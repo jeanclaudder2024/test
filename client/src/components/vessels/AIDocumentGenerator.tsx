@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2 } from "lucide-react";
+import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2, Lock } from "lucide-react";
 import type { Vessel } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,8 @@ interface DocumentTemplate {
   description: string;
   createdAt: string;
   updatedAt: string;
+  canGenerate: boolean;
+  accessMessage: string;
 }
 
 interface GeneratedDocument {
@@ -192,26 +194,50 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {templates.map((template: DocumentTemplate) => (
-                <Card key={template.id} className="border cursor-pointer hover:border-primary/50 transition-colors">
+                <Card key={template.id} className="border hover:border-primary/50 transition-colors">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center justify-between">
                       {template.title}
-                      <Button
-                        size="sm"
-                        onClick={() => generateDocumentMutation.mutate(template.id)}
-                        disabled={generateDocumentMutation.isPending}
-                        className="ml-2"
-                      >
-                        {generateDocumentMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
-                        Create
-                      </Button>
+                      {template.canGenerate ? (
+                        <Button
+                          size="sm"
+                          onClick={() => generateDocumentMutation.mutate(template.id)}
+                          disabled={generateDocumentMutation.isPending}
+                          className="ml-2"
+                        >
+                          {generateDocumentMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="h-4 w-4" />
+                          )}
+                          Create
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          disabled
+                          className="ml-2 bg-gray-300 text-gray-500 cursor-not-allowed"
+                          onClick={() => {
+                            toast({
+                              title: "Access Required",
+                              description: template.accessMessage,
+                              variant: "destructive",
+                            });
+                          }}
+                        >
+                          <Lock className="h-4 w-4" />
+                          Locked
+                        </Button>
+                      )}
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
                       {template.description}
+                      {!template.canGenerate && (
+                        <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
+                          <Lock className="h-3 w-3 inline mr-1" />
+                          {template.accessMessage}
+                        </div>
+                      )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

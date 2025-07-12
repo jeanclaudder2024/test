@@ -6363,74 +6363,67 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Public Document Templates Endpoint (for vessel AI generation) - with access control
+  // Public Document Templates Endpoint (for vessel AI generation) - SHOW ALL templates but with access info
   apiRouter.get("/document-templates", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const user = req.user!;
       const allTemplates = await storage.getDocumentTemplates();
       
-      // Filter templates based on user access level
-      let accessibleTemplates = [];
+      // Get user subscription and broker status once
+      const userSubscription = await storage.getUserSubscription(user.id);
+      const userPlan = userSubscription?.planId || 1;
+      const brokerStatus = await storage.getBrokerSubscriptionStatus(user.id);
       
-      for (const template of allTemplates) {
-        console.log(`Checking template ${template.name} (ID: ${template.id}): adminOnly=${template.adminOnly}, brokerOnly=${template.brokerOnly}, isActive=${template.isActive}`);
+      // Transform templates with access control info
+      const templatesWithAccess = await Promise.all(allTemplates.map(async (template) => {
+        let canGenerate = true;
+        let accessMessage = '';
         
-        // Admin users get access to all templates
+        // Admin users can always generate
         if (user.role === 'admin') {
-          console.log(`Admin user - granting access to template ${template.name}`);
-          accessibleTemplates.push(template);
-          continue;
-        }
-        
-        // Skip admin-only templates for regular users
-        if (template.adminOnly) {
-          console.log(`Skipping admin-only template ${template.name} for regular user`);
-          continue;
-        }
-        
-        // Check broker-only access
-        if (template.brokerOnly) {
-          const brokerStatus = await storage.getBrokerSubscriptionStatus(user.id);
-          if (!brokerStatus.hasActiveSubscription) {
-            continue;
+          canGenerate = true;
+        } else {
+          // Check admin-only access
+          if (template.adminOnly) {
+            canGenerate = false;
+            accessMessage = 'This document requires administrator privileges. Please contact your administrator.';
+          }
+          // Check broker-only access
+          else if (template.brokerOnly && !brokerStatus.hasActiveSubscription) {
+            canGenerate = false;
+            accessMessage = 'This document is available for broker members only. Contact us to help you get access to this document as it requires special approval.';
+          }
+          // Check subscription plan access
+          else if (template.enterpriseAccess === false && userPlan < 3) {
+            canGenerate = false;
+            accessMessage = 'Please upgrade your plan to Enterprise to access this document.';
+          }
+          else if (template.professionalAccess === false && userPlan < 2) {
+            canGenerate = false;
+            accessMessage = 'Please upgrade your plan to Professional to access this document.';
+          }
+          else if (template.basicAccess === false && userPlan < 1) {
+            canGenerate = false;
+            accessMessage = 'Please upgrade your plan to access this document.';
           }
         }
         
-        // Check subscription plan access
-        const userSubscription = await storage.getUserSubscription(user.id);
-        const userPlan = userSubscription?.planId || 1; // Default to basic plan
-        
-        // Skip templates that require higher plans
-        if (template.enterpriseAccess === false && userPlan < 3) {
-          continue;
-        }
-        
-        if (template.professionalAccess === false && userPlan < 2) {
-          continue;
-        }
-        
-        if (template.basicAccess === false && userPlan < 1) {
-          continue;
-        }
-        
-        // Template is accessible
-        accessibleTemplates.push(template);
-      }
-      
-      // Transform templates to match expected format
-      const transformedTemplates = accessibleTemplates.map(template => ({
-        id: template.id,
-        title: template.name,
-        description: template.description,
-        category: template.category,
-        prompt: template.prompt,
-        isActive: template.isActive,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt
+        return {
+          id: template.id,
+          title: template.name,
+          description: template.description,
+          category: template.category,
+          prompt: template.prompt,
+          isActive: template.isActive,
+          createdAt: template.createdAt,
+          updatedAt: template.updatedAt,
+          canGenerate,
+          accessMessage
+        };
       }));
       
-      console.log(`User ${user.email} (role: ${user.role}) has access to ${transformedTemplates.length} templates`);
-      res.json(transformedTemplates);
+      console.log(`User ${user.email} (role: ${user.role}) can see ${templatesWithAccess.length} templates, can generate from ${templatesWithAccess.filter(t => t.canGenerate).length}`);
+      res.json(templatesWithAccess);
     } catch (error) {
       console.error("Error fetching document templates:", error);
       res.status(500).json({ 
