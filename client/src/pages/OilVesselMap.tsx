@@ -23,58 +23,44 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Create enhanced vessel icon similar to vessel detail page
+// Create ship-shaped vessel icon from vessel detail page
 const createVesselIcon = (vesselType: string) => {
   const isOilVessel = vesselType?.toLowerCase().includes('tanker') || 
                      vesselType?.toLowerCase().includes('oil') || 
                      vesselType?.toLowerCase().includes('crude');
   
-  const bgColor = isOilVessel ? '#ef4444' : '#3b82f6';
-  const bgColorSecondary = isOilVessel ? '#dc2626' : '#2563eb';
-  const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.6)' : 'rgba(59, 130, 246, 0.6)';
+  // Colors based on vessel type
+  const fillColor = isOilVessel ? '#ef4444' : '#3b82f6';
+  const strokeColor = '#ffffff';
+  
+  // Ship-shaped icon that looks like a tanker from above (same as vessel detail page)
+  const shipShape = `
+    <path d="M3,14 L6,7 L18,7 L21,14 L12,18 L3,14 Z" />
+  `;
   
   return L.divIcon({
-    html: `<div style="
-      background: linear-gradient(135deg, ${bgColor}, ${bgColorSecondary});
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 4px solid white;
-      box-shadow: 
-        0 8px 16px ${shadowColor}, 
-        0 4px 8px rgba(0,0,0,0.3),
-        inset 0 2px 4px rgba(255,255,255,0.3);
-      position: relative;
-      transform: scale(1);
-      transition: all 0.3s ease;
-      cursor: pointer;
-    ">
+    html: `
       <div style="
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-size: 16px;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-      ">🚢</div>
-      <div style="
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 12px;
-        height: 12px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      "></div>
-    </div>`,
-    className: 'vessel-marker-enhanced',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20]
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      ">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" style="
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        ">
+          <path d="M3,14 L6,7 L18,7 L21,14 L12,18 L3,14 Z" 
+                fill="${fillColor}" 
+                stroke="${strokeColor}" 
+                stroke-width="1.5"/>
+        </svg>
+      </div>
+    `,
+    className: 'vessel-marker-ship',
+    iconSize: [48, 48],
+    iconAnchor: [24, 24]
   });
 };
 
