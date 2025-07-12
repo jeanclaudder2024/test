@@ -319,8 +319,8 @@ export default function AdvancedMaritimeMap() {
     return L.divIcon({
       className: `custom-vessel-icon`,
       html: iconHtml,
-      iconSize: [60, 60],
-      iconAnchor: [30, 30],
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
     });
   };
 

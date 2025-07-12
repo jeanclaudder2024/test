@@ -715,6 +715,8 @@ Changelog:
   * **Speed Indicators**: AdvancedMaritimeMap includes speed display in green badges for enhanced maritime tracking
   * **Rotation Support**: Vessel icons rotate based on heading/course data for realistic vessel orientation display
   * **Complete Visual Consistency**: Users now see identical professional ship-shaped vessel icons across the entire platform
+  * **Optimized Icon Sizing**: Reduced vessel icons to 16x16px (same size as port icons) with proportional labels for cleaner map appearance
+  * **Removed Card Styling**: Eliminated background cards/containers for clean ship icons with direct vessel type color coding on SVG elements
   * **Professional Layout**: Added shadow effects, decorative borders, and visual separators for premium document appearance
   * **Content Organization**: Enhanced content structure with proper indentation, line gaps, and paragraph spacing
   * **Premium Branding**: Upgraded company logo design with shadow effects and sophisticated styling
