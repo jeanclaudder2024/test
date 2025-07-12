@@ -37,11 +37,11 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [expandedDocument, setExpandedDocument] = useState<number | null>(null);
 
-  // Fetch available document templates
+  // Fetch available document templates based on user access level
   const { data: templates = [], isLoading: templatesLoading } = useQuery<DocumentTemplate[]>({
-    queryKey: ['/api/admin/article-templates'],
+    queryKey: ['/api/document-templates'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/article-templates', {
+      const response = await fetch('/api/document-templates', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }

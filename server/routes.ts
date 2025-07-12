@@ -6363,11 +6363,70 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Public Document Templates Endpoint (for vessel AI generation)
-  apiRouter.get("/document-templates", async (req: Request, res) => {
+  // Public Document Templates Endpoint (for vessel AI generation) - with access control
+  apiRouter.get("/document-templates", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const templates = await storage.getArticleTemplates();
-      res.json(templates);
+      const user = req.user!;
+      const allTemplates = await storage.getDocumentTemplates();
+      
+      // Filter templates based on user access level
+      let accessibleTemplates = [];
+      
+      for (const template of allTemplates) {
+        // Admin users get access to all templates
+        if (user.role === 'admin') {
+          accessibleTemplates.push(template);
+          continue;
+        }
+        
+        // Skip admin-only templates for regular users
+        if (template.adminOnly) {
+          continue;
+        }
+        
+        // Check broker-only access
+        if (template.brokerOnly) {
+          const brokerStatus = await storage.getBrokerSubscriptionStatus(user.id);
+          if (!brokerStatus.hasActiveSubscription) {
+            continue;
+          }
+        }
+        
+        // Check subscription plan access
+        const userSubscription = await storage.getUserSubscription(user.id);
+        const userPlan = userSubscription?.planId || 1; // Default to basic plan
+        
+        // Skip templates that require higher plans
+        if (template.enterpriseAccess === false && userPlan < 3) {
+          continue;
+        }
+        
+        if (template.professionalAccess === false && userPlan < 2) {
+          continue;
+        }
+        
+        if (template.basicAccess === false && userPlan < 1) {
+          continue;
+        }
+        
+        // Template is accessible
+        accessibleTemplates.push(template);
+      }
+      
+      // Transform templates to match expected format
+      const transformedTemplates = accessibleTemplates.map(template => ({
+        id: template.id,
+        title: template.name,
+        description: template.description,
+        category: template.category,
+        prompt: template.prompt,
+        isActive: template.isActive,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      }));
+      
+      console.log(`User ${user.email} (role: ${user.role}) has access to ${transformedTemplates.length} templates`);
+      res.json(transformedTemplates);
     } catch (error) {
       console.error("Error fetching document templates:", error);
       res.status(500).json({ 
