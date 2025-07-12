@@ -6453,6 +6453,8 @@ Only use authentic, real-world data for existing refineries.`;
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
+      
+      console.log(`Debug: template object:`, JSON.stringify(template, null, 2));
 
       // Check template access permissions based on user role and subscription
       const user = req.user!;
@@ -6494,11 +6496,13 @@ Only use authentic, real-world data for existing refineries.`;
         console.log(`User access validated for template ${template.name}`);
       }
 
-      // Get vessel data
-      const vessel = await storage.getVesselById(vesselId);
+      // Get vessel data  
+      const vessel = await storage.getVesselById(vesselIdNum);
       if (!vessel) {
         return res.status(404).json({ message: "Vessel not found" });
       }
+      
+      console.log(`Debug: vessel object:`, { id: vessel.id, name: vessel.name });
 
       // Generate AI document using OpenAI
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
