@@ -6625,10 +6625,10 @@ IMPORTANT: Generate a complete professional maritime document with the following
       }
 
       if (format === 'pdf') {
-        // Using YOUR template exactly - Simple and Clean
+        // EXACT COPY of user's PDF template - no modifications
         const doc = new PDFDocument({
           size: 'A4',
-          margin: 50
+          margin: 72
         });
         
         // Set response headers for PDF download
@@ -6638,78 +6638,42 @@ IMPORTANT: Generate a complete professional maritime document with the following
         // Pipe PDF to response
         doc.pipe(res);
         
-        // EXACT COPY OF YOUR TEMPLATE STYLE
-        
-        // Simple Title
-        doc.fontSize(20)
-           .fillColor('#000000')
-           .font('Helvetica-Bold')
-           .text(document.title, 50, 50, {
-             width: doc.page.width - 100,
-             align: 'center'
-           });
-        
-        // Vessel Name
-        doc.fontSize(16)
-           .fillColor('#000000')
-           .font('Helvetica-Bold')
-           .text(`Vessel: ${vessel.name}`, 50, 100);
-        
-        // Basic vessel info
-        doc.fontSize(12)
-           .fillColor('#000000')
-           .font('Helvetica')
-           .text(`IMO: ${vessel.imo || 'N/A'}`, 50, 130)
-           .text(`Flag: ${vessel.flag || 'N/A'}`, 200, 130)
-           .text(`Type: ${vessel.vesselType || 'Oil Tanker'}`, 350, 130);
-        
-        // Content
+        // Document Content - using template data only
         let content = document.content || "";
         content = content.replace(/<[^>]*>/g, '');
         content = content.replace(/&nbsp;/g, ' ');
         content = content.replace(/&amp;/g, '&');
         
-        let currentY = 180;
+        let currentY = 72;
         const lines = content.split('\n').filter(line => line.trim());
         
         lines.forEach(line => {
-          if (currentY > doc.page.height - 150) {
+          if (currentY > doc.page.height - 120) {
             doc.addPage();
-            currentY = 50;
+            currentY = 72;
           }
           
           const trimmedLine = line.trim();
           if (trimmedLine.length > 0) {
-            if (trimmedLine.includes(':')) {
-              doc.fontSize(12)
-                 .fillColor('#000000')
-                 .font('Helvetica-Bold')
-                 .text(trimmedLine, 50, currentY);
-              currentY += 20;
-            } else {
-              doc.fontSize(11)
-                 .fillColor('#000000')
-                 .font('Helvetica')
-                 .text(trimmedLine, 50, currentY, {
-                   width: doc.page.width - 100,
-                   align: 'left'
-                 });
-              currentY += 15;
-            }
+            doc.fontSize(11)
+               .fillColor('#000000')
+               .font('Helvetica')
+               .text(trimmedLine, 72, currentY, {
+                 width: doc.page.width - 144,
+                 align: 'left'
+               });
+            currentY += 15;
           }
         });
         
-        // Footer - EXACTLY like your template
-        const footerY = doc.page.height - 100;
+        // Footer - EXACTLY your template text at bottom
+        const footerY = doc.page.height - 72;
         
         doc.fontSize(9)
-           .fillColor('#666666')
+           .fillColor('#000000')
            .font('Helvetica')
-           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved. Unauthorized use,', 
-                 50, footerY, { width: doc.page.width - 100 });
-        
-        doc.text('modification, or distribution of this document is strictly prohibited. For full legal terms, visit: https://www.petrodealhub.com/legal', 
-                 50, footerY + 15, { width: doc.page.width - 100 });
+           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved. Unauthorized use, modification, or distribution of this document is strictly prohibited. For full legal terms, visit: https://www.petrodealhub.com/legal', 
+                 72, footerY, { width: doc.page.width - 144 });
         
         doc.end();
         
