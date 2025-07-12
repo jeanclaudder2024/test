@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2, Lock, ExternalLink, MessageCircle } from "lucide-react";
+import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2, Lock, ExternalLink, MessageCircle, Ship, FileCheck, Users, Building, Award, Shield } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "wouter";
 import type { Vessel } from "@shared/schema";
@@ -20,6 +20,33 @@ interface DocumentTemplate {
   canGenerate: boolean;
   accessMessage: string;
 }
+
+// Category mapping for templates
+const getTemplateCategory = (title: string, description: string) => {
+  const titleLower = title.toLowerCase();
+  const descLower = description.toLowerCase();
+  
+  if (titleLower.includes('certificate') || titleLower.includes('certification') || descLower.includes('certificate')) {
+    return { name: 'Certificates & Compliance', icon: Award, color: 'text-green-600 bg-green-50' };
+  }
+  if (titleLower.includes('manifest') || titleLower.includes('cargo') || descLower.includes('cargo')) {
+    return { name: 'Cargo Documentation', icon: Ship, color: 'text-blue-600 bg-blue-50' };
+  }
+  if (titleLower.includes('inspection') || titleLower.includes('survey') || descLower.includes('inspection')) {
+    return { name: 'Inspections & Surveys', icon: FileCheck, color: 'text-orange-600 bg-orange-50' };
+  }
+  if (titleLower.includes('crew') || titleLower.includes('manning') || descLower.includes('crew')) {
+    return { name: 'Crew & Manning', icon: Users, color: 'text-purple-600 bg-purple-50' };
+  }
+  if (titleLower.includes('commercial') || titleLower.includes('business') || descLower.includes('commercial')) {
+    return { name: 'Commercial Documents', icon: Building, color: 'text-indigo-600 bg-indigo-50' };
+  }
+  if (titleLower.includes('safety') || titleLower.includes('security') || descLower.includes('safety')) {
+    return { name: 'Safety & Security', icon: Shield, color: 'text-red-600 bg-red-50' };
+  }
+  
+  return { name: 'General Documents', icon: FileText, color: 'text-gray-600 bg-gray-50' };
+};
 
 interface GeneratedDocument {
   id: number;
@@ -173,6 +200,16 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
     );
   }
 
+  // Group templates by category
+  const categorizedTemplates = templates.reduce((acc, template) => {
+    const category = getTemplateCategory(template.title, template.description);
+    if (!acc[category.name]) {
+      acc[category.name] = { ...category, templates: [] };
+    }
+    acc[category.name].templates.push(template);
+    return acc;
+  }, {} as Record<string, { name: string; icon: any; color: string; templates: DocumentTemplate[] }>);
+
   return (
     <div className="space-y-6">
       {/* Available Templates */}
@@ -180,10 +217,10 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
         <CardHeader>
           <CardTitle className="flex items-center">
             <BookOpen className="h-5 w-5 mr-2" />
-            Available Document Templates
+            Professional Document Templates
           </CardTitle>
           <CardDescription>
-            Select a template to create professional maritime documentation for {vesselName}
+            Create professional maritime documentation for {vesselName} organized by category
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -194,12 +231,27 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
               <p className="text-sm">Contact your administrator to add document templates.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {templates.map((template: DocumentTemplate) => (
-                <Card key={template.id} className="border hover:border-primary/50 transition-colors">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      {template.title}
+            <div className="space-y-6">
+              {Object.entries(categorizedTemplates).map(([categoryName, categoryData]) => (
+                <div key={categoryName} className="space-y-4">
+                  {/* Category Header */}
+                  <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                    <div className={`p-2 rounded-lg ${categoryData.color}`}>
+                      <categoryData.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-900">{categoryName}</h3>
+                      <p className="text-sm text-gray-600">{categoryData.templates.length} template{categoryData.templates.length !== 1 ? 's' : ''} available</p>
+                    </div>
+                  </div>
+                  
+                  {/* Templates Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {categoryData.templates.map((template: DocumentTemplate) => (
+                      <Card key={template.id} className="border hover:border-primary/50 transition-all duration-200 hover:shadow-lg group">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center justify-between">
+                            <span className="truncate pr-2">{template.title}</span>
                       {template.canGenerate ? (
                         <Button
                           size="sm"
@@ -339,26 +391,29 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {template.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4 mr-1" />
-                        Created {new Date(template.createdAt).toLocaleDateString()}
-                      </div>
-                      {!template.canGenerate && (
-                        <div className="text-xs text-orange-600 font-medium">
-                          Access Required
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                            )}
+                          </CardTitle>
+                          <CardDescription className="line-clamp-2 text-sm">
+                            {template.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {new Date(template.createdAt).toLocaleDateString()}
+                            </div>
+                            {!template.canGenerate && (
+                              <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
+                                Access Required
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}
