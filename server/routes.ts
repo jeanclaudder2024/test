@@ -6702,12 +6702,13 @@ IMPORTANT: Generate a complete professional maritime document with the following
            .lineWidth(3)
            .stroke();
         
-        // "CLIENT COPY" watermark exactly like template
+        // Simple watermark text (you can customize this)
+        const watermarkText = 'CLIENT COPY'; // You can change this text
         doc.fontSize(36)
            .fillColor('#f0c0c0')
            .font('Helvetica-Bold')
            .rotate(-30, {origin: [pageWidth - 200, pageHeight - 200]})
-           .text('CLIENT COPY', pageWidth - 300, pageHeight - 220)
+           .text(watermarkText, pageWidth - 300, pageHeight - 220)
            .rotate(30, {origin: [pageWidth - 200, pageHeight - 200]});
         
         // Document content area
