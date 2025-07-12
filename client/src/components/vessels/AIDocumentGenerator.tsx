@@ -264,7 +264,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                           ) : (
                             <Plus className="h-4 w-4" />
                           )}
-                          Create
+                          Get
                         </Button>
                       ) : (
                         <TooltipProvider delayDuration={100}>
