@@ -7085,6 +7085,8 @@ IMPORTANT: Generate a complete professional maritime document with the following
         return res.status(400).json({ message: "Invalid template ID" });
       }
 
+      console.log('Template update request body:', JSON.stringify(req.body, null, 2));
+
       const { 
         title, 
         description, 
@@ -7097,6 +7099,8 @@ IMPORTANT: Generate a complete professional maritime document with the following
         professionalAccess = true,
         enterpriseAccess = true
       } = req.body;
+      
+      console.log(`Updating template ${templateId}: adminOnly=${adminOnly}, brokerOnly=${brokerOnly}`);
       
       if (!title || !description || !category || !prompt) {
         return res.status(400).json({ message: "Missing required fields" });
