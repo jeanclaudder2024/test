@@ -925,7 +925,7 @@
     }
   }
   
-  /* Professional vessel marker styles from vessel detail page */
+  /* Clean vessel marker styles without card background */
   .vessel-marker {
     display: flex;
     flex-direction: column;
@@ -935,29 +935,25 @@
   }
   
   .vessel-icon {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-    border: 2px solid white;
     transition: all 0.3s ease;
   }
   
   .vessel-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+    transform: scale(1.15);
   }
   
   .vessel-icon svg {
-    width: 20px;
-    height: 20px;
-    fill: white;
-    stroke: white;
-    stroke-width: 0.5;
+    width: 28px;
+    height: 28px;
+    fill: #2563eb;
+    stroke: #1d4ed8;
+    stroke-width: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
   
   .vessel-label {
@@ -987,30 +983,35 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   
-  /* Vessel type styling */
-  .vessel-type-crude .vessel-icon {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  /* Vessel type color styling for ship icons */
+  .vessel-type-crude .vessel-icon svg {
+    fill: #dc2626;
+    stroke: #b91c1c;
+    filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.4));
   }
   
-  .vessel-type-products .vessel-icon {
-    background: linear-gradient(135deg, #059669, #047857);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+  .vessel-type-products .vessel-icon svg {
+    fill: #059669;
+    stroke: #047857;
+    filter: drop-shadow(0 2px 4px rgba(5, 150, 105, 0.4));
   }
   
-  .vessel-type-lng .vessel-icon {
-    background: linear-gradient(135deg, #7c3aed, #6d28d9);
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  .vessel-type-lng .vessel-icon svg {
+    fill: #7c3aed;
+    stroke: #6d28d9;
+    filter: drop-shadow(0 2px 4px rgba(124, 58, 237, 0.4));
   }
   
-  .vessel-type-lpg .vessel-icon {
-    background: linear-gradient(135deg, #ea580c, #dc2626);
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+  .vessel-type-lpg .vessel-icon svg {
+    fill: #ea580c;
+    stroke: #dc2626;
+    filter: drop-shadow(0 2px 4px rgba(234, 88, 12, 0.4));
   }
   
-  .vessel-type-chemical .vessel-icon {
-    background: linear-gradient(135deg, #0891b2, #0e7490);
-    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.4);
+  .vessel-type-chemical .vessel-icon svg {
+    fill: #0891b2;
+    stroke: #0e7490;
+    filter: drop-shadow(0 2px 4px rgba(8, 145, 178, 0.4));
   }
     50% {
       transform: scale(1.1);
