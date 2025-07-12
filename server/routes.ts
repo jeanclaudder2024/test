@@ -6552,7 +6552,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         id: Date.now(), // Simple ID for mock storage
         templateId,
         vesselId,
-        title: `${template.title} - ${vessel.name}`,
+        title: `${template.name} - ${vessel.name}`,
         content: content || "Document generation failed",
         status: "generated",
         createdAt: new Date().toISOString()
