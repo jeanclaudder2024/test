@@ -6703,13 +6703,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
            .lineWidth(3)
            .stroke();
         
-        // "CLIENT COPY" watermark
-        doc.fontSize(36)
-           .fillColor('#f0c0c0')
-           .font('Helvetica-Bold')
-           .rotate(-30, {origin: [pageWidth - 200, pageHeight - 200]})
-           .text('CLIENT COPY', pageWidth - 300, pageHeight - 220)
-           .rotate(30, {origin: [pageWidth - 200, pageHeight - 200]});
+        // Use logo as watermark (no text watermark)
         
         // AI Content Area - positioned around logo
         let content = document.content || "";
@@ -6723,9 +6717,9 @@ IMPORTANT: Generate a complete professional maritime document with the following
         const lines = content.split('\n').filter(line => line.trim());
         
         lines.forEach(line => {
-          // Skip logo area (around Y 250-350)
-          if (currentY > 220 && currentY < 420) {
-            currentY = 420;
+          // Skip logo area (around Y 220-380) - logo acts as watermark
+          if (currentY > 220 && currentY < 380) {
+            currentY = 380;
           }
           
           if (currentY > pageHeight - 120) {
