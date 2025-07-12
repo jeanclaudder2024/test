@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2, Lock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Vessel } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -213,32 +214,41 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                           Create
                         </Button>
                       ) : (
-                        <Button
-                          size="sm"
-                          disabled
-                          className="ml-2 bg-gray-300 text-gray-500 cursor-not-allowed"
-                          onClick={() => {
-                            toast({
-                              title: "Access Required",
-                              description: template.accessMessage,
-                              variant: "destructive",
-                            });
-                          }}
-                        >
-                          <Lock className="h-4 w-4" />
-                          Locked
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                disabled
+                                className="ml-2 bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400"
+                                onClick={() => {
+                                  toast({
+                                    title: "Access Required",
+                                    description: template.accessMessage,
+                                    variant: "destructive",
+                                  });
+                                }}
+                              >
+                                <Lock className="h-4 w-4" />
+                                Locked
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p>{template.accessMessage}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
                       {template.description}
-                      {!template.canGenerate && (
-                        <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
-                          <Lock className="h-3 w-3 inline mr-1" />
-                          {template.accessMessage}
-                        </div>
-                      )}
                     </CardDescription>
+                    {!template.canGenerate && (
+                      <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
+                        <Lock className="h-3 w-3 inline mr-1" />
+                        {template.accessMessage}
+                      </div>
+                    )}
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center text-sm text-muted-foreground">
