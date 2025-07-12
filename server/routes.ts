@@ -6373,14 +6373,18 @@ Only use authentic, real-world data for existing refineries.`;
       let accessibleTemplates = [];
       
       for (const template of allTemplates) {
+        console.log(`Checking template ${template.name} (ID: ${template.id}): adminOnly=${template.adminOnly}, brokerOnly=${template.brokerOnly}, isActive=${template.isActive}`);
+        
         // Admin users get access to all templates
         if (user.role === 'admin') {
+          console.log(`Admin user - granting access to template ${template.name}`);
           accessibleTemplates.push(template);
           continue;
         }
         
         // Skip admin-only templates for regular users
         if (template.adminOnly) {
+          console.log(`Skipping admin-only template ${template.name} for regular user`);
           continue;
         }
         
