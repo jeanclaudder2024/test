@@ -249,17 +249,18 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                     <CardDescription className="line-clamp-2">
                       {template.description}
                     </CardDescription>
-                    {!template.canGenerate && (
-                      <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
-                        <Lock className="h-3 w-3 inline mr-1" />
-                        {template.accessMessage}
-                      </div>
-                    )}
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4 mr-1" />
-                      Created {new Date(template.createdAt).toLocaleDateString()}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4 mr-1" />
+                        Created {new Date(template.createdAt).toLocaleDateString()}
+                      </div>
+                      {!template.canGenerate && (
+                        <div className="text-xs text-orange-600 font-medium">
+                          Access Required
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
