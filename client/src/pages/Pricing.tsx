@@ -329,16 +329,19 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            💼 Choose the Plan That Fits Your Petroleum Trading Needs
-          </h1>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto mb-8">
-            Whether you're an individual broker or a global trading company, PetroDealHub provides 
-            flexible subscription plans tailored to your scale of operations, market access, and trading goals.
-          </p>
+    <div className="container py-12 mx-auto">
+      <div className="flex flex-col items-center justify-center mb-12">
+        <Badge variant="outline" className="px-4 py-2 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+          <div className="w-2 h-2 rounded-full bg-blue-400 mr-2 animate-pulse"></div>
+          Choose the Plan That Fits Your Petroleum Trading Needs
+        </Badge>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">
+          Flexible Subscription Plans
+        </h1>
+        <p className="text-muted-foreground mb-6 text-center max-w-2xl">
+          Whether you're an individual broker or a global trading company, PetroDealHub provides 
+          flexible subscription plans tailored to your scale of operations, market access, and trading goals.
+        </p>
         <div className="mb-6 text-center">
           <div className="inline-flex items-center gap-4 text-sm text-slate-500">
             <span>✅ 5-Day free trial for every plan</span>
@@ -373,114 +376,83 @@ export default function PricingPage() {
         </div>
       </div>
       
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {plans?.map((plan, index) => {
-            const price = billingInterval === 'month' 
-              ? plan.monthlyPrice 
-              : plan.yearlyPrice;
-
-            // Define colors and emojis for each plan
-            const planConfig = {
-              1: { 
-                emoji: "🧪", 
-                gradient: "from-blue-500 to-blue-600",
-                icon: <Zap className="h-6 w-6" />
-              },
-              2: { 
-                emoji: "📈", 
-                gradient: "from-purple-500 to-purple-600",
-                icon: <Star className="h-6 w-6" />
-              },
-              3: { 
-                emoji: "🏢", 
-                gradient: "from-orange-500 to-orange-600",
-                icon: <Crown className="h-6 w-6" />
-              }
-            };
-
-            const config = planConfig[plan.id as keyof typeof planConfig] || planConfig[1];
+      <div className="grid gap-6 md:grid-cols-3">
+        {plans?.map((plan) => {
+          const price = billingInterval === 'month' 
+            ? plan.monthlyPrice 
+            : plan.yearlyPrice;
             
-            return (
-              <Card 
-                key={plan.id} 
-                className={`relative overflow-hidden transition-all duration-300 hover:scale-105 ${
-                  plan.isPopular ? 'ring-2 ring-purple-500 shadow-2xl' : 'shadow-lg'
-                }`}
-              >
-                {plan.isPopular && (
-                  <div className="absolute top-0 left-0 right-0">
-                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-center py-2 px-4 text-sm font-semibold">
-                      ⭐ MOST POPULAR
-                    </div>
+          return (
+            <Card key={plan.id} className={cn(
+              "flex flex-col",
+              plan.isPopular && "border-primary shadow-md"
+            )}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <CardDescription className="mt-1.5">{plan.description}</CardDescription>
                   </div>
-                )}
+                  {plan.isPopular && (
+                    <Badge className="bg-primary hover:bg-primary">Popular</Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <div className="flex items-baseline mb-4">
+                  <span className="text-3xl font-bold">
+                    {formatCurrency(price, plan.currency)}
+                  </span>
+                  <span className="text-muted-foreground ml-1">
+                    /{billingInterval}
+                  </span>
+                </div>
                 
-                <CardHeader className={`bg-gradient-to-r ${config.gradient} text-white ${plan.isPopular ? 'pt-12' : 'pt-6'}`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{config.emoji}</span>
-                      <div className="bg-white/20 p-2 rounded-lg">
-                        {config.icon}
+                <div className="space-y-2">
+                  {plan.features.map((feature, i) => (
+                    <div key={i} className="flex items-start">
+                      <div className="mr-2 mt-1">
+                        {feature.included ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </div>
-                    </div>
-                  </div>
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                  <CardDescription className="text-white/90">
-                    {plan.description}
-                  </CardDescription>
-                  
-                  <div className="mt-6">
-                    <div className="flex items-baseline">
-                      <span className="text-4xl font-bold">
-                        {formatCurrency(price, plan.currency)}
+                      <span className={cn(
+                        "text-sm",
+                        !feature.included && "text-muted-foreground line-through"
+                      )}>
+                        {feature.name}
                       </span>
-                      <span className="text-white/80 ml-2">/{billingInterval}</span>
                     </div>
-                    <div className="text-white/90 text-sm mt-2 font-medium">
-                      ✅ {plan.trialDays}-Day Free Trial
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="flex-grow p-6">
-                  <div className="space-y-4 mb-6">
+                  ))}
+                </div>
                 
-                    <div className="space-y-3">
-                      {plan.features.slice(0, 6).map((feature, i) => {
-                        const colors = ['blue', 'green', 'purple', 'orange', 'indigo', 'pink'];
-                        const color = colors[i % colors.length];
-                        
-                        return (
-                          <div key={i} className="flex items-start space-x-3">
-                            <div className={`bg-${color}-100 p-1 rounded`}>
-                              <Check className={`h-4 w-4 text-${color}-600`} />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{feature.name}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="p-6 pt-0">
-                  <Button 
-                    onClick={() => handleSubscribe(plan.id)}
-                    className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl`}
-                  >
-                    Start {plan.trialDays}-Day Free Trial
-                  </Button>
-                </CardFooter>
-              </Card>
+                {plan.trialDays > 0 && (
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Includes {plan.trialDays} day free trial
+                  </p>
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => handleSubscribe(plan.id)}
+                  className={cn(
+                    "w-full",
+                    plan.isPopular ? "bg-primary hover:bg-primary/90" : ""
+                  )}
+                >
+                  Subscribe to {plan.name}
+                </Button>
+              </CardFooter>
+            </Card>
           );
-          })}
-        </div>
+        })}
+      </div>
       
-        {/* Expandable Plan Comparison Button */}
-        <div className="mt-16 mx-auto max-w-4xl text-center">
-          <Button
+      {/* Expandable Plan Comparison Button */}
+      <div className="mt-16 mx-auto max-w-4xl text-center">
+        <Button
           onClick={() => setShowComparison(!showComparison)}
           variant="outline"
           size="lg"
@@ -797,15 +769,14 @@ export default function PricingPage() {
         </div>
       </div>
       
-        <div className="mt-12 mx-auto max-w-3xl text-center">
-          <h3 className="text-xl font-semibold mb-2">Enterprise Solutions</h3>
-          <p className="text-muted-foreground mb-4">
-            Need a custom solution for your large maritime operations? Contact our sales team for a tailored package.
-          </p>
-          <Button variant="outline" onClick={() => navigate('/contact')}>
-            Contact Sales
-          </Button>
-        </div>
+      <div className="mt-12 mx-auto max-w-3xl text-center">
+        <h3 className="text-xl font-semibold mb-2">Enterprise Solutions</h3>
+        <p className="text-muted-foreground mb-4">
+          Need a custom solution for your large maritime operations? Contact our sales team for a tailored package.
+        </p>
+        <Button variant="outline" onClick={() => navigate('/contact')}>
+          Contact Sales
+        </Button>
       </div>
     </div>
   );
