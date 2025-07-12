@@ -6625,10 +6625,10 @@ IMPORTANT: Generate a complete professional maritime document with the following
       }
 
       if (format === 'pdf') {
-        // Simple PDF Template - Fill data into clean format
+        // Professional Modern PDF Design
         const doc = new PDFDocument({
           size: 'A4',
-          margin: 72
+          margin: 0
         });
         
         // Set response headers for PDF download
@@ -6638,91 +6638,187 @@ IMPORTANT: Generate a complete professional maritime document with the following
         // Pipe PDF to response
         doc.pipe(res);
         
-        // SIMPLE TEMPLATE APPROACH - Clean and Professional
+        // MODERN PROFESSIONAL DESIGN
+        const pageWidth = doc.page.width;
+        const pageHeight = doc.page.height;
         
-        // Header Section
-        doc.rect(0, 0, doc.page.width, 60)
-           .fill('#1e40af');
+        // Gradient Header Background
+        doc.rect(0, 0, pageWidth, 100)
+           .fillColor('#0f172a', 1)
+           .fill();
         
-        // Company Logo (Simple Circle)
-        doc.circle(35, 30, 15)
-           .fill('white');
+        doc.rect(0, 0, pageWidth, 100)
+           .fillColor('#1e40af', 0.8)
+           .fill();
+        
+        // Modern Logo Design
+        doc.circle(50, 50, 25)
+           .fillColor('white', 1)
+           .fill()
+           .stroke('#1e40af')
+           .lineWidth(3);
+        
+        doc.fontSize(22)
+           .fillColor('#1e40af')
+           .font('Helvetica-Bold')
+           .text('P', 40, 38);
+        
+        // Company Branding
+        doc.fontSize(32)
+           .fillColor('white')
+           .font('Helvetica-Bold')
+           .text('PETRODEALHUB', 90, 30);
         
         doc.fontSize(14)
-           .fillColor('#1e40af')
-           .text('P', 29, 23);
+           .fillColor('#e2e8f0')
+           .font('Helvetica')
+           .text('Maritime Documentation Excellence', 90, 60);
         
-        // Company Name
-        doc.fontSize(20)
-           .fillColor('white')
-           .text('PETRODEALHUB', 60, 20);
-        
-        // Document Title
-        doc.fontSize(18)
-           .fillColor('#1e40af')
-           .text(document.title, 72, 100);
-        
-        // Vessel Information Box
-        doc.rect(72, 140, doc.page.width - 144, 60)
-           .stroke('#e5e7eb')
-           .fill('#f8fafc');
+        // Status Badge
+        doc.rect(pageWidth - 200, 20, 180, 30)
+           .fillColor('#10b981', 1)
+           .fill();
         
         doc.fontSize(12)
-           .fillColor('#1e40af')
-           .text(`Vessel: ${vessel.name}`, 85, 155);
+           .fillColor('white')
+           .font('Helvetica-Bold')
+           .text('CERTIFIED DOCUMENT', pageWidth - 190, 32);
         
-        doc.fontSize(10)
-           .fillColor('#6b7280')
-           .text(`IMO: ${vessel.imo || 'N/A'} | Flag: ${vessel.flag || 'N/A'}`, 85, 175);
+        // Document Title Section
+        doc.rect(0, 100, pageWidth, 80)
+           .fillColor('#f8fafc', 1)
+           .fill();
         
-        // Document Content
+        doc.fontSize(28)
+           .fillColor('#1e293b')
+           .font('Helvetica-Bold')
+           .text(document.title, 50, 125, {
+             width: pageWidth - 100,
+             align: 'center'
+           });
+        
+        // Vessel Information Panel
+        const vesselBoxY = 200;
+        doc.rect(50, vesselBoxY, pageWidth - 100, 100)
+           .fillColor('#ffffff', 1)
+           .fill()
+           .stroke('#e2e8f0')
+           .lineWidth(2);
+        
+        // Vessel Header
+        doc.rect(50, vesselBoxY, pageWidth - 100, 35)
+           .fillColor('#3b82f6', 1)
+           .fill();
+        
+        doc.fontSize(16)
+           .fillColor('white')
+           .font('Helvetica-Bold')
+           .text('VESSEL INFORMATION', 70, vesselBoxY + 10);
+        
+        // Vessel Details
+        doc.fontSize(18)
+           .fillColor('#1e293b')
+           .font('Helvetica-Bold')
+           .text(`${vessel.name}`, 70, vesselBoxY + 50);
+        
+        doc.fontSize(12)
+           .fillColor('#64748b')
+           .font('Helvetica')
+           .text(`IMO: ${vessel.imo || 'Not Available'}`, 70, vesselBoxY + 75)
+           .text(`Flag State: ${vessel.flag || 'Not Available'}`, 300, vesselBoxY + 75)
+           .text(`Vessel Type: ${vessel.vesselType || 'Oil Tanker'}`, 70, vesselBoxY + 90)
+           .text(`Generated: ${new Date().toLocaleDateString()}`, 300, vesselBoxY + 90);
+        
+        // Content Section
         let content = document.content || "";
         content = content.replace(/<[^>]*>/g, '');
         content = content.replace(/&nbsp;/g, ' ');
         content = content.replace(/&amp;/g, '&');
+        content = content.replace(/&lt;/g, '<');
+        content = content.replace(/&gt;/g, '>');
         
-        let yPos = 230;
+        let currentY = 330;
+        const contentWidth = pageWidth - 100;
         const lines = content.split('\n').filter(line => line.trim());
         
-        lines.forEach(line => {
-          if (yPos > doc.page.height - 150) {
+        lines.forEach((line, index) => {
+          if (currentY > pageHeight - 200) {
             doc.addPage();
-            yPos = 72;
+            currentY = 50;
           }
           
-          if (line.includes(':')) {
-            doc.fontSize(11)
-               .fillColor('#1e40af')
-               .text(line, 72, yPos);
-            yPos += 20;
-          } else {
-            doc.fontSize(10)
-               .fillColor('#374151')
-               .text(line, 72, yPos, {
-                 width: doc.page.width - 144,
-                 align: 'left'
-               });
-            yPos += 15;
+          const trimmedLine = line.trim();
+          if (trimmedLine.length > 0) {
+            if (trimmedLine.includes(':') || trimmedLine.toUpperCase() === trimmedLine) {
+              // Section Headers
+              doc.fontSize(14)
+                 .fillColor('#1e40af')
+                 .font('Helvetica-Bold')
+                 .text(trimmedLine, 50, currentY, {
+                   width: contentWidth,
+                   align: 'left'
+                 });
+              currentY += 25;
+            } else {
+              // Regular Content
+              doc.fontSize(11)
+                 .fillColor('#374151')
+                 .font('Helvetica')
+                 .text(trimmedLine, 50, currentY, {
+                   width: contentWidth,
+                   align: 'justify',
+                   lineGap: 2
+                 });
+              
+              const textHeight = doc.heightOfString(trimmedLine, {
+                width: contentWidth,
+                lineGap: 2
+              });
+              currentY += textHeight + 10;
+            }
           }
         });
         
-        // Footer - Your Legal Text
-        const footerY = doc.page.height - 80;
+        // Professional Footer
+        const footerY = pageHeight - 120;
         
-        doc.rect(72, footerY, doc.page.width - 144, 60)
-           .fill('#f9fafb')
-           .stroke('#e5e7eb');
+        // Footer Background
+        doc.rect(0, footerY, pageWidth, 120)
+           .fillColor('#f1f5f9', 1)
+           .fill();
         
-        doc.fontSize(8)
-           .fillColor('#6b7280')
+        // Separator Line
+        doc.moveTo(50, footerY + 20)
+           .lineTo(pageWidth - 50, footerY + 20)
+           .stroke('#cbd5e1')
+           .lineWidth(1);
+        
+        // Legal Disclaimer
+        doc.fontSize(9)
+           .fillColor('#475569')
+           .font('Helvetica')
            .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved.', 
-                 80, footerY + 10, { width: doc.page.width - 160 });
+                 50, footerY + 35, { width: pageWidth - 100 });
         
         doc.text('Unauthorized use, modification, or distribution of this document is strictly prohibited.', 
-                 80, footerY + 25, { width: doc.page.width - 160 });
+                 50, footerY + 50, { width: pageWidth - 100 });
         
         doc.text('For full legal terms, visit: https://www.petrodealhub.com/legal', 
-                 80, footerY + 40, { width: doc.page.width - 160 });
+                 50, footerY + 65, { width: pageWidth - 100 });
+        
+        // Document Metadata
+        doc.fontSize(10)
+           .fillColor('#1e40af')
+           .font('Helvetica-Bold')
+           .text(`Document ID: ${document.id}`, 50, footerY + 90)
+           .text('Page 1', pageWidth - 100, footerY + 90);
+        
+        // Company Footer
+        doc.fontSize(9)
+           .fillColor('#64748b')
+           .font('Helvetica')
+           .text('© 2025 PetroDealHub Maritime Platform - Professional Documentation Services', 
+                 50, footerY + 105);
         
         doc.end();
         
