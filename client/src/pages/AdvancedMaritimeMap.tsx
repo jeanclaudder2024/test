@@ -278,77 +278,49 @@ export default function AdvancedMaritimeMap() {
     });
   }, [vessels, selectedVesselTypes, searchTerm]);
 
-  // Get enhanced vessel icon similar to vessel detail page
+  // Get exact same vessel icon as vessel detail page
   const getVesselIcon = (vessel: Vessel) => {
-    const isOilVessel = vessel.vesselType?.toLowerCase().includes('tanker') || 
-                       vessel.vesselType?.toLowerCase().includes('oil') || 
-                       vessel.vesselType?.toLowerCase().includes('crude');
+    // Determine vessel type class for styling (same as vessel detail page)
+    let vesselTypeClass = 'vessel-type-default';
+    const lowerType = vessel.vesselType?.toLowerCase() || '';
     
-    const bgColor = isOilVessel ? '#ef4444' : '#3b82f6';
-    const bgColorSecondary = isOilVessel ? '#dc2626' : '#2563eb';
-    const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.6)' : 'rgba(59, 130, 246, 0.6)';
-
+    if (lowerType.includes('crude')) {
+      vesselTypeClass = 'vessel-type-crude';
+    } else if (lowerType.includes('product')) {
+      vesselTypeClass = 'vessel-type-products';
+    } else if (lowerType.includes('lng')) {
+      vesselTypeClass = 'vessel-type-lng';
+    } else if (lowerType.includes('lpg')) {
+      vesselTypeClass = 'vessel-type-lpg';
+    } else if (lowerType.includes('chemical')) {
+      vesselTypeClass = 'vessel-type-chemical';
+    }
+    
+    // Ship-shaped icon that looks like a tanker from above (exact same as vessel detail page)
+    const shipShape = `
+      <path d="M3,14 L6,7 L18,7 L21,14 L12,18 L3,14 Z" />
+    `;
+    
     const rotation = vessel.heading || vessel.course || 0;
-    const isMoving = vessel.speed && vessel.speed > 0.5;
-
-    return L.divIcon({
-      className: 'vessel-marker-enhanced',
-      html: `
-        <div style="
-          background: linear-gradient(135deg, ${bgColor}, ${bgColorSecondary});
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          border: 4px solid white;
-          box-shadow: 
-            0 8px 16px ${shadowColor}, 
-            0 4px 8px rgba(0,0,0,0.3),
-            inset 0 2px 4px rgba(255,255,255,0.3);
-          position: relative;
-          transform: rotate(${rotation}deg) scale(1);
-          transition: all 0.3s ease;
-          cursor: pointer;
-          ${isMoving ? 'animation: pulse 2s infinite;' : ''}
-        ">
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-${rotation}deg);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-          ">🚢</div>
-          <div style="
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 12px;
-            height: 12px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          "></div>
-          ${vessel.speed ? `<div style="
-            position: absolute;
-            bottom: -18px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-${rotation}deg);
-            font-size: 10px;
-            font-weight: bold;
-            color: white;
-            background: rgba(0,0,0,0.7);
-            padding: 2px 4px;
-            border-radius: 4px;
-            white-space: nowrap;
-          ">${vessel.speed.toFixed(1)}kt</div>` : ''}
+    
+    // Create professional vessel icon exactly like vessel detail page
+    const iconHtml = `
+      <div class="vessel-marker ${vesselTypeClass}">
+        <div class="vessel-icon" style="transform: rotate(${rotation}deg);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            ${shipShape}
+          </svg>
         </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
+        <div class="vessel-label">${vessel.name}</div>
+        ${vessel.speed ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
+      </div>
+    `;
+    
+    return L.divIcon({
+      className: `custom-vessel-icon`,
+      html: iconHtml,
+      iconSize: [60, 60],
+      iconAnchor: [30, 30],
     });
   };
 

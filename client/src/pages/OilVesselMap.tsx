@@ -23,44 +23,46 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Create ship-shaped vessel icon from vessel detail page
-const createVesselIcon = (vesselType: string) => {
-  const isOilVessel = vesselType?.toLowerCase().includes('tanker') || 
-                     vesselType?.toLowerCase().includes('oil') || 
-                     vesselType?.toLowerCase().includes('crude');
+// Create exact same vessel icon as vessel detail page
+const createVesselIcon = (vesselType: string, vesselName: string) => {
+  // Determine vessel type class for styling (same as vessel detail page)
+  let vesselTypeClass = 'vessel-type-default';
+  const lowerType = vesselType?.toLowerCase() || '';
   
-  // Colors based on vessel type
-  const fillColor = isOilVessel ? '#ef4444' : '#3b82f6';
-  const strokeColor = '#ffffff';
+  if (lowerType.includes('crude')) {
+    vesselTypeClass = 'vessel-type-crude';
+  } else if (lowerType.includes('product')) {
+    vesselTypeClass = 'vessel-type-products';
+  } else if (lowerType.includes('lng')) {
+    vesselTypeClass = 'vessel-type-lng';
+  } else if (lowerType.includes('lpg')) {
+    vesselTypeClass = 'vessel-type-lpg';
+  } else if (lowerType.includes('chemical')) {
+    vesselTypeClass = 'vessel-type-chemical';
+  }
   
-  // Ship-shaped icon that looks like a tanker from above (same as vessel detail page)
+  // Ship-shaped icon that looks like a tanker from above (exact same as vessel detail page)
   const shipShape = `
     <path d="M3,14 L6,7 L18,7 L21,14 L12,18 L3,14 Z" />
   `;
   
-  return L.divIcon({
-    html: `
-      <div style="
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-      ">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" style="
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        ">
-          <path d="M3,14 L6,7 L18,7 L21,14 L12,18 L3,14 Z" 
-                fill="${fillColor}" 
-                stroke="${strokeColor}" 
-                stroke-width="1.5"/>
+  // Create professional vessel icon exactly like vessel detail page
+  const iconHtml = `
+    <div class="vessel-marker ${vesselTypeClass}">
+      <div class="vessel-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          ${shipShape}
         </svg>
       </div>
-    `,
-    className: 'vessel-marker-ship',
-    iconSize: [48, 48],
-    iconAnchor: [24, 24]
+      <div class="vessel-label">${vesselName}</div>
+    </div>
+  `;
+  
+  return L.divIcon({
+    className: `custom-vessel-icon`,
+    html: iconHtml,
+    iconSize: [60, 60],
+    iconAnchor: [30, 30],
   });
 };
 
@@ -711,7 +713,7 @@ export default function OilVesselMap() {
               <Marker
                 key={vessel.id}
                 position={[lat, lng]}
-                icon={createVesselIcon(vessel.vesselType || '')}
+                icon={createVesselIcon(vessel.vesselType || '', vessel.name)}
               >
                 <Popup>
                   <div className="p-2 min-w-[200px]">

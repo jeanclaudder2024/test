@@ -923,6 +923,95 @@
       transform: scale(1);
       filter: brightness(1);
     }
+  }
+  
+  /* Professional vessel marker styles from vessel detail page */
+  .vessel-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1000;
+  }
+  
+  .vessel-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    border: 2px solid white;
+    transition: all 0.3s ease;
+  }
+  
+  .vessel-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+  }
+  
+  .vessel-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+    stroke: white;
+    stroke-width: 0.5;
+  }
+  
+  .vessel-label {
+    margin-top: 4px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .vessel-speed {
+    margin-top: 2px;
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Vessel type styling */
+  .vessel-type-crude .vessel-icon {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  }
+  
+  .vessel-type-products .vessel-icon {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+  }
+  
+  .vessel-type-lng .vessel-icon {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  }
+  
+  .vessel-type-lpg .vessel-icon {
+    background: linear-gradient(135deg, #ea580c, #dc2626);
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+  }
+  
+  .vessel-type-chemical .vessel-icon {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.4);
+  }
     50% {
       transform: scale(1.1);
       filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
@@ -965,4 +1054,3 @@
       stroke-dashoffset: -1000;
     }
   }
-}
