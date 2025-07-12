@@ -3,8 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, LayerGroup, ZoomControl, Circle
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -204,10 +204,10 @@ export default function AdvancedMaritimeMap() {
   }, [vesselData]);
 
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery<any>({
-    queryKey: ['/api/ports'],
+    queryKey: ['/api/admin/ports'],
     staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: true
+    enabled: isAuthenticated
   });
 
   const ports = useMemo(() => {
@@ -233,10 +233,10 @@ export default function AdvancedMaritimeMap() {
   }, [portsData]);
 
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery<any>({
-    queryKey: ['/api/refineries'],
+    queryKey: ['/api/admin/refineries'],
     staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: true
+    enabled: isAuthenticated
   });
 
   const refineries = useMemo(() => {
@@ -543,6 +543,28 @@ export default function AdvancedMaritimeMap() {
             <p className="text-gray-600">Please log in to access the advanced maritime intelligence features.</p>
             <Button onClick={() => window.location.href = '/login'} className="w-full">
               Login to Access Map
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show login message for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <Card className="p-8 max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="text-blue-600 flex items-center justify-center">
+              <MapIcon className="w-8 h-8 mr-2" />
+              Advanced Maritime Map
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-600">Please log in to view advanced maritime tracking data.</p>
+            <Button onClick={() => window.location.href = '/login'} className="w-full">
+              Login to View Map
             </Button>
           </CardContent>
         </Card>
