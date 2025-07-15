@@ -679,6 +679,15 @@ Changelog:
   * **Dashboard Alert System**: Added broker dashboard notifications showing count of rejected steps requiring attention with direct navigation to step management
   * **Manage Steps Button**: Added blue "Manage Steps" button to deal cards that opens selected deal and switches to steps tab automatically
   * **Professional UI Enhancements**: Added visual status indicators, hover effects, and improved layout for better user experience with rejection handling workflow
+- July 15, 2025. **CRITICAL DATABASE SCHEMA FIX: Complete Broker Transaction Documents System**:
+  * **Database Schema Issues Resolved**: Fixed missing columns in transaction_documents table (document_name, file_path, file_size, file_type)
+  * **Transaction Steps Table**: Created comprehensive transaction_steps table with 8-step CIF-ASWP workflow integration
+  * **Deal Messages System**: Implemented complete deal_messages table for broker-admin communication
+  * **Document Tracking Enhancement**: Added getDealDocuments API endpoint and storage method for step-specific document retrieval
+  * **UI Document Display**: Enhanced TransactionProgress component to show uploaded documents with download capabilities
+  * **Database Migration Files**: Created BROKER_TRANSACTION_DOCUMENTS_SCHEMA_FIX.sql and QUICK_DATABASE_FIX.sql for immediate deployment
+  * **Production Ready**: Complete database schema now supports full document tracking, messaging, and 8-step transaction workflow
+  * **DEPLOYMENT REQUIRED**: Database must be updated using QUICK_DATABASE_FIX.sql in Supabase SQL Editor before full functionality
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
