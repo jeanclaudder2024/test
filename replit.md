@@ -671,6 +671,16 @@ Changelog:
   * **Database Schema Simplification**: Created SIMPLE_BROKER_DEALS_SCHEMA.sql without foreign key constraints to avoid dependency issues
   * **Manual Database Setup**: Provided clean SQL schema file for direct Supabase SQL Editor execution without "column does not exist" errors
   * **Production Ready**: Broker deals creation endpoint now handles proper data type conversion for all numeric and integer fields
+- July 15, 2025. **COMPLETE STEP MANAGEMENT SYSTEM INTEGRATION**:
+  * **Step Management Component**: Created simplified StepManagement.tsx with clean list view showing 8-step CIF-ASWP transaction workflow
+  * **No Tabs Interface**: Replaced complex tab system with simple card-based step list per user request
+  * **Individual Step Cards**: Each step displays status, description, submission dates, and action buttons
+  * **Document Upload System**: Integrated document upload dialogs for each transaction step with file validation
+  * **Messaging System**: Added step-specific messaging functionality to communicate with admin about each step
+  * **API Endpoints Complete**: Added transaction step endpoints, document upload, and message sending capabilities
+  * **Storage Methods**: Implemented complete database methods for transaction steps, documents, and messages
+  * **Expandable Documents**: Added toggle view for step documents with upload/download functionality
+  * **Status Tracking**: Color-coded status badges and icons for pending, submitted, approved, rejected steps
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
