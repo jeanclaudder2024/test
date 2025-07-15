@@ -359,8 +359,8 @@ export default function VesselDetail() {
       commissionAmount: null,
       originPort: vessel.loadingPort || (vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'),
       destinationPort: vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown',
-      departureDate: vessel.estimatedDeparture || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      arrivalDate: vessel.estimatedArrival || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      departureDate: vessel.estimatedDeparture ? new Date(vessel.estimatedDeparture) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      arrivalDate: vessel.estimatedArrival ? new Date(vessel.estimatedArrival) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       progressPercentage: 0,
       completionDate: null,
       notes: `Deal request from vessel ${vessel.name} (${vessel.imo}). Route: ${vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'} to ${vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown'}`
