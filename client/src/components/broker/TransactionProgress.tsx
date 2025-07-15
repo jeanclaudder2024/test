@@ -33,12 +33,13 @@ interface TransactionStep {
   stepNumber: number;
   stepName: string;
   stepDescription: string;
-  requiredDocuments: string[];
+  requiredDocuments?: string[];
   status: 'pending' | 'approved' | 'refused' | 'cancelled';
   submittedAt?: Date;
   reviewedAt?: Date;
   adminNotes?: string;
   adminId?: number;
+  notes?: string;
 }
 
 interface DealMessage {
