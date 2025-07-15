@@ -1950,30 +1950,82 @@ export class DatabaseStorage implements IStorage {
 
   async getBrokerDealMessages(brokerId: number): Promise<any[]> {
     try {
-      // Use raw SQL to handle joins with aliases
+      // Use raw SQL to handle joins with aliases - using recipient_id and message_content
       const messages = await db.execute(sql`
         SELECT 
           dm.id,
           dm.deal_id as "dealId",
           dm.sender_id as "senderId",
-          dm.receiver_id as "receiverId",
-          dm.message,
+          dm.recipient_id as "receiverId",
+          dm.message_content as "message",
           dm.is_read as "isRead",
-          dm.created_at as "createdAt",
+          dm.sent_at as "createdAt",
           CONCAT(sender.first_name, ' ', sender.last_name) as "senderName",
           CONCAT(receiver.first_name, ' ', receiver.last_name) as "receiverName",
           bd.deal_title as "dealTitle"
         FROM deal_messages dm
         LEFT JOIN users sender ON dm.sender_id = sender.id
-        LEFT JOIN users receiver ON dm.receiver_id = receiver.id
+        LEFT JOIN users receiver ON dm.recipient_id = receiver.id
         LEFT JOIN broker_deals bd ON dm.deal_id = bd.id
         WHERE bd.broker_id = ${brokerId}
-        ORDER BY dm.created_at DESC
+        ORDER BY dm.sent_at DESC
       `);
       
       return messages.rows || [];
     } catch (error) {
       console.error('Error fetching broker deal messages:', error);
+      return [];
+    }
+  }
+
+  async createDealMessage(messageData: { dealId: number; senderId: number; receiverId: number; message: string }): Promise<any> {
+    try {
+      // Use the correct column names for the actual database schema
+      const result = await db.execute(sql`
+        INSERT INTO deal_messages (deal_id, sender_id, recipient_id, message_content, is_read, sent_at)
+        VALUES (${messageData.dealId}, ${messageData.senderId}, ${messageData.receiverId}, ${messageData.message}, false, NOW())
+        RETURNING id, deal_id as "dealId", sender_id as "senderId", recipient_id as "receiverId", message_content as "message", is_read as "isRead", sent_at as "createdAt"
+      `);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating deal message:', error);
+      throw error;
+    }
+  }
+
+  async getBrokerDocuments(brokerId: number): Promise<any[]> {
+    try {
+      const documents = await db.execute(sql`
+        SELECT 
+          bd.id,
+          bd.broker_id as "brokerId",
+          bd.deal_id as "dealId",
+          bd.document_name as "documentName",
+          bd.file_name as "fileName",
+          bd.original_name as "originalName",
+          bd.file_type as "fileType",
+          bd.file_size as "fileSize",
+          bd.file_path as "filePath",
+          bd.description,
+          bd.uploaded_by as "uploadedBy",
+          bd.download_count as "downloadCount",
+          bd.is_public as "isPublic",
+          bd.tags,
+          bd.created_at as "uploadedAt",
+          bd.updated_at as "updatedAt",
+          CONCAT(u.first_name, ' ', u.last_name) as "uploaderName",
+          brd.deal_title as "dealTitle"
+        FROM broker_documents bd
+        LEFT JOIN users u ON bd.uploaded_by = u.id
+        LEFT JOIN broker_deals brd ON bd.deal_id = brd.id
+        WHERE bd.broker_id = ${brokerId}
+        ORDER BY bd.created_at DESC
+      `);
+      
+      return documents.rows || [];
+    } catch (error) {
+      console.error('Error fetching broker documents:', error);
       return [];
     }
   }
@@ -3280,23 +3332,23 @@ export class DatabaseStorage implements IStorage {
 
   async getDealMessages(dealId: number): Promise<any[]> {
     try {
-      // Use raw SQL to handle joins with aliases
+      // Use raw SQL to handle joins with aliases - using recipient_id and message_content
       const messages = await db.execute(sql`
         SELECT 
           dm.id,
           dm.deal_id as "dealId",
           dm.sender_id as "senderId",
-          dm.receiver_id as "receiverId",
-          dm.message,
+          dm.recipient_id as "receiverId",
+          dm.message_content as "message",
           dm.is_read as "isRead",
-          dm.created_at as "createdAt",
+          dm.sent_at as "createdAt",
           CONCAT(sender.first_name, ' ', sender.last_name) as "senderName",
           CONCAT(receiver.first_name, ' ', receiver.last_name) as "receiverName"
         FROM deal_messages dm
         LEFT JOIN users sender ON dm.sender_id = sender.id
-        LEFT JOIN users receiver ON dm.receiver_id = receiver.id
+        LEFT JOIN users receiver ON dm.recipient_id = receiver.id
         WHERE dm.deal_id = ${dealId}
-        ORDER BY dm.created_at
+        ORDER BY dm.sent_at
       `);
       
       return messages.rows || [];

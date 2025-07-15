@@ -240,6 +240,54 @@ export function registerBrokerRoutes(app: Express) {
     }
   });
 
+  // Admin endpoints for broker management
+  
+  // Get broker documents for admin
+  app.get('/api/admin/brokers/:brokerId/documents', authenticateToken, async (req, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      const documents = await storage.getBrokerDocuments(brokerId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching broker documents:', error);
+      res.status(500).json({ error: 'Failed to fetch broker documents' });
+    }
+  });
+
+  // Get broker messages for admin
+  app.get('/api/admin/brokers/:brokerId/messages', authenticateToken, async (req, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      const messages = await storage.getBrokerDealMessages(brokerId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching broker messages:', error);
+      res.status(500).json({ error: 'Failed to fetch broker messages' });
+    }
+  });
+
+  // Send message to broker from admin
+  app.post('/api/admin/brokers/:brokerId/messages', authenticateToken, async (req, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      const adminId = req.user.id;
+      const { dealId, message } = req.body;
+
+      const messageData = {
+        dealId: dealId || null,
+        senderId: adminId,
+        receiverId: brokerId,
+        message: message
+      };
+
+      const newMessage = await storage.createDealMessage(messageData);
+      res.json(newMessage);
+    } catch (error) {
+      console.error('Error sending message to broker:', error);
+      res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
+
   // Generate sample data for broker
   app.post('/api/broker/generate-sample-data', authenticateToken, async (req, res) => {
     try {
