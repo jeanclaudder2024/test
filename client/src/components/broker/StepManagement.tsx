@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +67,7 @@ interface StepManagementProps {
 }
 
 export function StepManagement({ selectedDeal, onBackToDashboard }: StepManagementProps) {
-  const [activeStep, setActiveStep] = useState<number>(1);
+  const [activeStep, setActiveStep] = useState<number>(0);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [stepNote, setStepNote] = useState('');
   const [messageText, setMessageText] = useState('');
@@ -91,6 +91,13 @@ export function StepManagement({ selectedDeal, onBackToDashboard }: StepManageme
       return data;
     }
   });
+
+  // Auto-select first step when steps are loaded
+  useEffect(() => {
+    if (steps.length > 0 && activeStep === 0) {
+      setActiveStep(steps[0].id);
+    }
+  }, [steps, activeStep]);
 
   // Fetch documents for current step
   const { data: stepDocuments = [] } = useQuery<StepDocument[]>({
