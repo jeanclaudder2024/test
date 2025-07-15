@@ -341,25 +341,29 @@ export default function VesselDetail() {
     if (!vessel) return;
 
     const dealData = {
-      title: `${vessel.name} - ${vessel.cargoType || 'Oil'} Deal`,
-      description: `Maritime deal for vessel ${vessel.name} (${vessel.imo}) carrying ${vessel.cargoType || 'Oil'} from ${vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'} to ${vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown'}`,
+      brokerId: undefined, // Will be set by the server
+      sellerCompanyId: null, // Optional field
+      buyerCompanyId: null, // Optional field
       vesselId: vessel.id,
-      vesselName: vessel.name,
-      oilType: vessel.oilType || vessel.cargoType || 'Crude Oil',
+      dealTitle: `${vessel.name} - ${vessel.cargoType || 'Oil'} Deal`,
+      dealDescription: `Maritime deal for vessel ${vessel.name} (${vessel.imo}) carrying ${vessel.cargoType || 'Oil'} from ${vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'} to ${vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown'}`,
+      cargoType: vessel.oilType || vessel.cargoType || 'Crude Oil',
       quantity: vessel.quantity || vessel.cargoCapacity?.toString() || '50000',
-      dealValue: vessel.dealValue || '50000000',
-      price: vessel.price || '75.00',
-      marketPrice: vessel.marketPrice || '77.50',
-      sourceCompany: vessel.sourceCompany || vessel.sellerName || 'Unknown Company',
-      targetRefinery: vessel.targetRefinery || 'Unknown Refinery',
-      loadingPort: vessel.loadingPort || (vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'),
-      destinationPort: vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown',
-      shippingType: vessel.shippingType || 'FOB',
-      routeDistance: vessel.routeDistance || '5000',
-      dealCode: vessel.dealCode || 'DEAL-00923',
+      quantityUnit: 'MT',
+      pricePerUnit: vessel.price || '75.00',
+      totalValue: vessel.dealValue || '50000000',
+      currency: 'USD',
       status: 'pending',
-      requestedAmount: vessel.dealValue || '50000000',
-      deliveryDate: vessel.estimatedArrival || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      priority: 'medium',
+      commissionRate: '0.0150',
+      commissionAmount: null,
+      originPort: vessel.loadingPort || (vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'),
+      destinationPort: vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown',
+      departureDate: vessel.estimatedDeparture || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      arrivalDate: vessel.estimatedArrival || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      progressPercentage: 0,
+      completionDate: null,
+      notes: `Deal request from vessel ${vessel.name} (${vessel.imo}). Route: ${vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'} to ${vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown'}`
     };
 
     createBrokerDealMutation.mutate(dealData);
