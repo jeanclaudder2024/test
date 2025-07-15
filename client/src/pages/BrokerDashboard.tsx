@@ -452,6 +452,17 @@ export default function BrokerDashboard() {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            setSelectedDeal(deal);
+                            setActiveTab('steps');
+                          }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Open Steps
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
