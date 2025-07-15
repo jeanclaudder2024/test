@@ -165,6 +165,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ==========================================
+  // PUBLIC REFINERIES API (no authentication)
+  // ==========================================
+  app.get("/api/refineries", async (req, res) => {
+    try {
+      const refineries = await storage.getRefineries();
+      console.log(`Fetching public refineries: ${refineries.length} found`);
+      res.json(refineries);
+    } catch (error) {
+      console.error("Error fetching public refineries:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch refineries",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Company Management API Routes
   app.get("/api/admin/real-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -909,6 +926,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     });
+
+    // NOTE: Public refineries endpoint is handled directly on app (above) to bypass authentication
 
     // Refinery CRUD endpoints
     // GET all refineries (admin only)

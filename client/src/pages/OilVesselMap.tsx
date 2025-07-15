@@ -167,13 +167,15 @@ export default function OilVesselMap() {
   });
   const ports = Array.isArray(portsData) ? portsData : (portsData?.ports || []);
 
-  // Fetch refineries data with error handling - use public endpoint
+  // Fetch refineries data with error handling - use public endpoint (no auth needed)
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery({
     queryKey: ['/api/refineries'],
-    enabled: isAuthenticated,
+    enabled: true, // Always enabled - using public endpoint
     retry: 1
   });
   const refineries = Array.isArray(refineriesData) ? refineriesData : [];
+  
+
 
   // Fetch oil types with error handling - use public endpoint
   const { data: oilTypesData, isLoading: oilTypesLoading, error: oilTypesError } = useQuery({
@@ -709,7 +711,9 @@ export default function OilVesselMap() {
             const lng = parseFloat(refinery.longitude?.toString() || '0');
             
             // Skip refineries with invalid coordinates
-            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return null;
+            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+              return null;
+            }
             
             return (
               <Marker

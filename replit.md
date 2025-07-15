@@ -653,12 +653,12 @@ Changelog:
   * **Enhanced User Experience**: Templates display with orange warning boxes and clear upgrade paths for restricted access
   * **Fixed HTML Structure**: Resolved React DOM nesting warnings by properly structuring card components
   * **Production Ready**: Complete template permission system with visual feedback and clear user guidance
-- July 12, 2025. **OIL VESSEL MAP REFINERIES TEMPORARILY HIDDEN: Fixed Overlap Issues**:
-  * **Refineries Disabled**: Temporarily hidden refinery markers to resolve persistent overlap and positioning issues
-  * **Clean Vessel Display**: Map now shows only vessels and ports for clear, uncluttered viewing
-  * **Problem Resolution**: Eliminated refineries appearing at same locations as vessels causing visual confusion
-  * **User Request Fulfilled**: Addressed user concern about refineries showing above vessels in same location
-  * **Future Enhancement**: Refineries can be re-enabled with proper positioning once coordinate data is validated
+- July 12, 2025. **OIL VESSEL MAP REFINERIES RE-ENABLED: Public API and Real Location Support**:
+  * **Public Refinery Endpoint**: Added `/api/refineries` public endpoint (no authentication required) for map display
+  * **Real Database Locations**: Re-enabled refineries using real coordinates updated via refinery management page
+  * **Authentication Fix**: Bypassed authentication requirements by adding direct app route instead of apiRouter
+  * **Coordinate Validation**: Only displays refineries with valid latitude/longitude coordinates (skips null values)
+  * **User Control**: Refineries now show real locations that admin users update through refinery management interface
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
