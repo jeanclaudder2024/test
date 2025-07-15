@@ -96,27 +96,28 @@ const createPortIcon = () => {
 const createRefineryIcon = () => {
   return L.divIcon({
     html: `<div style="
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4), 0 2px 4px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      width: 14px;
+      height: 14px;
+      border-radius: 20%;
+      border: 2px solid white;
+      box-shadow: 0 3px 6px rgba(220, 38, 38, 0.5), 0 1px 3px rgba(0,0,0,0.3);
       position: relative;
+      transform: rotate(45deg);
     ">
       <div style="
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%) rotate(-45deg);
         color: white;
-        font-size: 8px;
+        font-size: 7px;
         font-weight: bold;
-      ">🏭</div>
+      ">⚡</div>
     </div>`,
     className: 'refinery-marker',
-    iconSize: [22, 22],
-    iconAnchor: [11, 11]
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
   });
 };
 
@@ -703,16 +704,20 @@ export default function OilVesselMap() {
           </LayersControl>
           
           {/* Refinery Markers - Rendered First (Bottom Layer) */}
-          {refineries.map((refinery: any) => {
+          {refineries.map((refinery: any, index: number) => {
             const lat = parseFloat(refinery.latitude?.toString() || '0');
             const lng = parseFloat(refinery.longitude?.toString() || '0');
             
-            if (isNaN(lat) || isNaN(lng)) return null;
+            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return null;
+            
+            // Add small offset to prevent exact overlap with vessels
+            const offsetLat = lat + (index * 0.001);
+            const offsetLng = lng + (index * 0.001);
             
             return (
               <Marker
                 key={`refinery-${refinery.id}`}
-                position={[lat, lng]}
+                position={[offsetLat, offsetLng]}
                 icon={createRefineryIcon()}
                 zIndexOffset={-1000}
               >
