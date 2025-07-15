@@ -75,6 +75,19 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
   const { data: steps = [], isLoading: stepsLoading, refetch: refetchSteps } = useQuery<TransactionStep[]>({
     queryKey: ['/api/broker-deals', selectedDeal?.id, 'steps'],
     enabled: !!selectedDeal?.id,
+    queryFn: async () => {
+      const response = await fetch(`/api/broker-deals/${selectedDeal?.id}/steps`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch steps');
+      }
+      const data = await response.json();
+      console.log('Fetched steps:', data);
+      return data;
+    }
   });
 
   // Fetch documents for current step
@@ -227,6 +240,11 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
       </Card>
     );
   }
+
+  // Debug logging
+  console.log('Selected Deal:', selectedDeal);
+  console.log('Steps data:', steps);
+  console.log('Steps loading:', stepsLoading);
 
   if (stepsLoading) {
     return (
