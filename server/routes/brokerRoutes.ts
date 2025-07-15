@@ -48,12 +48,33 @@ export function registerBrokerRoutes(app: Express) {
   app.post('/api/broker/deals', authenticateToken, async (req, res) => {
     try {
       const userId = req.user.id;
+      
+      // Prepare data matching the database schema
       const dealData = {
-        ...req.body,
         brokerId: userId,
-        progress: 0,
-        startDate: new Date(),
-        documentsCount: 0
+        sellerCompanyId: req.body.sellerCompanyId || null,
+        buyerCompanyId: req.body.buyerCompanyId || null,
+        vesselId: req.body.vesselId || null,
+        dealTitle: req.body.dealTitle,
+        dealDescription: req.body.dealDescription,
+        cargoType: req.body.cargoType,
+        quantity: req.body.quantity,
+        quantityUnit: req.body.quantityUnit || 'MT',
+        pricePerUnit: req.body.pricePerUnit,
+        totalValue: req.body.totalValue,
+        currency: req.body.currency || 'USD',
+        status: req.body.status || 'pending',
+        priority: req.body.priority || 'medium',
+        commissionRate: req.body.commissionRate || '0.0150',
+        commissionAmount: req.body.commissionAmount || null,
+        originPort: req.body.originPort,
+        destinationPort: req.body.destinationPort,
+        // Convert date strings to Date objects if they exist
+        departureDate: req.body.departureDate ? new Date(req.body.departureDate) : null,
+        arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : null,
+        progressPercentage: req.body.progressPercentage || 0,
+        completionDate: req.body.completionDate ? new Date(req.body.completionDate) : null,
+        notes: req.body.notes || null
       };
       
       const deal = await storage.createBrokerDeal(dealData);
