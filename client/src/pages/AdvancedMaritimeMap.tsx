@@ -581,14 +581,20 @@ export default function AdvancedMaritimeMap() {
   }
 
   return (
-    <div className="h-screen w-full relative">
+    <div className="h-screen w-full relative bg-blue-600">
       {/* Main Map Container */}
       <MapContainer
         ref={mapRef}
         center={[20, 0]}
         zoom={3}
+        minZoom={2}
+        maxZoom={18}
         className="h-full w-full z-0"
         zoomControl={false}
+        style={{ backgroundColor: '#1e40af' }}
+        worldCopyJump={true}
+        maxBounds={[[-90, -180], [90, 180]]}
+        maxBoundsViscosity={1.0}
       >
         {/* Base map layers */}
         <TileLayer
