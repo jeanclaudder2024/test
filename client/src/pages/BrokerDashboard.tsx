@@ -484,13 +484,16 @@ export default function BrokerDashboard() {
                         <Button 
                           size="sm" 
                           className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            console.log('Setting selected deal:', deal);
                             setSelectedDeal(deal);
+                            console.log('Switching to steps tab');
                             setActiveTab('steps');
                           }}
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Manage Steps
+                          View Steps
                         </Button>
                       </div>
                     </CardContent>
