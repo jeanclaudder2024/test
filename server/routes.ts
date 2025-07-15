@@ -14764,6 +14764,40 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // Download document endpoint
+  app.get("/api/documents/:id/download", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const docId = parseInt(req.params.id);
+      
+      if (isNaN(docId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+
+      const document = await storage.getDocumentById(docId);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Disposition', `attachment; filename="${document.fileName}"`);
+      res.setHeader('Content-Type', document.fileType || 'application/octet-stream');
+      
+      // For now, return document info since we don't have file storage implemented
+      res.json({
+        id: document.id,
+        fileName: document.fileName,
+        fileType: document.fileType,
+        message: "Document download would start here"
+      });
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      res.status(500).json({ 
+        message: "Failed to download document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Send deal message
   app.post("/api/broker-deals/:dealId/messages", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {

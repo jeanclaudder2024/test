@@ -389,6 +389,16 @@ export default function TransactionProgress({ dealId, currentUserRole, currentUs
                         </div>
                       )}
 
+                      {/* Broker Notes */}
+                      {step.brokerNotes && (
+                        <div className="mb-3">
+                          <h5 className="font-medium text-sm text-blue-700 mb-1">Broker Notes:</h5>
+                          <div className="bg-gray-50 border border-gray-200 rounded p-2 text-sm">
+                            {step.brokerNotes}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Admin Notes (if any) */}
                       {step.adminNotes && (
                         <div className="mb-3">
@@ -400,7 +410,7 @@ export default function TransactionProgress({ dealId, currentUserRole, currentUs
                       )}
 
                       {/* No submissions message */}
-                      {!step.notes && !step.submittedAt && stepDocuments.filter((doc: any) => doc.stepId === step.id).length === 0 && (
+                      {!step.brokerNotes && !step.submittedAt && stepDocuments.filter((doc: any) => doc.stepId === step.id).length === 0 && (
                         <div className="text-center py-4 text-gray-500">
                           <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                           <p className="text-sm">No submissions yet for this step</p>
