@@ -30,6 +30,7 @@ import {
   Fuel,
   Package,
   ChevronRight,
+  ChevronLeft,
   Eye,
   EyeOff,
   Satellite,
@@ -41,7 +42,8 @@ import {
   Gauge,
   Route,
   Timer,
-  TrendingUp
+  TrendingUp,
+  Settings
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -157,6 +159,7 @@ export default function AdvancedMaritimeMap() {
   const [selectedItemType, setSelectedItemType] = useState<'vessel' | 'port' | 'refinery' | null>(null);
   const [filterRadius, setFilterRadius] = useState(0);
   const [animationSpeed, setAnimationSpeed] = useState(1);
+  const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
   const { toast } = useToast();
   const mapRef = useRef<L.Map | null>(null);
 
@@ -167,9 +170,10 @@ export default function AdvancedMaritimeMap() {
   // Fetch data using React Query with error handling
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery<any>({
     queryKey: ['/api/vessels/polling'],
-    refetchInterval: realTimeTracking ? 30000 : false,
+    refetchInterval: realTimeTracking ? 60000 : false, // Reduced to 60 seconds for better performance
     retry: 1,
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    staleTime: 30000 // Cache data for 30 seconds
   });
 
   const vessels = useMemo(() => {
@@ -205,9 +209,10 @@ export default function AdvancedMaritimeMap() {
 
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery<any>({
     queryKey: ['/api/ports'],
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // Cache ports for 10 minutes - they don't change often
     retry: 1,
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: false // Don't refetch on window focus for better performance
   });
 
   const ports = useMemo(() => {
@@ -234,9 +239,10 @@ export default function AdvancedMaritimeMap() {
 
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery<any>({
     queryKey: ['/api/refineries'],
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // Cache refineries for 10 minutes - they rarely change
     retry: 1,
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: false // Don't refetch on window focus for better performance
   });
 
   const refineries = useMemo(() => {
@@ -262,7 +268,9 @@ export default function AdvancedMaritimeMap() {
   // Fetch oil types from public endpoint
   const { data: oilTypes = [] } = useQuery({
     queryKey: ['/api/oil-types'],
-    staleTime: 5 * 60 * 1000
+    staleTime: 10 * 60 * 1000, // Cache oil types for 10 minutes
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: false
   });
 
   // Filter vessels based on selected types and search
@@ -716,13 +724,22 @@ export default function AdvancedMaritimeMap() {
 
       {/* Enhanced Control Panel */}
       <div className="absolute top-4 left-4 z-[1000] max-w-sm">
-        <Card className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <MapIconSolid className="h-5 w-5" />
-                Maritime Intelligence Map
-              </span>
+        {!isControlPanelCollapsed ? (
+          <Card className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <MapIconSolid className="h-5 w-5" />
+                  Maritime Intelligence Map
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsControlPanelCollapsed(true)}
+                  className="h-6 w-6 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
               {realTimeTracking && (
                 <Badge variant="default" className="animate-pulse">
                   <Activity className="h-3 w-3 mr-1" />
@@ -970,6 +987,15 @@ export default function AdvancedMaritimeMap() {
             </div>
           </CardContent>
         </Card>
+        ) : (
+          <Button
+            onClick={() => setIsControlPanelCollapsed(false)}
+            className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl border h-12 w-12 p-0"
+            variant="outline"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Loading Overlay */}
