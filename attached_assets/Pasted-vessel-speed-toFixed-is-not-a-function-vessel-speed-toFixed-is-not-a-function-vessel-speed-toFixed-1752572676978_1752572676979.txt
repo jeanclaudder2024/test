@@ -1,0 +1,46 @@
+vessel.speed.toFixed is not a function
+vessel.speed.toFixed is not a function
+vessel.speed.toFixed is not a function
+The above error occurred in the <AdvancedMaritimeMap> component:
+
+    at AdvancedMaritimeMap (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/pages/AdvancedMaritimeMap.tsx:75:35)
+    at Route (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=39b0d388:323:16)
+    at Switch (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=39b0d388:379:17)
+    at PresenceChild (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=39b0d388:7742:24)
+    at AnimatePresence (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=39b0d388:7800:26)
+    at main
+    at div
+    at div
+    at div
+    at MobileLayout (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/ui/mobile-layout.tsx:57:32)
+    at ProtectedRoutes
+    at AuthenticatedApp (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=QKOXARzVbc5aClNap5umY:301:45)
+    at Router (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=QKOXARzVbc5aClNap5umY:381:3)
+    at LanguageProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-language.tsx:268:36)
+    at ThemeProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at QueryClientProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=39b0d388:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+The above error occurred in the <AdvancedMaritimeMap> component:
+
+    at AdvancedMaritimeMap (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/pages/AdvancedMaritimeMap.tsx:75:35)
+    at Route (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=39b0d388:323:16)
+    at Switch (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=39b0d388:379:17)
+    at PresenceChild (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=39b0d388:7742:24)
+    at AnimatePresence (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=39b0d388:7800:26)
+    at main
+    at div
+    at MobileLayout (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/ui/mobile-layout.tsx:57:32)
+    at ProtectedRoutes
+    at AuthenticatedApp (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=QKOXARzVbc5aClNap5umY:301:45)
+    at Router (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=QKOXARzVbc5aClNap5umY:381:3)
+    at LanguageProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-language.tsx:268:36)
+    at ThemeProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at QueryClientProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=39b0d388:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+vessel.speed.toFixed is not a function

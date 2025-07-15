@@ -693,10 +693,10 @@ export default function AdvancedMaritimeMap() {
                           {vessel.status}
                         </Badge>
                       </p>
-                      {vessel.speed !== undefined && (
+                      {vessel.speed !== undefined && typeof vessel.speed === 'number' && (
                         <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
                       )}
-                      {vessel.course !== undefined && (
+                      {vessel.course !== undefined && typeof vessel.course === 'number' && (
                         <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
                       )}
                       {vessel.destinationPort && (
