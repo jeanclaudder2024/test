@@ -369,45 +369,4 @@ export function registerBrokerRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to generate sample data' });
     }
   });
-
-  // Get broker deal steps
-  app.get('/api/broker-deals/:dealId/steps', authenticateToken, async (req, res) => {
-    try {
-      const dealId = parseInt(req.params.dealId);
-      const steps = await storage.getBrokerDealSteps(dealId);
-      res.json(steps);
-    } catch (error) {
-      console.error('Error fetching deal steps:', error);
-      res.status(500).json({ error: 'Failed to fetch deal steps' });
-    }
-  });
-
-  // Submit step documents and update step status
-  app.post('/api/broker-deals/:dealId/steps/:stepId/submit', authenticateToken, async (req, res) => {
-    try {
-      const dealId = parseInt(req.params.dealId);
-      const stepId = parseInt(req.params.stepId);
-      const userId = req.user.id;
-      
-      // Update step status to in_progress
-      await storage.updateTransactionStepStatus(stepId, 'in_progress', userId);
-      
-      res.json({ success: true, message: 'Step submitted successfully' });
-    } catch (error) {
-      console.error('Error submitting step:', error);
-      res.status(500).json({ error: 'Failed to submit step' });
-    }
-  });
-
-  // Get deal messages
-  app.get('/api/broker-deals/:dealId/messages', authenticateToken, async (req, res) => {
-    try {
-      const dealId = parseInt(req.params.dealId);
-      const messages = await storage.getDealMessages(dealId);
-      res.json(messages);
-    } catch (error) {
-      console.error('Error fetching deal messages:', error);
-      res.status(500).json({ error: 'Failed to fetch deal messages' });
-    }
-  });
 }

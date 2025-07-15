@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { BrokerDealDetail } from './BrokerDealDetail';
 
 // Using local types instead of imports from a separate file
 type Deal = {
@@ -1095,15 +1094,6 @@ export function DealManager({ brokerId }: DealManagerProps) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
-
-      {/* Broker Deal Detail Component - Step-by-Step Interface */}
-      {selectedDeal && showDealDetailsDialog && (
-        <BrokerDealDetail
-          dealId={selectedDeal.id}
-          isOpen={showDealDetailsDialog}
-          onClose={() => setShowDealDetailsDialog(false)}
-        />
       )}
     </div>
   );

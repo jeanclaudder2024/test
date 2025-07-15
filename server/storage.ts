@@ -303,12 +303,6 @@ export interface IStorage {
   // Enhanced Dashboard Methods
   getUserSubscription(userId: number): Promise<any>;
   getUserPayments(userId: number): Promise<any[]>;
-
-  // Broker Deal Step Methods
-  getBrokerDealSteps(dealId: number): Promise<any[]>;
-  updateTransactionStepStatus(stepId: number, status: string, userId: number): Promise<any>;
-  getDealMessages(dealId: number): Promise<any[]>;
-  createDealMessage(messageData: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3656,115 +3650,6 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('Error updating broker stats:', error);
-    }
-  }
-
-  // Get broker deal steps
-  async getBrokerDealSteps(dealId: number) {
-    try {
-      const results = await db.execute(sql`
-        SELECT 
-          id,
-          deal_id,
-          step_number,
-          step_name,
-          step_description,
-          status,
-          submitted_at,
-          reviewed_at,
-          reviewed_by,
-          admin_notes
-        FROM transaction_steps
-        WHERE deal_id = ${dealId}
-        ORDER BY step_number
-      `);
-      
-      return results.rows || [];
-    } catch (error) {
-      console.error('Error fetching broker deal steps:', error);
-      return [];
-    }
-  }
-
-  // Update transaction step status
-  async updateTransactionStepStatus(stepId: number, status: string, userId: number) {
-    try {
-      const results = await db.execute(sql`
-        UPDATE transaction_steps 
-        SET 
-          status = ${status},
-          submitted_at = NOW(),
-          reviewed_by = ${userId}
-        WHERE id = ${stepId}
-        RETURNING *
-      `);
-      
-      return results.rows[0];
-    } catch (error) {
-      console.error('Error updating transaction step status:', error);
-      throw error;
-    }
-  }
-
-  // Get deal messages
-  async getDealMessages(dealId: number) {
-    try {
-      const results = await db.execute(sql`
-        SELECT 
-          id,
-          deal_id,
-          sender_id,
-          sender_type,
-          message,
-          created_at,
-          is_read
-        FROM deal_messages
-        WHERE deal_id = ${dealId}
-        ORDER BY created_at
-      `);
-      
-      return results.rows || [];
-    } catch (error) {
-      console.error('Error fetching deal messages:', error);
-      return [];
-    }
-  }
-
-  // Create deal message
-  async createDealMessage(messageData: any) {
-    try {
-      const results = await db.execute(sql`
-        INSERT INTO deal_messages (
-          deal_id,
-          sender_id,
-          sender_type,
-          message,
-          created_at,
-          is_read
-        ) VALUES (
-          ${messageData.dealId},
-          ${messageData.senderId},
-          ${messageData.senderType},
-          ${messageData.message},
-          NOW(),
-          false
-        )
-        RETURNING *
-      `);
-      
-      return results.rows[0];
-    } catch (error) {
-      console.error('Error creating deal message:', error);
-      // Return a mock response if database fails
-      return {
-        id: Date.now(),
-        deal_id: messageData.dealId,
-        sender_id: messageData.senderId,
-        sender_type: messageData.senderType,
-        message: messageData.message,
-        created_at: new Date().toISOString(),
-        is_read: false
-      };
     }
   }
 }
