@@ -653,6 +653,18 @@ Changelog:
   * **Enhanced User Experience**: Templates display with orange warning boxes and clear upgrade paths for restricted access
   * **Fixed HTML Structure**: Resolved React DOM nesting warnings by properly structuring card components
   * **Production Ready**: Complete template permission system with visual feedback and clear user guidance
+- July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
+  * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
+  * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
+  * **Removed Duplicate Markers**: Eliminated duplicate port and refinery marker sections causing rendering conflicts
+  * **Vessels Always Visible**: Vessels now properly appear on top of all other map elements as intended
+  * **Clean Map Display**: Fixed visual hierarchy ensuring vessels are the primary focus with proper layering
+- July 12, 2025. **EXPANDED OIL TYPES SYSTEM: Comprehensive Oil Products for Trading**:
+  * **12 Oil Product Types**: Added complete range including Brent, WTI, Dubai, Oman crude oils, gasoline, diesel, jet fuel, heating oil, naphtha, fuel oil, natural gas, LPG
+  * **Enhanced Filter Categories**: Updated filter system with 6 categories (All, Crude Oil, Natural Gas & LPG, Refined Products, Heavy Products, Heating & Energy)
+  * **Improved Trading Opportunities**: Added 6 comprehensive trading recommendations covering various oil product types
+  * **Smart Filtering Logic**: Enhanced filtering to match oil symbols and names across expanded product categories
+  * **Professional Oil Market Data**: Complete coverage of major oil benchmarks and refined products for comprehensive trading analysis
 - July 12, 2025. **OIL TRADING PRICES SIMPLIFICATION: Removed Complex Charts for Clean Interface**:
   * **Simplified Oil Prices Interface**: Removed all complex recharts components and analysis charts per user request
   * **Created SimpleOilTradingPrices Component**: Built clean, simple version with basic oil price data, trading opportunities, calculator, and market news

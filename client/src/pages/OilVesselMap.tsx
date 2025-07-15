@@ -702,7 +702,101 @@ export default function OilVesselMap() {
             </LayersControl.BaseLayer>
           </LayersControl>
           
-          {/* Vessel Markers */}
+          {/* Refinery Markers - Rendered First (Bottom Layer) */}
+          {refineries.map((refinery: any) => {
+            const lat = parseFloat(refinery.latitude?.toString() || '0');
+            const lng = parseFloat(refinery.longitude?.toString() || '0');
+            
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            return (
+              <Marker
+                key={`refinery-${refinery.id}`}
+                position={[lat, lng]}
+                icon={createRefineryIcon()}
+                zIndexOffset={-1000}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <div className="font-semibold text-lg mb-2">{refinery.name}</div>
+                    
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">Refinery</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Country:</span>
+                        <span className="font-medium">{refinery.country}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Capacity:</span>
+                        <span className="font-medium">{refinery.capacity || 'N/A'}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Position:</span>
+                        <span className="font-mono text-xs">
+                          {lat.toFixed(4)}, {lng.toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+          
+          {/* Port Markers - Middle Layer */}
+          {ports.map((port: any) => {
+            const lat = parseFloat(port.lat?.toString() || '0');
+            const lng = parseFloat(port.lng?.toString() || '0');
+            
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            return (
+              <Marker
+                key={`port-${port.id}`}
+                position={[lat, lng]}
+                icon={createPortIcon()}
+                zIndexOffset={0}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <div className="font-semibold text-lg mb-2">{port.name}</div>
+                    
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">Port</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Country:</span>
+                        <span className="font-medium">{port.country}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Region:</span>
+                        <span className="font-medium">{port.region}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Position:</span>
+                        <span className="font-mono text-xs">
+                          {lat.toFixed(4)}, {lng.toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+          
+          {/* Vessel Markers - Top Layer */}
           {mappableVessels.map((vessel) => {
             const lat = parseFloat(vessel.currentLat?.toString() || '0');
             const lng = parseFloat(vessel.currentLng?.toString() || '0');
@@ -714,6 +808,7 @@ export default function OilVesselMap() {
                 key={vessel.id}
                 position={[lat, lng]}
                 icon={createVesselIcon(vessel.vesselType || '', vessel.name)}
+                zIndexOffset={1000}
               >
                 <Popup>
                   <div className="p-2 min-w-[200px]">
@@ -819,52 +914,7 @@ export default function OilVesselMap() {
             );
           })}
           
-          {/* Port Markers */}
-          {ports.map((port: any) => {
-            const lat = parseFloat(port.lat?.toString() || '0');
-            const lng = parseFloat(port.lng?.toString() || '0');
-            
-            if (isNaN(lat) || isNaN(lng)) return null;
-            
-            return (
-              <Marker
-                key={`port-${port.id}`}
-                position={[lat, lng]}
-                icon={createPortIcon()}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <div className="font-semibold text-lg mb-2">{port.name}</div>
-                    
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Type:</span>
-                        <span className="font-medium">Port</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Country:</span>
-                        <span className="font-medium">{port.country}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Region:</span>
-                        <span className="font-medium">{port.region}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Position:</span>
-                        <span className="font-mono text-xs">
-                          {lat.toFixed(4)}, {lng.toFixed(4)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-          
+
           {/* Vessel Destination Lines */}
           {(showDestinationLines || selectedVesselLines.size > 0) && vessels.map((vessel: any) => {
             // Show line if global toggle is on OR if this specific vessel is selected
@@ -927,51 +977,7 @@ export default function OilVesselMap() {
             );
           })}
 
-          {/* Refinery Markers */}
-          {refineries.map((refinery: any) => {
-            const lat = parseFloat(refinery.latitude?.toString() || '0');
-            const lng = parseFloat(refinery.longitude?.toString() || '0');
-            
-            if (isNaN(lat) || isNaN(lng)) return null;
-            
-            return (
-              <Marker
-                key={`refinery-${refinery.id}`}
-                position={[lat, lng]}
-                icon={createRefineryIcon()}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <div className="font-semibold text-lg mb-2">{refinery.name}</div>
-                    
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Type:</span>
-                        <span className="font-medium">Refinery</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Country:</span>
-                        <span className="font-medium">{refinery.country}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Capacity:</span>
-                        <span className="font-medium">{refinery.capacity || 'N/A'}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Position:</span>
-                        <span className="font-mono text-xs">
-                          {lat.toFixed(4)}, {lng.toFixed(4)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+
 
           {/* Port Zones */}
           {showPortZones && (ports as any[]).map((port: any) => {
