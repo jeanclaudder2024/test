@@ -5513,33 +5513,47 @@ Only use authentic, real-world data for existing refineries.`;
         return res.status(401).json({ message: "User not authenticated" });
       }
       
+      // Helper function to safely convert values to integers
+      const safeParseInt = (value: any): number | null => {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = parseInt(value.toString());
+        return isNaN(parsed) ? null : parsed;
+      };
+
+      // Helper function to safely convert values to strings for decimal fields
+      const safeDecimalString = (value: any, defaultValue: string = '0.00'): string => {
+        if (value === null || value === undefined || value === '') return defaultValue;
+        const num = parseFloat(value.toString());
+        return isNaN(num) ? defaultValue : num.toString();
+      };
+
       // Prepare data matching the Drizzle schema (using camelCase field names)
       const dealData = {
         brokerId: userId,
-        sellerCompanyId: req.body.sellerCompanyId || req.body.sellerId || null,
-        buyerCompanyId: req.body.buyerCompanyId || req.body.buyerId || null,
-        vesselId: req.body.vesselId || null,
+        sellerCompanyId: safeParseInt(req.body.sellerCompanyId || req.body.sellerId),
+        buyerCompanyId: safeParseInt(req.body.buyerCompanyId || req.body.buyerId),
+        vesselId: safeParseInt(req.body.vesselId),
         dealTitle: req.body.dealTitle || req.body.title || 'Untitled Deal',
         dealDescription: req.body.dealDescription || req.body.description || null,
         cargoType: req.body.cargoType || req.body.dealType || 'Oil',
-        quantity: req.body.quantity?.toString() || req.body.volume?.toString() || '0',
+        quantity: safeDecimalString(req.body.quantity || req.body.volume, '0'),
         quantityUnit: req.body.quantityUnit || req.body.volumeUnit || 'MT',
-        pricePerUnit: req.body.pricePerUnit?.toString() || req.body.price?.toString() || '0',
-        totalValue: req.body.totalValue?.toString() || (req.body.price * req.body.volume)?.toString() || '0',
+        pricePerUnit: safeDecimalString(req.body.pricePerUnit || req.body.price, '0'),
+        totalValue: safeDecimalString(req.body.totalValue || (req.body.price * req.body.volume), '0'),
         currency: req.body.currency || 'USD',
         status: req.body.status || 'pending',
         priority: req.body.priority || 'medium',
-        commissionRate: req.body.commissionRate?.toString() || '0.0150',
-        commissionAmount: req.body.commissionAmount?.toString() || null,
+        commissionRate: safeDecimalString(req.body.commissionRate, '0.0150'),
+        commissionAmount: req.body.commissionAmount ? safeDecimalString(req.body.commissionAmount) : null,
         originPort: req.body.originPort || req.body.origin || null,
         destinationPort: req.body.destinationPort || req.body.destination || null,
         // Convert date strings to Date objects if they exist
         departureDate: req.body.departureDate ? new Date(req.body.departureDate) : req.body.estimatedDeparture ? new Date(req.body.estimatedDeparture) : null,
         arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : req.body.estimatedArrival ? new Date(req.body.estimatedArrival) : null,
-        progressPercentage: req.body.progressPercentage || 0,
+        progressPercentage: safeParseInt(req.body.progressPercentage) || 0,
         completionDate: req.body.completionDate ? new Date(req.body.completionDate) : null,
         notes: req.body.notes || null,
-        // Add the required fields for transaction progress tracking
+        // Add the required fields for transaction progress tracking (ensure integers)
         currentStep: 1,
         transactionType: 'CIF-ASWP',
         overallProgress: '0.00'
