@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { storage } from "./storage";
+import { updateRefineryCoordinates } from "./services/refineryCoordinatesfix";
 import authRoutes from "./routes/authRoutes";
 import { registerBrokerRoutes } from "./routes/brokerRoutes";
 import { registerSubscriptionRoutes } from "./routes/subscriptionRoutes";
@@ -1512,31 +1513,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Route to update refinery coordinates with accurate data
-    apiRouter.post("/refineries/update-coordinates", async (req, res) => {
+    // Route to fix refinery coordinates (all showing in same location)
+    apiRouter.post("/refineries/fix-coordinates", async (req, res) => {
       try {
-        console.log("Starting refinery coordinates update process...");
+        console.log("🏭 Starting refinery coordinates fix process...");
         
-        // Update existing refineries with accurate coordinates
-        const updateResult = await updateRefineryCoordinates();
-        console.log("Refinery coordinates updated successfully:", updateResult);
-        
-        // Seed any missing refineries from the accurate dataset
-        const seedResult = await seedMissingRefineries();
-        console.log("Missing refineries added successfully:", seedResult);
+        // Update all refineries with accurate real-world coordinates
+        const updateResult = await updateRefineryCoordinates(storage);
+        console.log("✅ Refinery coordinates fixed successfully:", updateResult);
         
         res.json({
           success: true,
-          message: "Refinery coordinates updated successfully",
+          message: "Refinery coordinates fixed successfully - they should now show in correct locations on map",
           data: {
             updated: updateResult.updated,
-            total: updateResult.total,
-            added: seedResult.added
+            total: updateResult.total
           }
         });
       } catch (error) {
-        console.error("Error updating refinery coordinates:", error);
-        res.status(500).json({ message: "Failed to update refinery coordinates" });
+        console.error("❌ Error fixing refinery coordinates:", error);
+        res.status(500).json({ 
+          success: false,
+          message: "Failed to fix refinery coordinates",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
       }
     });
   }
