@@ -1859,32 +1859,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllBrokerDeals(): Promise<any[]> {
-    try {
-      const deals = await db
-        .select({
-          id: brokerDeals.id,
-          brokerId: brokerDeals.brokerId,
-          title: brokerDeals.title,
-          description: brokerDeals.description,
-          status: brokerDeals.status,
-          requestedAmount: brokerDeals.requestedAmount,
-          oilType: brokerDeals.oilType,
-          quantity: brokerDeals.quantity,
-          deliveryDate: brokerDeals.deliveryDate,
-          createdAt: brokerDeals.createdAt,
-          brokerName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-        })
-        .from(brokerDeals)
-        .leftJoin(users, eq(brokerDeals.brokerId, users.id))
-        .orderBy(desc(brokerDeals.createdAt));
 
-      return deals;
-    } catch (error) {
-      console.error('Error fetching all broker deals:', error);
-      return [];
-    }
-  }
 
   async updateBrokerDealStatus(dealId: number, status: string): Promise<any> {
     try {
@@ -3082,6 +3057,31 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getAllBrokerDeals(): Promise<any[]> {
+    try {
+      const deals = await db.select({
+        id: brokerDeals.id,
+        brokerId: brokerDeals.brokerId,
+        title: brokerDeals.dealTitle,
+        description: brokerDeals.dealDescription,
+        status: brokerDeals.status,
+        requestedAmount: brokerDeals.totalValue,
+        oilType: brokerDeals.cargoType,
+        quantity: brokerDeals.quantity,
+        deliveryDate: brokerDeals.arrivalDate,
+        createdAt: brokerDeals.createdAt,
+        brokerName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`
+      })
+      .from(brokerDeals)
+      .leftJoin(users, eq(brokerDeals.brokerId, users.id))
+      .orderBy(desc(brokerDeals.createdAt));
+      return deals;
+    } catch (error) {
+      console.error('Error fetching all broker deals:', error);
+      return [];
+    }
+  }
+
   async createBrokerDeal(deal: any): Promise<any> {
     try {
       const [newDeal] = await db.insert(brokerDeals).values(deal).returning();
@@ -3237,12 +3237,12 @@ export class DatabaseStorage implements IStorage {
       const cancelledDeals = deals.filter(d => d.status === 'cancelled').length;
       
       const totalValue = deals.reduce((sum, deal) => {
-        const value = parseFloat(deal.dealValue.replace(/[^\d.]/g, '')) || 0;
+        const value = parseFloat(deal.totalValue?.toString().replace(/[^\d.]/g, '') || '0');
         return sum + value;
       }, 0);
       
       const totalCommission = deals.reduce((sum, deal) => {
-        const commission = parseFloat(deal.commissionAmount?.replace(/[^\d.]/g, '') || '0');
+        const commission = parseFloat(deal.commissionAmount?.toString().replace(/[^\d.]/g, '') || '0');
         return sum + commission;
       }, 0);
       
