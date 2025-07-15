@@ -3320,17 +3320,28 @@ export class DatabaseStorage implements IStorage {
         )
       `);
 
-      // Add missing current_step column to broker_deals table
+      // Add missing columns to broker_deals table
       await db.execute(sql`
         ALTER TABLE broker_deals 
-        ADD COLUMN IF NOT EXISTS current_step INTEGER DEFAULT 1 CHECK (current_step BETWEEN 1 AND 8)
+        ADD COLUMN IF NOT EXISTS current_step INTEGER DEFAULT 1 CHECK (current_step BETWEEN 1 AND 8),
+        ADD COLUMN IF NOT EXISTS transaction_type VARCHAR(50) DEFAULT 'CIF-ASWP',
+        ADD COLUMN IF NOT EXISTS buyer_company VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS seller_company VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS contract_value DECIMAL(15,2),
+        ADD COLUMN IF NOT EXISTS commission_rate DECIMAL(5,2) DEFAULT 2.00,
+        ADD COLUMN IF NOT EXISTS transaction_status VARCHAR(50) DEFAULT 'pending',
+        ADD COLUMN IF NOT EXISTS priority_level VARCHAR(20) DEFAULT 'medium'
       `);
 
-      // Update existing deals to have current_step = 1
+      // Update existing deals to have default values
       await db.execute(sql`
         UPDATE broker_deals 
-        SET current_step = 1 
-        WHERE current_step IS NULL
+        SET current_step = COALESCE(current_step, 1),
+            transaction_type = COALESCE(transaction_type, 'CIF-ASWP'),
+            transaction_status = COALESCE(transaction_status, 'pending'),
+            priority_level = COALESCE(priority_level, 'medium'),
+            commission_rate = COALESCE(commission_rate, 2.00)
+        WHERE current_step IS NULL OR transaction_type IS NULL
       `);
 
       console.log('Transaction progress tables ensured');
