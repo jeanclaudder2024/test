@@ -82,11 +82,13 @@ export function CompanyManagement() {
     queryFn: async () => {
       try {
         // Try admin endpoint first
-        return await apiRequest('/api/admin/real-companies');
+        const response = await apiRequest('GET', '/api/admin/real-companies');
+        return await response.json();
       } catch (error) {
         console.log('Admin endpoint failed, trying public endpoint:', error);
         // Fallback to public endpoint
-        return await apiRequest('/api/real-companies');
+        const response = await apiRequest('GET', '/api/real-companies');
+        return await response.json();
       }
     },
     retry: false,
@@ -123,17 +125,13 @@ export function CompanyManagement() {
     mutationFn: async (data: RealCompanyFormData) => {
       try {
         // Try admin endpoint first
-        return await apiRequest('/api/admin/real-companies', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        });
+        const response = await apiRequest('POST', '/api/admin/real-companies', data);
+        return await response.json();
       } catch (error) {
         console.log('Admin endpoint failed, trying public endpoint:', error);
         // Fallback to public endpoint
-        return await apiRequest('/api/real-companies', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        });
+        const response = await apiRequest('POST', '/api/real-companies', data);
+        return await response.json();
       }
     },
     onSuccess: () => {
@@ -159,13 +157,11 @@ export function CompanyManagement() {
   const createFakeCompanyMutation = useMutation({
     mutationFn: async (realCompanyId: number) => {
       const generatedName = generateFakeCompanyName();
-      return apiRequest('/api/admin/fake-companies', {
-        method: 'POST',
-        body: JSON.stringify({
-          realCompanyId,
-          generatedName,
-        }),
+      const response = await apiRequest('POST', '/api/admin/fake-companies', {
+        realCompanyId,
+        generatedName,
       });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
@@ -191,15 +187,13 @@ export function CompanyManagement() {
     mutationFn: async (id: number) => {
       try {
         // Try admin endpoint first
-        return await apiRequest(`/api/admin/real-companies/${id}`, {
-          method: 'DELETE',
-        });
+        const response = await apiRequest('DELETE', `/api/admin/real-companies/${id}`);
+        return await response.json();
       } catch (error) {
         console.log('Admin endpoint failed, trying public endpoint:', error);
         // Fallback to public endpoint
-        return await apiRequest(`/api/real-companies/${id}`, {
-          method: 'DELETE',
-        });
+        const response = await apiRequest('DELETE', `/api/real-companies/${id}`);
+        return await response.json();
       }
     },
     onSuccess: () => {
@@ -222,9 +216,8 @@ export function CompanyManagement() {
   // Delete fake company mutation
   const deleteFakeCompanyMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/fake-companies/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await apiRequest('DELETE', `/api/admin/fake-companies/${id}`);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
@@ -263,17 +256,13 @@ export function CompanyManagement() {
     mutationFn: async ({ id, data }: { id: number; data: RealCompanyFormData }) => {
       try {
         // Try admin endpoint first
-        return await apiRequest(`/api/admin/real-companies/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(data),
-        });
+        const response = await apiRequest('PUT', `/api/admin/real-companies/${id}`, data);
+        return await response.json();
       } catch (error) {
         console.log('Admin endpoint failed, trying public endpoint:', error);
         // Fallback to public endpoint
-        return await apiRequest(`/api/real-companies/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(data),
-        });
+        const response = await apiRequest('PUT', `/api/real-companies/${id}`, data);
+        return await response.json();
       }
     },
     onSuccess: () => {
@@ -299,10 +288,8 @@ export function CompanyManagement() {
   // Edit fake company mutation
   const editFakeCompanyMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: { generatedName: string; realCompanyId: number } }) => {
-      return apiRequest(`/api/admin/fake-companies/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('PUT', `/api/admin/fake-companies/${id}`, data);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
