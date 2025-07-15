@@ -1911,29 +1911,69 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAdminBrokerFiles(): Promise<any[]> {
     try {
-      const files = await db
-        .select({
-          id: adminBrokerFiles.id,
-          brokerId: adminBrokerFiles.brokerId,
-          fileName: adminBrokerFiles.fileName,
-          originalName: adminBrokerFiles.originalName,
-          fileType: adminBrokerFiles.fileType,
-          fileSize: adminBrokerFiles.fileSize,
-          description: adminBrokerFiles.description,
-          category: adminBrokerFiles.category,
-          priority: adminBrokerFiles.priority,
-          isRead: adminBrokerFiles.isRead,
-          readAt: adminBrokerFiles.readAt,
-          createdAt: adminBrokerFiles.createdAt,
-          brokerName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-        })
-        .from(adminBrokerFiles)
-        .leftJoin(users, eq(adminBrokerFiles.brokerId, users.id))
-        .orderBy(desc(adminBrokerFiles.createdAt));
-
-      return files;
+      // For now, return empty array since adminBrokerFiles table doesn't exist
+      // We'll use transaction documents instead
+      return [];
     } catch (error) {
       console.error('Error fetching all admin broker files:', error);
+      return [];
+    }
+  }
+
+  async getBrokerUploadedDocuments(brokerId: number): Promise<any[]> {
+    try {
+      const documents = await db
+        .select({
+          id: transactionDocuments.id,
+          stepId: transactionDocuments.stepId,
+          dealId: transactionDocuments.dealId,
+          fileName: transactionDocuments.fileName,
+          originalName: transactionDocuments.originalName,
+          fileType: transactionDocuments.fileType,
+          fileSize: transactionDocuments.fileSize,
+          uploadedAt: transactionDocuments.uploadedAt,
+          stepName: transactionSteps.stepName,
+          dealTitle: brokerDeals.dealTitle,
+        })
+        .from(transactionDocuments)
+        .leftJoin(transactionSteps, eq(transactionDocuments.stepId, transactionSteps.id))
+        .leftJoin(brokerDeals, eq(transactionDocuments.dealId, brokerDeals.id))
+        .where(eq(brokerDeals.brokerId, brokerId))
+        .orderBy(desc(transactionDocuments.uploadedAt));
+
+      return documents;
+    } catch (error) {
+      console.error('Error fetching broker uploaded documents:', error);
+      return [];
+    }
+  }
+
+  async getBrokerDealMessages(brokerId: number): Promise<any[]> {
+    try {
+      // Use raw SQL to handle joins with aliases
+      const messages = await db.execute(sql`
+        SELECT 
+          dm.id,
+          dm.deal_id as "dealId",
+          dm.sender_id as "senderId",
+          dm.receiver_id as "receiverId",
+          dm.message,
+          dm.is_read as "isRead",
+          dm.created_at as "createdAt",
+          CONCAT(sender.first_name, ' ', sender.last_name) as "senderName",
+          CONCAT(receiver.first_name, ' ', receiver.last_name) as "receiverName",
+          bd.deal_title as "dealTitle"
+        FROM deal_messages dm
+        LEFT JOIN users sender ON dm.sender_id = sender.id
+        LEFT JOIN users receiver ON dm.receiver_id = receiver.id
+        LEFT JOIN broker_deals bd ON dm.deal_id = bd.id
+        WHERE bd.broker_id = ${brokerId}
+        ORDER BY dm.created_at DESC
+      `);
+      
+      return messages.rows || [];
+    } catch (error) {
+      console.error('Error fetching broker deal messages:', error);
       return [];
     }
   }
@@ -3240,22 +3280,26 @@ export class DatabaseStorage implements IStorage {
 
   async getDealMessages(dealId: number): Promise<any[]> {
     try {
-      return await db.select({
-        id: dealMessages.id,
-        dealId: dealMessages.dealId,
-        senderId: dealMessages.senderId,
-        receiverId: dealMessages.receiverId,
-        message: dealMessages.message,
-        isRead: dealMessages.isRead,
-        createdAt: dealMessages.createdAt,
-        senderName: sql<string>`CONCAT(sender.first_name, ' ', sender.last_name)`,
-        receiverName: sql<string>`CONCAT(receiver.first_name, ' ', receiver.last_name)`
-      })
-      .from(dealMessages)
-      .leftJoin(sql`${users} AS sender`, eq(dealMessages.senderId, sql`sender.id`))
-      .leftJoin(sql`${users} AS receiver`, eq(dealMessages.receiverId, sql`receiver.id`))
-      .where(eq(dealMessages.dealId, dealId))
-      .orderBy(dealMessages.createdAt);
+      // Use raw SQL to handle joins with aliases
+      const messages = await db.execute(sql`
+        SELECT 
+          dm.id,
+          dm.deal_id as "dealId",
+          dm.sender_id as "senderId",
+          dm.receiver_id as "receiverId",
+          dm.message,
+          dm.is_read as "isRead",
+          dm.created_at as "createdAt",
+          CONCAT(sender.first_name, ' ', sender.last_name) as "senderName",
+          CONCAT(receiver.first_name, ' ', receiver.last_name) as "receiverName"
+        FROM deal_messages dm
+        LEFT JOIN users sender ON dm.sender_id = sender.id
+        LEFT JOIN users receiver ON dm.receiver_id = receiver.id
+        WHERE dm.deal_id = ${dealId}
+        ORDER BY dm.created_at
+      `);
+      
+      return messages.rows || [];
     } catch (error) {
       console.error('Error fetching deal messages:', error);
       return [];

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TransactionProgress from "@/components/broker/TransactionProgress";
+import BrokerDetails from "./BrokerDetails";
 import { 
   Users, 
   Plus, 
@@ -85,6 +86,7 @@ export function BrokerManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedBroker, setSelectedBroker] = useState<BrokerUser | null>(null);
+  const [showBrokerDetails, setShowBrokerDetails] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -201,6 +203,19 @@ export function BrokerManagement() {
       </Badge>
     );
   };
+
+  // Show broker details if selected
+  if (showBrokerDetails && selectedBroker) {
+    return (
+      <BrokerDetails 
+        broker={selectedBroker} 
+        onBack={() => {
+          setShowBrokerDetails(false);
+          setSelectedBroker(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -415,8 +430,12 @@ export function BrokerManagement() {
                           </div>
                           <Button
                             variant="outline"
-                            onClick={() => setSelectedBroker(broker)}
+                            onClick={() => {
+                              setSelectedBroker(broker);
+                              setShowBrokerDetails(true);
+                            }}
                           >
+                            <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </Button>
                         </div>

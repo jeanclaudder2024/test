@@ -12697,6 +12697,44 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Get broker uploaded documents (Admin only)
+  app.get("/api/admin/broker/:brokerId/documents", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      if (isNaN(brokerId)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
+      }
+      
+      const documents = await storage.getBrokerUploadedDocuments(brokerId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching broker uploaded documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker uploaded documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get broker deal messages (Admin only)
+  app.get("/api/admin/broker/:brokerId/messages", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      if (isNaN(brokerId)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
+      }
+      
+      const messages = await storage.getBrokerDealMessages(brokerId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching broker deal messages:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker deal messages",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Send admin file to broker (Admin only)
   app.post("/api/admin/broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
