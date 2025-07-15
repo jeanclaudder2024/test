@@ -52,33 +52,33 @@ export function registerBrokerRoutes(app: Express) {
       // Prepare data matching the Drizzle schema (using camelCase field names)
       const dealData = {
         brokerId: userId,
-        sellerCompanyId: req.body.sellerCompanyId || null,
-        buyerCompanyId: req.body.buyerCompanyId || null,
-        vesselId: req.body.vesselId || null,
+        sellerCompanyId: req.body.sellerCompanyId ? parseInt(req.body.sellerCompanyId) : null,
+        buyerCompanyId: req.body.buyerCompanyId ? parseInt(req.body.buyerCompanyId) : null,
+        vesselId: req.body.vesselId ? parseInt(req.body.vesselId) : null,
         dealTitle: req.body.dealTitle || req.body.title || 'Untitled Deal',
         dealDescription: req.body.dealDescription || req.body.description || null,
         cargoType: req.body.cargoType || req.body.dealType || 'Oil',
-        quantity: req.body.quantity || '0',
+        quantity: parseFloat(req.body.quantity || '0'),
         quantityUnit: req.body.quantityUnit || 'MT',
-        pricePerUnit: req.body.pricePerUnit || req.body.price || '0',
-        totalValue: req.body.totalValue || '0',
+        pricePerUnit: parseFloat(req.body.pricePerUnit || req.body.price || '0'),
+        totalValue: parseFloat(req.body.totalValue || '0'),
         currency: req.body.currency || 'USD',
         status: req.body.status || 'pending',
         priority: req.body.priority || 'medium',
-        commissionRate: req.body.commissionRate || '0.0150',
-        commissionAmount: req.body.commissionAmount || null,
+        commissionRate: parseFloat(req.body.commissionRate || '0.0150'),
+        commissionAmount: req.body.commissionAmount ? parseFloat(req.body.commissionAmount) : null,
         originPort: req.body.originPort || req.body.origin || null,
         destinationPort: req.body.destinationPort || req.body.destination || null,
         // Convert date strings to Date objects if they exist
         departureDate: req.body.departureDate ? new Date(req.body.departureDate) : null,
         arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : null,
-        progressPercentage: req.body.progressPercentage || 0,
+        progressPercentage: parseInt(req.body.progressPercentage || '0'),
         completionDate: req.body.completionDate ? new Date(req.body.completionDate) : null,
         notes: req.body.notes || null,
         // Add the required fields for transaction progress tracking
-        currentStep: 1,
-        transactionType: 'CIF-ASWP',
-        overallProgress: '0.00'
+        currentStep: parseInt(req.body.currentStep || '1'),
+        transactionType: req.body.transactionType || 'CIF-ASWP',
+        overallProgress: parseFloat(req.body.overallProgress || '0.00')
       };
       
       const deal = await storage.createBrokerDeal(dealData);

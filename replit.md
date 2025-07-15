@@ -665,6 +665,12 @@ Changelog:
   * **Deployment Compatibility**: Fixed company management create, edit, and delete functionality for Render deployment environment
   * **Enhanced Error Handling**: Added detailed logging and graceful fallback for authentication failures
   * **Production Ready**: Company management now works seamlessly in both local development and production deployment
+- July 15, 2025. **CRITICAL BROKER DEALS DATABASE AND DATA CONVERSION FIXES**:
+  * **Fixed PostgreSQL Integer Conversion Error**: Resolved "invalid input syntax for type integer: '0.00'" error by converting all numeric strings to proper data types
+  * **Complete Data Type Conversion**: Added parseFloat() and parseInt() conversion for quantity, pricePerUnit, totalValue, commissionRate, progressPercentage, currentStep, and overallProgress fields
+  * **Database Schema Simplification**: Created SIMPLE_BROKER_DEALS_SCHEMA.sql without foreign key constraints to avoid dependency issues
+  * **Manual Database Setup**: Provided clean SQL schema file for direct Supabase SQL Editor execution without "column does not exist" errors
+  * **Production Ready**: Broker deals creation endpoint now handles proper data type conversion for all numeric and integer fields
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
