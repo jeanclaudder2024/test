@@ -1652,6 +1652,7 @@ export const transactionSteps = pgTable("transaction_steps", {
   reviewedAt: timestamp("reviewed_at"),
   reviewedBy: integer("reviewed_by").references(() => users.id),
   adminNotes: text("admin_notes"),
+  brokerNotes: text("broker_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
