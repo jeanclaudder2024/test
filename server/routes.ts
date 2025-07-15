@@ -14499,5 +14499,185 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // Transaction Progress API Routes
+  
+  // Get transaction steps for a deal
+  app.get("/api/broker-deals/:dealId/steps", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+
+      const steps = await storage.getTransactionSteps(dealId);
+      res.json(steps);
+    } catch (error) {
+      console.error("Error fetching transaction steps:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch transaction steps",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update transaction step status (admin only)
+  app.patch("/api/admin/transaction-steps/:stepId", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      const { status, adminNotes } = req.body;
+      const adminId = req.user?.id;
+
+      if (isNaN(stepId)) {
+        return res.status(400).json({ message: "Invalid step ID" });
+      }
+
+      if (!status || !['pending', 'approved', 'refused', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const updatedStep = await storage.updateTransactionStepStatus(stepId, status, adminNotes, adminId);
+      res.json(updatedStep);
+    } catch (error) {
+      console.error("Error updating transaction step status:", error);
+      res.status(500).json({ 
+        message: "Failed to update step status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Submit transaction step (broker only)
+  app.post("/api/broker-deals/steps/:stepId/submit", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      
+      if (isNaN(stepId)) {
+        return res.status(400).json({ message: "Invalid step ID" });
+      }
+
+      const updatedStep = await storage.submitTransactionStep(stepId);
+      res.json(updatedStep);
+    } catch (error) {
+      console.error("Error submitting transaction step:", error);
+      res.status(500).json({ 
+        message: "Failed to submit step",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Upload transaction document
+  app.post("/api/broker-deals/steps/:stepId/documents", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      const userId = req.user?.id;
+      
+      if (isNaN(stepId) || !userId) {
+        return res.status(400).json({ message: "Invalid parameters" });
+      }
+
+      // This would handle file upload using multer middleware
+      // For now, returning a placeholder response
+      res.json({ message: "Document upload endpoint ready" });
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ 
+        message: "Failed to upload document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get transaction documents for a step
+  app.get("/api/broker-deals/steps/:stepId/documents", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      
+      if (isNaN(stepId)) {
+        return res.status(400).json({ message: "Invalid step ID" });
+      }
+
+      const documents = await storage.getTransactionDocuments(stepId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching transaction documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Deal Messages API Routes
+  
+  // Get deal messages
+  app.get("/api/broker-deals/:dealId/messages", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+
+      const messages = await storage.getDealMessages(dealId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching deal messages:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch messages",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Send deal message
+  app.post("/api/broker-deals/:dealId/messages", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      const senderId = req.user?.id;
+      const { receiverId, message } = req.body;
+      
+      if (isNaN(dealId) || !senderId || !receiverId || !message) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const messageData = {
+        dealId,
+        senderId,
+        receiverId: parseInt(receiverId),
+        message
+      };
+
+      const newMessage = await storage.createDealMessage(messageData);
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error("Error sending deal message:", error);
+      res.status(500).json({ 
+        message: "Failed to send message",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Mark message as read
+  app.patch("/api/deal-messages/:messageId/read", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      
+      if (isNaN(messageId)) {
+        return res.status(400).json({ message: "Invalid message ID" });
+      }
+
+      await storage.markMessageAsRead(messageId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ 
+        message: "Failed to mark message as read",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   return httpServer;
 }

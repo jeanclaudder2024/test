@@ -1632,10 +1632,63 @@ export const brokerDeals = pgTable("broker_deals", {
   
   progressPercentage: integer("progress_percentage").default(0),
   completionDate: timestamp("completion_date"),
+  currentStep: integer("current_step").default(1),
+  transactionType: varchar("transaction_type", { length: 50 }).default("CIF-ASWP"),
+  overallProgress: decimal("overall_progress", { precision: 5, scale: 2 }).default("0.00"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   notes: text("notes"),
+});
+
+export const transactionSteps = pgTable("transaction_steps", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull().references(() => brokerDeals.id, { onDelete: "cascade" }),
+  stepNumber: integer("step_number").notNull(),
+  stepName: varchar("step_name", { length: 255 }).notNull(),
+  stepDescription: text("step_description"),
+  status: varchar("status", { length: 50 }).default("pending"),
+  submittedAt: timestamp("submitted_at"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const transactionDocuments = pgTable("transaction_documents", {
+  id: serial("id").primaryKey(),
+  stepId: integer("step_id").notNull().references(() => transactionSteps.id, { onDelete: "cascade" }),
+  dealId: integer("deal_id").notNull().references(() => brokerDeals.id, { onDelete: "cascade" }),
+  documentType: varchar("document_type", { length: 100 }).notNull(),
+  originalFilename: varchar("original_filename", { length: 255 }).notNull(),
+  storedFilename: varchar("stored_filename", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  uploadedBy: integer("uploaded_by").notNull().references(() => users.id),
+  uploadedAt: timestamp("uploaded_at").defaultNow()
+});
+
+export const dealMessages = pgTable("deal_messages", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull().references(() => brokerDeals.id, { onDelete: "cascade" }),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  receiverId: integer("receiver_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const dealMessageAttachments = pgTable("deal_message_attachments", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => dealMessages.id, { onDelete: "cascade" }),
+  originalFilename: varchar("original_filename", { length: 255 }).notNull(),
+  storedFilename: varchar("stored_filename", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  uploadedAt: timestamp("uploaded_at").defaultNow()
 });
 
 export const brokerDocuments = pgTable("broker_documents", {
@@ -1786,6 +1839,38 @@ export type BrokerStats = typeof brokerStats.$inferSelect;
 export type InsertBrokerStats = z.infer<typeof insertBrokerStatsSchema>;
 export type BrokerProfile = typeof brokerProfiles.$inferSelect;
 export type InsertBrokerProfile = z.infer<typeof insertBrokerProfileSchema>;
+
+// Transaction Progress Schemas
+export const insertTransactionStepSchema = createInsertSchema(transactionSteps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTransactionDocumentSchema = createInsertSchema(transactionDocuments).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export const insertDealMessageSchema = createInsertSchema(dealMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDealMessageAttachmentSchema = createInsertSchema(dealMessageAttachments).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+// Transaction Progress Types
+export type TransactionStep = typeof transactionSteps.$inferSelect;
+export type InsertTransactionStep = z.infer<typeof insertTransactionStepSchema>;
+export type TransactionDocument = typeof transactionDocuments.$inferSelect;
+export type InsertTransactionDocument = z.infer<typeof insertTransactionDocumentSchema>;
+export type DealMessage = typeof dealMessages.$inferSelect;
+export type InsertDealMessage = z.infer<typeof insertDealMessageSchema>;
+export type DealMessageAttachment = typeof dealMessageAttachments.$inferSelect;
+export type InsertDealMessageAttachment = z.infer<typeof insertDealMessageAttachmentSchema>;
 
 export const insertLandingPageBlockSchema = createInsertSchema(landingPageBlocks).omit({
   id: true,

@@ -314,6 +314,13 @@ export async function initializeCustomAuthTables() {
     } catch (error) {
       console.log('Landing page images table setup skipped:', error.message);
     }
+
+    // Ensure transaction progress tables are created
+    try {
+      await storage.ensureTransactionTables();
+    } catch (error) {
+      console.log('Transaction tables setup skipped:', error.message);
+    }
     
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);

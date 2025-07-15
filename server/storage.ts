@@ -46,7 +46,11 @@ import {
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
   adminDocuments, AdminDocument, InsertAdminDocument,
   documentTemplates, DocumentTemplate, InsertDocumentTemplate,
-  generatedDocuments, GeneratedDocument, InsertGeneratedDocument
+  generatedDocuments, GeneratedDocument, InsertGeneratedDocument,
+  transactionSteps, TransactionStep, InsertTransactionStep,
+  transactionDocuments, TransactionDocument, InsertTransactionDocument,
+  dealMessages, DealMessage, InsertDealMessage,
+  dealMessageAttachments, DealMessageAttachment, InsertDealMessageAttachment
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -1599,6 +1603,15 @@ export class DatabaseStorage implements IStorage {
 
   async createBrokerDeal(deal: InsertBrokerDeal): Promise<BrokerDeal> {
     const [newDeal] = await db.insert(brokerDeals).values(deal).returning();
+    
+    // Automatically create transaction steps for the new deal
+    try {
+      await this.createTransactionSteps(newDeal.id);
+    } catch (error) {
+      console.error('Error creating transaction steps for deal:', error);
+      // Don't fail the deal creation if transaction steps fail
+    }
+    
     return newDeal;
   }
 
@@ -3069,6 +3082,9 @@ export class DatabaseStorage implements IStorage {
         oilType: brokerDeals.cargoType,
         quantity: brokerDeals.quantity,
         deliveryDate: brokerDeals.arrivalDate,
+        currentStep: brokerDeals.currentStep,
+        transactionType: brokerDeals.transactionType,
+        overallProgress: brokerDeals.overallProgress,
         createdAt: brokerDeals.createdAt,
         brokerName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`
       })
@@ -3082,9 +3098,311 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Transaction Steps Management
+  async createTransactionSteps(dealId: number): Promise<void> {
+    try {
+      const defaultSteps = [
+        { stepNumber: 1, stepName: 'Buyer Issues PO', stepDescription: 'Purchase Order issuance by buyer' },
+        { stepNumber: 2, stepName: 'ICPO', stepDescription: 'Irrevocable Corporate Purchase Order submission' },
+        { stepNumber: 3, stepName: 'Contract Under Review', stepDescription: 'Contract review and validation process' },
+        { stepNumber: 4, stepName: 'PPOP Sent', stepDescription: 'Past Performance of Product documentation' },
+        { stepNumber: 5, stepName: 'Buyer Issues Bank Instrument', stepDescription: 'Bank instrument issuance by buyer' },
+        { stepNumber: 6, stepName: 'Waiting for Bank Instrument', stepDescription: 'Awaiting bank instrument confirmation' },
+        { stepNumber: 7, stepName: 'POP + 2% PB', stepDescription: 'Proof of Product with 2% Performance Bond' },
+        { stepNumber: 8, stepName: 'Commission', stepDescription: 'Commission payment and transaction completion' }
+      ];
+
+      const stepsToInsert = defaultSteps.map(step => ({
+        dealId,
+        stepNumber: step.stepNumber,
+        stepName: step.stepName,
+        stepDescription: step.stepDescription,
+        status: 'pending' as const
+      }));
+
+      await db.insert(transactionSteps).values(stepsToInsert);
+    } catch (error) {
+      console.error('Error creating transaction steps:', error);
+      throw error;
+    }
+  }
+
+  async getTransactionSteps(dealId: number): Promise<any[]> {
+    try {
+      return await db.select()
+        .from(transactionSteps)
+        .where(eq(transactionSteps.dealId, dealId))
+        .orderBy(transactionSteps.stepNumber);
+    } catch (error) {
+      console.error('Error fetching transaction steps:', error);
+      return [];
+    }
+  }
+
+  async updateTransactionStepStatus(stepId: number, status: string, adminNotes?: string, reviewedBy?: number): Promise<any> {
+    try {
+      const [updatedStep] = await db
+        .update(transactionSteps)
+        .set({
+          status: status as any,
+          reviewedAt: new Date(),
+          reviewedBy,
+          adminNotes,
+          updatedAt: new Date()
+        })
+        .where(eq(transactionSteps.id, stepId))
+        .returning();
+
+      return updatedStep;
+    } catch (error) {
+      console.error('Error updating transaction step status:', error);
+      throw error;
+    }
+  }
+
+  async submitTransactionStep(stepId: number): Promise<any> {
+    try {
+      const [updatedStep] = await db
+        .update(transactionSteps)
+        .set({
+          status: 'submitted',
+          submittedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(transactionSteps.id, stepId))
+        .returning();
+
+      return updatedStep;
+    } catch (error) {
+      console.error('Error submitting transaction step:', error);
+      throw error;
+    }
+  }
+
+  // Transaction Documents Management
+  async uploadTransactionDocument(documentData: any): Promise<any> {
+    try {
+      const [newDocument] = await db
+        .insert(transactionDocuments)
+        .values(documentData)
+        .returning();
+
+      return newDocument;
+    } catch (error) {
+      console.error('Error uploading transaction document:', error);
+      throw error;
+    }
+  }
+
+  async getTransactionDocuments(stepId: number): Promise<any[]> {
+    try {
+      return await db.select()
+        .from(transactionDocuments)
+        .where(eq(transactionDocuments.stepId, stepId))
+        .orderBy(desc(transactionDocuments.uploadedAt));
+    } catch (error) {
+      console.error('Error fetching transaction documents:', error);
+      return [];
+    }
+  }
+
+  // Deal Messages Management
+  async createDealMessage(messageData: any): Promise<any> {
+    try {
+      const [newMessage] = await db
+        .insert(dealMessages)
+        .values(messageData)
+        .returning();
+
+      return newMessage;
+    } catch (error) {
+      console.error('Error creating deal message:', error);
+      throw error;
+    }
+  }
+
+  async getDealMessages(dealId: number): Promise<any[]> {
+    try {
+      return await db.select({
+        id: dealMessages.id,
+        dealId: dealMessages.dealId,
+        senderId: dealMessages.senderId,
+        receiverId: dealMessages.receiverId,
+        message: dealMessages.message,
+        isRead: dealMessages.isRead,
+        createdAt: dealMessages.createdAt,
+        senderName: sql<string>`CONCAT(sender.first_name, ' ', sender.last_name)`,
+        receiverName: sql<string>`CONCAT(receiver.first_name, ' ', receiver.last_name)`
+      })
+      .from(dealMessages)
+      .leftJoin(sql`${users} AS sender`, eq(dealMessages.senderId, sql`sender.id`))
+      .leftJoin(sql`${users} AS receiver`, eq(dealMessages.receiverId, sql`receiver.id`))
+      .where(eq(dealMessages.dealId, dealId))
+      .orderBy(dealMessages.createdAt);
+    } catch (error) {
+      console.error('Error fetching deal messages:', error);
+      return [];
+    }
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    try {
+      await db
+        .update(dealMessages)
+        .set({ isRead: true })
+        .where(eq(dealMessages.id, messageId));
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      throw error;
+    }
+  }
+
+  // Create transaction progress tables if they don't exist
+  async ensureTransactionTables(): Promise<void> {
+    try {
+      // Create transaction_steps table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS transaction_steps (
+          id SERIAL PRIMARY KEY,
+          deal_id INTEGER NOT NULL REFERENCES broker_deals(id) ON DELETE CASCADE,
+          step_number INTEGER NOT NULL CHECK (step_number BETWEEN 1 AND 8),
+          step_name TEXT NOT NULL,
+          step_description TEXT NOT NULL,
+          required_documents TEXT[] DEFAULT '{}',
+          status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'refused', 'cancelled')),
+          submitted_at TIMESTAMP,
+          reviewed_at TIMESTAMP,
+          admin_notes TEXT,
+          admin_id INTEGER REFERENCES users(id),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(deal_id, step_number)
+        )
+      `);
+
+      // Create transaction_documents table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS transaction_documents (
+          id SERIAL PRIMARY KEY,
+          step_id INTEGER NOT NULL REFERENCES transaction_steps(id) ON DELETE CASCADE,
+          document_name TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          file_size INTEGER,
+          content_type TEXT,
+          uploaded_by INTEGER NOT NULL REFERENCES users(id),
+          uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Create deal_messages table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS deal_messages (
+          id SERIAL PRIMARY KEY,
+          deal_id INTEGER NOT NULL REFERENCES broker_deals(id) ON DELETE CASCADE,
+          sender_id INTEGER NOT NULL REFERENCES users(id),
+          receiver_id INTEGER NOT NULL REFERENCES users(id),
+          message TEXT NOT NULL,
+          is_read BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Create deal_message_attachments table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS deal_message_attachments (
+          id SERIAL PRIMARY KEY,
+          message_id INTEGER NOT NULL REFERENCES deal_messages(id) ON DELETE CASCADE,
+          file_name TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          file_size INTEGER,
+          content_type TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      console.log('Transaction progress tables ensured');
+    } catch (error) {
+      console.error('Error ensuring transaction tables:', error);
+    }
+  }
+
+  async createTransactionSteps(dealId: number): Promise<void> {
+    try {
+      // Ensure tables exist first
+      await this.ensureTransactionTables();
+
+      const steps = [
+        {
+          dealId,
+          stepNumber: 1,
+          stepName: "Buyer Issues PO",
+          stepDescription: "Buyer submits Purchase Order with specifications",
+          requiredDocuments: ["Purchase Order", "Company Registration", "Financial Statement"]
+        },
+        {
+          dealId,
+          stepNumber: 2,
+          stepName: "ICPO",
+          stepDescription: "Irrevocable Corporate Purchase Order submission",
+          requiredDocuments: ["ICPO Document", "Bank Letter", "Passport Copy"]
+        },
+        {
+          dealId,
+          stepNumber: 3,
+          stepName: "Contract Under Review",
+          stepDescription: "Legal review and contract finalization",
+          requiredDocuments: ["Signed Contract", "Legal Review", "Compliance Certificate"]
+        },
+        {
+          dealId,
+          stepNumber: 4,
+          stepName: "PPOP Sent",
+          stepDescription: "Past Performance of Product sent to buyer",
+          requiredDocuments: ["PPOP Document", "Quality Certificate", "Previous Transaction Records"]
+        },
+        {
+          dealId,
+          stepNumber: 5,
+          stepName: "Buyer Issues Bank Instrument",
+          stepDescription: "Bank guarantee or letter of credit issued",
+          requiredDocuments: ["Bank Instrument", "LC/SBLC", "Swift MT700"]
+        },
+        {
+          dealId,
+          stepNumber: 6,
+          stepName: "Waiting for Bank Instrument",
+          stepDescription: "Verification and processing of banking documents",
+          requiredDocuments: ["Bank Verification", "Swift Confirmation", "Authorization Letter"]
+        },
+        {
+          dealId,
+          stepNumber: 7,
+          stepName: "POP + 2% PB",
+          stepDescription: "Proof of Product and Performance Bond submission",
+          requiredDocuments: ["POP Document", "Performance Bond", "Insurance Certificate"]
+        },
+        {
+          dealId,
+          stepNumber: 8,
+          stepName: "Commission",
+          stepDescription: "Final commission payment and deal completion",
+          requiredDocuments: ["Commission Agreement", "Payment Receipt", "Completion Certificate"]
+        }
+      ];
+
+      await db.insert(transactionSteps).values(steps);
+    } catch (error) {
+      console.error('Error creating transaction steps:', error);
+      throw error;
+    }
+  }
+
   async createBrokerDeal(deal: any): Promise<any> {
     try {
       const [newDeal] = await db.insert(brokerDeals).values(deal).returning();
+      
+      // Create default transaction steps for the new deal
+      await this.createTransactionSteps(newDeal.id);
       
       // Update broker stats
       await this.updateBrokerStats(deal.brokerId);

@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import TransactionProgress from "@/components/broker/TransactionProgress";
 import { 
   Users, 
   Plus, 
@@ -22,7 +24,9 @@ import {
   DollarSign,
   Activity,
   UserPlus,
-  Filter
+  Filter,
+  Target,
+  Eye
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -473,25 +477,60 @@ export function BrokerManagement() {
                             </div>
                           </div>
                         </div>
-                        {deal.status === 'pending' && (
-                          <div className="flex space-x-2 ml-4">
-                            <Button
-                              size="sm"
-                              onClick={() => updateDealStatusMutation.mutate({ dealId: deal.id, status: 'approved' })}
-                              disabled={updateDealStatusMutation.isPending}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateDealStatusMutation.mutate({ dealId: deal.id, status: 'rejected' })}
-                              disabled={updateDealStatusMutation.isPending}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex flex-col space-y-2 ml-4">
+                          {/* Transaction Progress Button */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex items-center gap-2"
+                              >
+                                <Target className="h-4 w-4" />
+                                View Progress
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <Target className="h-5 w-5 text-blue-600" />
+                                  Deal Transaction Progress - {deal.title}
+                                </DialogTitle>
+                                <DialogDescription>
+                                  Track the 8-step CIF-ASWP transaction process and communicate with the broker
+                                </DialogDescription>
+                              </DialogHeader>
+                              <TransactionProgress 
+                                dealId={deal.id} 
+                                currentUserRole="admin" 
+                                currentUserId={33} // Admin user ID
+                              />
+                            </DialogContent>
+                          </Dialog>
+                          
+                          {/* Approval Buttons */}
+                          {deal.status === 'pending' && (
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                onClick={() => updateDealStatusMutation.mutate({ dealId: deal.id, status: 'approved' })}
+                                disabled={updateDealStatusMutation.isPending}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateDealStatusMutation.mutate({ dealId: deal.id, status: 'rejected' })}
+                                disabled={updateDealStatusMutation.isPending}
+                              >
+                                <AlertCircle className="h-4 w-4 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
