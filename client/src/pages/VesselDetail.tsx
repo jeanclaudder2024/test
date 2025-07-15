@@ -313,6 +313,57 @@ export default function VesselDetail() {
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
   const [testBrokerOverride, setTestBrokerOverride] = useState<boolean | null>(null);
+
+  // Create broker deal mutation
+  const createBrokerDealMutation = useMutation({
+    mutationFn: async (dealData: any) => {
+      return apiRequest("POST", "/api/broker/deals", dealData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Deal Sent to Broker Management",
+        description: "Your deal has been successfully added to the broker management system. You can track it in your broker dashboard.",
+        duration: 6000,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Sending Deal",
+        description: error.message || "Failed to send deal to broker management. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  });
+
+  // Function to send deal to broker management
+  const sendDealToBroker = () => {
+    if (!vessel) return;
+
+    const dealData = {
+      title: `${vessel.name} - ${vessel.cargoType || 'Oil'} Deal`,
+      description: `Maritime deal for vessel ${vessel.name} (${vessel.imo}) carrying ${vessel.cargoType || 'Oil'} from ${vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'} to ${vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown'}`,
+      vesselId: vessel.id,
+      vesselName: vessel.name,
+      oilType: vessel.oilType || vessel.cargoType || 'Crude Oil',
+      quantity: vessel.quantity || vessel.cargoCapacity?.toString() || '50000',
+      dealValue: vessel.dealValue || '50000000',
+      price: vessel.price || '75.00',
+      marketPrice: vessel.marketPrice || '77.50',
+      sourceCompany: vessel.sourceCompany || vessel.sellerName || 'Unknown Company',
+      targetRefinery: vessel.targetRefinery || 'Unknown Refinery',
+      loadingPort: vessel.loadingPort || (vessel.departurePort ? getDeparturePortName(vessel.departurePort) : 'Unknown'),
+      destinationPort: vessel.destinationPort ? getDestinationPortName(vessel.destinationPort) : 'Unknown',
+      shippingType: vessel.shippingType || 'FOB',
+      routeDistance: vessel.routeDistance || '5000',
+      dealCode: vessel.dealCode || 'DEAL-00923',
+      status: 'pending',
+      requestedAmount: vessel.dealValue || '50000000',
+      deliveryDate: vessel.estimatedArrival || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    createBrokerDealMutation.mutate(dealData);
+  };
   
   // Helper function to get port name by ID or name
   const getPortName = (portIdOrName: number | string | null | undefined): string => {
@@ -1263,16 +1314,20 @@ export default function VesselDetail() {
                             style={{
                               animationDuration: '3s'
                             }}
-                            onClick={() => {
-                              toast({
-                                title: "Deal Interest Registered",
-                                description: "Your interest in this maritime deal has been recorded. Our broker team will contact you within 24 hours.",
-                                duration: 6000,
-                              });
-                            }}
+                            onClick={sendDealToBroker}
+                            disabled={createBrokerDealMutation.isPending}
                           >
-                            <TrendingUp className="mr-2 h-4 w-4" />
-                            Express Interest in Deal
+                            {createBrokerDealMutation.isPending ? (
+                              <>
+                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-background"></div>
+                                Sending Deal...
+                              </>
+                            ) : (
+                              <>
+                                <TrendingUp className="mr-2 h-4 w-4" />
+                                Express Interest in Deal
+                              </>
+                            )}
                           </Button>
                         ) : (
                           <Button 
