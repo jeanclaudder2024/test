@@ -671,6 +671,14 @@ Changelog:
   * **Database Schema Simplification**: Created SIMPLE_BROKER_DEALS_SCHEMA.sql without foreign key constraints to avoid dependency issues
   * **Manual Database Setup**: Provided clean SQL schema file for direct Supabase SQL Editor execution without "column does not exist" errors
   * **Production Ready**: Broker deals creation endpoint now handles proper data type conversion for all numeric and integer fields
+- July 16, 2025. **MAJOR BROKER DASHBOARD UI FIXES AND STEP MANAGEMENT ENHANCEMENT**:
+  * **Fixed Deal Interface Mismatch**: Updated Deal interface in BrokerDashboard.tsx to match actual API response structure with correct field names
+  * **Enhanced Step Management**: Added automatic first deal selection when accessing steps tab to prevent empty states
+  * **Deal Selector Integration**: Added dropdown selector in steps tab for seamless navigation between deals
+  * **Direct Step Access**: Added "Open Steps" button to each deal card in overview page for immediate workflow access
+  * **Modal Display Fix**: Corrected deal details modal to show proper information (totalValue, cargoType, originPort, destinationPort, etc.)
+  * **Card Display Enhancement**: Updated deal cards to show accurate information using correct API fields (totalValue, quantity with units, cargoType)
+  * **User Experience Optimization**: Implemented smooth navigation between deals overview and step management with proper state management
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
