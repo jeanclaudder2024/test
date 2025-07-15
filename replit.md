@@ -665,6 +665,12 @@ Changelog:
   * **Deployment Compatibility**: Fixed company management create, edit, and delete functionality for Render deployment environment
   * **Enhanced Error Handling**: Added detailed logging and graceful fallback for authentication failures
   * **Production Ready**: Company management now works seamlessly in both local development and production deployment
+- July 15, 2025. **BROKER STEPS PAGE INTERFACE IMPROVEMENTS**:
+  * Removed deal selector dropdown from steps page for streamlined direct access to Kerosene Deal
+  * Removed "Details" tab from step management interface, keeping only "Documents" and "Communication" tabs
+  * Enhanced auto-selection functionality - steps page automatically opens to first deal and first step
+  * Added "Back to Dashboard" button with proper navigation to deals tab
+  * Improved user experience with direct access to step management without dropdown selection
 - July 15, 2025. **CRITICAL BROKER DEALS DATABASE AND DATA CONVERSION FIXES**:
   * **Fixed PostgreSQL Integer Conversion Error**: Resolved "invalid input syntax for type integer: '0.00'" error by converting all numeric strings to proper data types
   * **Complete Data Type Conversion**: Added parseFloat() and parseInt() conversion for quantity, pricePerUnit, totalValue, commissionRate, progressPercentage, currentStep, and overallProgress fields
