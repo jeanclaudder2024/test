@@ -30,7 +30,6 @@ import {
   Fuel,
   Package,
   ChevronRight,
-  ChevronLeft,
   Eye,
   EyeOff,
   Satellite,
@@ -42,8 +41,7 @@ import {
   Gauge,
   Route,
   Timer,
-  TrendingUp,
-  Settings
+  TrendingUp
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -126,11 +124,12 @@ interface WeatherData {
 
 // Map styles - using CartoDB tiles for English country names
 const mapStyles = {
-  standard: 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', // Light style as default
+  standard: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
   satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   ocean: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+  nautical: 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
   dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  terrain: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+  terrain: 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png'
 };
 
 // Heat map gradient for vessel density
@@ -144,7 +143,7 @@ const heatMapGradient = {
 };
 
 export default function AdvancedMaritimeMap() {
-  const [mapStyle, setMapStyle] = useState<keyof typeof mapStyles>('standard');
+  const [mapStyle, setMapStyle] = useState<keyof typeof mapStyles>('ocean');
   const [showVessels, setShowVessels] = useState(true);
   const [showPorts, setShowPorts] = useState(true);
   const [showRefineries, setShowRefineries] = useState(true);
@@ -158,7 +157,6 @@ export default function AdvancedMaritimeMap() {
   const [selectedItemType, setSelectedItemType] = useState<'vessel' | 'port' | 'refinery' | null>(null);
   const [filterRadius, setFilterRadius] = useState(0);
   const [animationSpeed, setAnimationSpeed] = useState(1);
-  const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
   const { toast } = useToast();
   const mapRef = useRef<L.Map | null>(null);
 
@@ -169,13 +167,9 @@ export default function AdvancedMaritimeMap() {
   // Fetch data using React Query with error handling
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery<any>({
     queryKey: ['/api/vessels/polling'],
-    refetchInterval: realTimeTracking ? 7200000 : false, // 2 hours = 7,200,000 milliseconds
+    refetchInterval: realTimeTracking ? 30000 : false,
     retry: 1,
-    enabled: isAuthenticated,
-    staleTime: 3600000, // Cache data for 1 hour
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false
+    enabled: isAuthenticated
   });
 
   const vessels = useMemo(() => {
@@ -211,10 +205,9 @@ export default function AdvancedMaritimeMap() {
 
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery<any>({
     queryKey: ['/api/ports'],
-    staleTime: 10 * 60 * 1000, // Cache ports for 10 minutes - they don't change often
+    staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: isAuthenticated,
-    refetchOnWindowFocus: false // Don't refetch on window focus for better performance
+    enabled: isAuthenticated
   });
 
   const ports = useMemo(() => {
@@ -241,10 +234,9 @@ export default function AdvancedMaritimeMap() {
 
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery<any>({
     queryKey: ['/api/refineries'],
-    staleTime: 10 * 60 * 1000, // Cache refineries for 10 minutes - they rarely change
+    staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: isAuthenticated,
-    refetchOnWindowFocus: false // Don't refetch on window focus for better performance
+    enabled: isAuthenticated
   });
 
   const refineries = useMemo(() => {
@@ -270,9 +262,7 @@ export default function AdvancedMaritimeMap() {
   // Fetch oil types from public endpoint
   const { data: oilTypes = [] } = useQuery({
     queryKey: ['/api/oil-types'],
-    staleTime: 10 * 60 * 1000, // Cache oil types for 10 minutes
-    enabled: isAuthenticated,
-    refetchOnWindowFocus: false
+    staleTime: 5 * 60 * 1000
   });
 
   // Filter vessels based on selected types and search
@@ -322,7 +312,7 @@ export default function AdvancedMaritimeMap() {
           </svg>
         </div>
         <div class="vessel-label">${vessel.name}</div>
-        ${vessel.speed && typeof vessel.speed === 'number' ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
+        ${vessel.speed ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
       </div>
     `;
     
@@ -583,24 +573,17 @@ export default function AdvancedMaritimeMap() {
   }
 
   return (
-    <div className="h-screen w-full relative bg-blue-600">
+    <div className="h-screen w-full relative">
       {/* Main Map Container */}
       <MapContainer
         ref={mapRef}
         center={[20, 0]}
         zoom={3}
-        minZoom={2}
-        maxZoom={18}
         className="h-full w-full z-0"
         zoomControl={false}
-        style={{ backgroundColor: '#1e40af' }}
-        worldCopyJump={true}
-        maxBounds={[[-90, -180], [90, 180]]}
-        maxBoundsViscosity={1.0}
       >
         {/* Base map layers */}
         <TileLayer
-          key={mapStyle} // Force re-render when map style changes
           attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={mapStyles[mapStyle]}
         />
@@ -613,10 +596,9 @@ export default function AdvancedMaritimeMap() {
         )}
 
         <MapControlsInner />
-        {/* Disable heavy components for better performance */}
-        {showHeatMap && <VesselHeatMap />}
-        {showWeather && <WeatherOverlay />}
-        {showRoutes && <VesselRoutes />}
+        <VesselHeatMap />
+        <WeatherOverlay />
+        <VesselRoutes />
 
         {/* Ports Layer */}
         {showPorts && (
@@ -687,27 +669,41 @@ export default function AdvancedMaritimeMap() {
           </LayerGroup>
         )}
 
-        {/* Vessels Layer - Optimized for performance */}
+        {/* Vessels Layer */}
         {showVessels && (
           <LayerGroup>
-            {filteredVessels.map(vessel => ( // Show all vessels
+            {filteredVessels.map(vessel => (
               <Marker
                 key={`vessel-${vessel.id}`}
                 position={[Number(vessel.lat), Number(vessel.lng)]}
                 icon={getVesselIcon(vessel)}
               >
                 <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Ship className="h-3 w-3" />
+                  <div className="p-2 min-w-[250px]">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <Ship className="h-4 w-4" />
                       {vessel.name}
                     </h3>
-                    <div className="mt-1 space-y-1 text-xs">
+                    <div className="mt-2 space-y-1 text-sm">
                       <p><span className="font-medium">Type:</span> {vessel.vesselType}</p>
                       <p><span className="font-medium">IMO:</span> {vessel.imo}</p>
-                      <p><span className="font-medium">Status:</span> {vessel.status}</p>
-                      {vessel.speed !== undefined && typeof vessel.speed === 'number' && (
+                      <p><span className="font-medium">Flag:</span> {vessel.flag}</p>
+                      <p><span className="font-medium">Status:</span> 
+                        <Badge variant="default" className="ml-1">
+                          {vessel.status}
+                        </Badge>
+                      </p>
+                      {vessel.speed !== undefined && (
                         <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
+                      )}
+                      {vessel.course !== undefined && (
+                        <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
+                      )}
+                      {vessel.destinationPort && (
+                        <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
+                      )}
+                      {vessel.eta && (
+                        <p><span className="font-medium">ETA:</span> {new Date(vessel.eta).toLocaleString()}</p>
                       )}
                     </div>
                   </div>
@@ -719,27 +715,18 @@ export default function AdvancedMaritimeMap() {
       </MapContainer>
 
       {/* Enhanced Control Panel */}
-      <div className="absolute top-4 left-4 z-[1000] max-w-sm" style={{ zIndex: 1000 }}>
-        {!isControlPanelCollapsed ? (
-          <Card className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <MapIconSolid className="h-5 w-5" />
-                  Maritime Intelligence Map
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsControlPanelCollapsed(true)}
-                  className="h-6 w-6 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
+        <Card className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <MapIconSolid className="h-5 w-5" />
+                Maritime Intelligence Map
+              </span>
               {realTimeTracking && (
                 <Badge variant="default" className="animate-pulse">
                   <Activity className="h-3 w-3 mr-1" />
-                  OPTIMIZED
+                  LIVE
                 </Badge>
               )}
             </CardTitle>
@@ -759,12 +746,12 @@ export default function AdvancedMaritimeMap() {
             {/* Map Style Selector */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Map Style</Label>
-              <Select value={mapStyle} onValueChange={(value: keyof typeof mapStyles) => setMapStyle(value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select map style" />
+              <Select value={mapStyle} onValueChange={(value: any) => setMapStyle(value)}>
+                <SelectTrigger>
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-[9999]" style={{ zIndex: 9999 }}>
-                  <SelectItem value="standard">Light (Default)</SelectItem>
+                <SelectContent>
+                  <SelectItem value="standard">Standard</SelectItem>
                   <SelectItem value="satellite">Satellite</SelectItem>
                   <SelectItem value="ocean">Ocean</SelectItem>
                   <SelectItem value="dark">Dark Mode</SelectItem>
@@ -983,15 +970,6 @@ export default function AdvancedMaritimeMap() {
             </div>
           </CardContent>
         </Card>
-        ) : (
-          <Button
-            onClick={() => setIsControlPanelCollapsed(false)}
-            className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl border h-12 w-12 p-0"
-            variant="outline"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-        )}
       </div>
 
       {/* Loading Overlay */}

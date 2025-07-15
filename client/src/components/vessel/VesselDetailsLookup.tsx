@@ -213,7 +213,7 @@ export function VesselDetailsLookup() {
                 <div>
                   <p className="text-sm font-medium">Speed & Course</p>
                   <p className="text-sm text-muted-foreground">
-                    {vessel.speed && typeof vessel.speed === 'number' ? vessel.speed.toFixed(1) : 'N/A'} knots at {vessel.course && typeof vessel.course === 'number' ? vessel.course.toFixed(1) : 'N/A'}°
+                    {vessel.speed.toFixed(1)} knots at {vessel.course.toFixed(1)}°
                   </p>
                 </div>
               </div>

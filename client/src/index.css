@@ -2,22 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fix for Leaflet map background when zooming out */
-.leaflet-container {
-  background-color: #1e40af !important; /* Ocean blue background */
-}
-
-.leaflet-tile-pane {
-  background-color: #1e40af !important; /* Ocean blue for tile areas */
-}
-
-/* Ensure no gray background shows through */
-.leaflet-layer,
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out {
-  background-color: transparent !important;
-}
-
 /* Custom Sidebar Styles */
 @layer utilities {
   .custom-scrollbar {
