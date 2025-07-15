@@ -14744,6 +14744,26 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // Get deal documents - showing broker submissions
+  app.get("/api/broker-deals/:dealId/documents", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+
+      const documents = await storage.getDealDocuments(dealId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching deal documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Send deal message
   app.post("/api/broker-deals/:dealId/messages", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {

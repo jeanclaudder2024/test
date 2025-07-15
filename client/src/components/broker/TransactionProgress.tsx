@@ -23,7 +23,8 @@ import {
   Shield,
   Globe,
   Target,
-  Award
+  Award,
+  Download
 } from 'lucide-react';
 
 interface TransactionStep {
@@ -104,6 +105,13 @@ export default function TransactionProgress({ dealId, currentUserRole, currentUs
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ['deal-messages', dealId],
     queryFn: () => apiRequest('GET', `/api/broker-deals/${dealId}/messages`).then(res => res.json()),
+    staleTime: 0
+  });
+
+  // Fetch documents for each step
+  const { data: stepDocuments = [], isLoading: documentsLoading } = useQuery({
+    queryKey: ['step-documents', dealId],
+    queryFn: () => apiRequest('GET', `/api/broker-deals/${dealId}/documents`).then(res => res.json()),
     staleTime: 0
   });
 
@@ -282,6 +290,123 @@ export default function TransactionProgress({ dealId, currentUserRole, currentUs
                         </ul>
                       </div>
                     )}
+
+                    {/* Broker Submissions - Show what broker sent for this step */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium mb-3 flex items-center gap-2 text-blue-800">
+                        <Upload className="h-4 w-4" />
+                        Broker Submissions for This Step
+                      </h4>
+                      
+                      {/* Broker Notes */}
+                      {step.notes && (
+                        <div className="mb-3">
+                          <h5 className="font-medium text-sm text-blue-700 mb-1">Broker Notes:</h5>
+                          <div className="bg-white rounded p-2 text-sm border border-blue-200">
+                            {step.notes}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step Status and Progress */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <h5 className="font-medium text-sm text-blue-700 mb-1">Status:</h5>
+                          <Badge variant={getStatusBadgeVariant(step.status)}>
+                            {step.status.charAt(0).toUpperCase() + step.status.slice(1)}
+                          </Badge>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-sm text-blue-700 mb-1">Progress:</h5>
+                          <div className="text-sm">{step.progressPercentage}% Complete</div>
+                        </div>
+                      </div>
+
+                      {/* Submission Date */}
+                      {step.submittedAt && (
+                        <div className="mb-3">
+                          <h5 className="font-medium text-sm text-blue-700 mb-1">Submitted:</h5>
+                          <div className="text-sm text-gray-600">
+                            {new Date(step.submittedAt).toLocaleString()}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Related Messages for this step */}
+                      {messages.filter((msg: any) => msg.stepId === step.id).length > 0 && (
+                        <div className="mb-3">
+                          <h5 className="font-medium text-sm text-blue-700 mb-2">Step Messages:</h5>
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {messages
+                              .filter((msg: any) => msg.stepId === step.id)
+                              .map((msg: any) => (
+                                <div key={msg.id} className="bg-white rounded p-2 border border-blue-200">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <span className="font-medium text-xs text-blue-600">
+                                      {msg.senderName || 'Unknown'}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(msg.createdAt).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm">{msg.message}</div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Uploaded Documents for this step */}
+                      {stepDocuments.filter((doc: any) => doc.stepId === step.id).length > 0 && (
+                        <div className="mb-3">
+                          <h5 className="font-medium text-sm text-blue-700 mb-2">Uploaded Documents:</h5>
+                          <div className="space-y-2">
+                            {stepDocuments
+                              .filter((doc: any) => doc.stepId === step.id)
+                              .map((doc: any) => (
+                                <div key={doc.id} className="bg-white rounded p-2 border border-blue-200 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-blue-600" />
+                                    <div>
+                                      <div className="font-medium text-sm">{doc.fileName}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {doc.fileSize ? `${(doc.fileSize / 1024).toFixed(1)} KB` : 'Unknown size'} • 
+                                        Uploaded {new Date(doc.createdAt).toLocaleDateString()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(`/api/documents/${doc.id}/download`, '_blank')}
+                                  >
+                                    <Download className="h-4 w-4 mr-1" />
+                                    Download
+                                  </Button>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Admin Notes (if any) */}
+                      {step.adminNotes && (
+                        <div className="mb-3">
+                          <h5 className="font-medium text-sm text-blue-700 mb-1">Admin Feedback:</h5>
+                          <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-sm">
+                            {step.adminNotes}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* No submissions message */}
+                      {!step.notes && !step.submittedAt && stepDocuments.filter((doc: any) => doc.stepId === step.id).length === 0 && (
+                        <div className="text-center py-4 text-gray-500">
+                          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm">No submissions yet for this step</p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Step Actions */}
                     <div className="flex flex-wrap gap-2">

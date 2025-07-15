@@ -2030,6 +2030,37 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getDealDocuments(dealId: number): Promise<any[]> {
+    try {
+      const documents = await db.execute(sql`
+        SELECT 
+          td.id,
+          td.deal_id as "dealId",
+          td.step_id as "stepId",
+          td.document_name as "fileName",
+          td.file_path as "filePath",
+          td.file_size as "fileSize",
+          td.file_type as "fileType",
+          td.uploaded_by as "uploadedBy",
+          td.created_at as "createdAt",
+          td.updated_at as "updatedAt",
+          CONCAT(u.first_name, ' ', u.last_name) as "uploaderName",
+          ts.step_number as "stepNumber",
+          ts.step_name as "stepName"
+        FROM transaction_documents td
+        LEFT JOIN users u ON td.uploaded_by = u.id
+        LEFT JOIN transaction_steps ts ON td.step_id = ts.id
+        WHERE td.deal_id = ${dealId}
+        ORDER BY ts.step_number, td.created_at DESC
+      `);
+      
+      return documents.rows || [];
+    } catch (error) {
+      console.error('Error fetching deal documents:', error);
+      return [];
+    }
+  }
+
   // Oil Types Filter Management methods
   async getOilTypes(): Promise<OilType[]> {
     try {
