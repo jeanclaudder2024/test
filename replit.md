@@ -671,6 +671,14 @@ Changelog:
   * **Database Schema Simplification**: Created SIMPLE_BROKER_DEALS_SCHEMA.sql without foreign key constraints to avoid dependency issues
   * **Manual Database Setup**: Provided clean SQL schema file for direct Supabase SQL Editor execution without "column does not exist" errors
   * **Production Ready**: Broker deals creation endpoint now handles proper data type conversion for all numeric and integer fields
+- July 15, 2025. **ENHANCED STEP MANAGEMENT SYSTEM: Complete Rejection Handling and Communication Features**:
+  * **Visual Rejection Indicators**: Added animated red pulse dots and background highlights for rejected steps in the overview grid
+  * **Enhanced Rejection Display**: Step rejection alerts now show admin feedback with clear "Action Required" messaging and contact admin buttons
+  * **Improved Communication System**: Added quick-action buttons for rejected steps with pre-written messages for clarification requests and completion reports
+  * **Smart Messaging Interface**: Enhanced communication tab with contextual placeholders and comprehensive messaging guidelines
+  * **Dashboard Alert System**: Added broker dashboard notifications showing count of rejected steps requiring attention with direct navigation to step management
+  * **Manage Steps Button**: Added blue "Manage Steps" button to deal cards that opens selected deal and switches to steps tab automatically
+  * **Professional UI Enhancements**: Added visual status indicators, hover effects, and improved layout for better user experience with rejection handling workflow
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)

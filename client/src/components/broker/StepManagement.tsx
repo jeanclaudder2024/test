@@ -270,16 +270,24 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
                 <div 
                   key={step.id}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    activeStep === step.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    activeStep === step.id ? 'border-blue-500 bg-blue-50' : 
+                    step.status === 'rejected' ? 'border-red-300 bg-red-50' :
+                    'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => setActiveStep(step.id)}
                 >
                   <div className="flex items-center space-x-2 mb-2">
                     {getStatusIcon(step.status)}
                     <span className="font-medium text-sm">Step {step.stepNumber}</span>
+                    {step.status === 'rejected' && (
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    )}
                   </div>
                   <p className="text-xs text-gray-600 mb-2">{step.stepName}</p>
                   {getStatusBadge(step.status)}
+                  {step.status === 'rejected' && (
+                    <p className="text-xs text-red-600 mt-1 font-medium">Action Required</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -316,8 +324,34 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
                   
                   {currentStepData.status === 'rejected' && (
                     <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <h4 className="font-medium text-red-800 mb-2">Step Rejected</h4>
-                      <p className="text-red-700">Please review the admin notes and resubmit with corrections.</p>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                        <h4 className="font-medium text-red-800">Step Rejected - Action Required</h4>
+                      </div>
+                      <p className="text-red-700 mb-3">Please review the admin notes and resubmit with corrections.</p>
+                      {currentStepData.adminNotes && (
+                        <div className="mt-3 p-3 bg-white rounded border">
+                          <p className="text-sm font-medium text-gray-700">Admin Feedback:</p>
+                          <p className="text-sm text-gray-600 mt-1">{currentStepData.adminNotes}</p>
+                        </div>
+                      )}
+                      <div className="mt-3 flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-blue-600 border-blue-600"
+                          onClick={() => {
+                            // Switch to communication tab
+                            const tabElement = document.querySelector('[data-state="active"][value="communication"]');
+                            if (tabElement) {
+                              (tabElement as HTMLElement).click();
+                            }
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Contact Admin
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -418,15 +452,48 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
               
               <TabsContent value="communication" className="space-y-4">
                 <div className="space-y-4">
+                  {/* Quick Actions for Rejected Steps */}
+                  {currentStepData.status === 'rejected' && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <h4 className="font-medium text-red-800 mb-2 flex items-center">
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        Step Rejection Communication
+                      </h4>
+                      <p className="text-red-700 text-sm mb-3">
+                        Use the message form below to ask for clarification or report step completion after addressing the issues.
+                      </p>
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => setMessageText("I need clarification on the rejection feedback for this step. Could you please provide more details about what needs to be corrected?")}
+                        >
+                          Ask for Clarification
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => setMessageText("I have addressed the issues mentioned in the rejection feedback and completed the step. Please review again.")}
+                        >
+                          Report Completion
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Message Form */}
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="message">Send Message to Admin</Label>
                       <Textarea
                         id="message"
-                        placeholder="Type your message to admin about this step..."
+                        placeholder={currentStepData.status === 'rejected' 
+                          ? "Ask for clarification about the rejection or report step completion..."
+                          : "Type your message to admin about this step..."}
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
                         className="mt-1"
+                        rows={4}
                       />
                     </div>
                     <Button 
@@ -439,11 +506,22 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
                         }
                       }}
                       disabled={!messageText || sendMessageMutation.isPending}
-                      size="sm"
+                      className="w-full"
                     >
                       <Send className="h-4 w-4 mr-2" />
-                      {sendMessageMutation.isPending ? 'Sending...' : 'Send Message'}
+                      {sendMessageMutation.isPending ? 'Sending...' : 'Send Message to Admin'}
                     </Button>
+                  </div>
+
+                  {/* Communication Guidelines */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-800 mb-2">Communication Guidelines</h4>
+                    <ul className="text-blue-700 text-sm space-y-1">
+                      <li>• Use this channel for step-related questions and updates</li>
+                      <li>• Admin will respond within 24 hours during business days</li>
+                      <li>• Include specific details about documents or requirements</li>
+                      <li>• For urgent matters, mention "URGENT" in your message</li>
+                    </ul>
                   </div>
                 </div>
               </TabsContent>

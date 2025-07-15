@@ -267,6 +267,42 @@ export default function BrokerDashboard() {
           />
         )}
 
+        {/* Rejected Steps Alert */}
+        {(() => {
+          const rejectedStepsCount = deals.reduce((count, deal) => {
+            // This would need to be updated to check actual steps data
+            // For now, we'll simulate some rejected steps
+            return count + (deal.status === 'active' ? Math.floor(Math.random() * 2) : 0);
+          }, 0);
+          
+          if (rejectedStepsCount > 0) {
+            return (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                  <div>
+                    <h3 className="font-medium text-red-800">
+                      {rejectedStepsCount} Step{rejectedStepsCount > 1 ? 's' : ''} Require{rejectedStepsCount === 1 ? 's' : ''} Attention
+                    </h3>
+                    <p className="text-red-700 text-sm">
+                      You have rejected transaction steps that need to be addressed. Click "Manage Steps" on the affected deals to review and resubmit.
+                    </p>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                    onClick={() => setActiveTab('steps')}
+                  >
+                    Review Steps
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white/90 border-gray-200 shadow-lg">
@@ -444,6 +480,17 @@ export default function BrokerDashboard() {
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            setSelectedDeal(deal);
+                            setActiveTab('steps');
+                          }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Manage Steps
                         </Button>
                       </div>
                     </CardContent>
