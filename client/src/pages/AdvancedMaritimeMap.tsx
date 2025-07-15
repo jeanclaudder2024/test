@@ -312,7 +312,7 @@ export default function AdvancedMaritimeMap() {
           </svg>
         </div>
         <div class="vessel-label">${vessel.name}</div>
-        ${vessel.speed ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
+        ${vessel.speed && typeof vessel.speed === 'number' ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
       </div>
     `;
     
