@@ -2037,14 +2037,13 @@ export class DatabaseStorage implements IStorage {
           td.id,
           td.deal_id as "dealId",
           td.step_id as "stepId",
-          td.document_type as "documentType",
-          td.original_filename as "fileName",
-          td.stored_filename as "storedFileName",
+          td.document_name as "fileName",
           td.file_path as "filePath",
           td.file_size as "fileSize",
-          td.mime_type as "fileType",
+          td.file_type as "fileType",
           td.uploaded_by as "uploadedBy",
-          td.uploaded_at as "createdAt",
+          td.created_at as "createdAt",
+          td.updated_at as "updatedAt",
           CONCAT(u.first_name, ' ', u.last_name) as "uploaderName",
           ts.step_number as "stepNumber",
           ts.step_name as "stepName"
@@ -2052,40 +2051,13 @@ export class DatabaseStorage implements IStorage {
         LEFT JOIN users u ON td.uploaded_by = u.id
         LEFT JOIN transaction_steps ts ON td.step_id = ts.id
         WHERE td.deal_id = ${dealId}
-        ORDER BY ts.step_number, td.uploaded_at DESC
+        ORDER BY ts.step_number, td.created_at DESC
       `);
       
       return documents.rows || [];
     } catch (error) {
       console.error('Error fetching deal documents:', error);
       return [];
-    }
-  }
-
-  async getDocumentById(docId: number): Promise<any | null> {
-    try {
-      const documents = await db.execute(sql`
-        SELECT 
-          td.id,
-          td.deal_id as "dealId",
-          td.step_id as "stepId",
-          td.document_type as "documentType",
-          td.original_filename as "fileName",
-          td.stored_filename as "storedFileName",
-          td.file_path as "filePath",
-          td.file_size as "fileSize",
-          td.mime_type as "fileType",
-          td.uploaded_by as "uploadedBy",
-          td.uploaded_at as "createdAt"
-        FROM transaction_documents td
-        WHERE td.id = ${docId}
-        LIMIT 1
-      `);
-      
-      return documents.rows[0] || null;
-    } catch (error) {
-      console.error('Error fetching document by ID:', error);
-      return null;
     }
   }
 
