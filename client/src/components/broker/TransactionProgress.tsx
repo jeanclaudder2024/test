@@ -323,12 +323,52 @@ export default function TransactionProgress({ dealId, currentUserRole, currentUs
                         </div>
                       </div>
 
-                      {/* Submission Date */}
-                      {step.submittedAt && (
-                        <div className="mb-3">
-                          <h5 className="font-medium text-sm text-blue-700 mb-1">Submitted:</h5>
-                          <div className="text-sm text-gray-600">
-                            {new Date(step.submittedAt).toLocaleString()}
+                      {/* Comprehensive Broker Submission Section */}
+                      {(step.submittedAt || step.notes || stepDocuments.filter((doc: any) => doc.stepId === step.id).length > 0) && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-sm text-green-700 mb-2 flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            Broker Submission Details
+                          </h5>
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-3">
+                            
+                            {/* Submission Timestamp */}
+                            {step.submittedAt && (
+                              <div className="flex items-center gap-2 text-sm text-green-800">
+                                <Calendar className="h-4 w-4" />
+                                <span><strong>Submitted:</strong> {new Date(step.submittedAt).toLocaleString()}</span>
+                              </div>
+                            )}
+                            
+                            {/* Broker Notes */}
+                            {step.notes && (
+                              <div className="text-sm text-green-800">
+                                <strong className="flex items-center gap-2 mb-1">
+                                  <MessageSquare className="h-4 w-4" />
+                                  Broker Notes:
+                                </strong>
+                                <div className="bg-white rounded p-2 border border-green-300">
+                                  {step.notes}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Document Summary */}
+                            {stepDocuments.filter((doc: any) => doc.stepId === step.id).length > 0 && (
+                              <div className="text-sm text-green-800">
+                                <strong className="flex items-center gap-2 mb-1">
+                                  <FileText className="h-4 w-4" />
+                                  Documents Submitted: {stepDocuments.filter((doc: any) => doc.stepId === step.id).length} file(s)
+                                </strong>
+                              </div>
+                            )}
+                            
+                            {/* No submission message */}
+                            {!step.submittedAt && !step.notes && stepDocuments.filter((doc: any) => doc.stepId === step.id).length === 0 && (
+                              <div className="text-sm text-gray-500 italic">
+                                No submission from broker yet for this step
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}

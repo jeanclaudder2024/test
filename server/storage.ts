@@ -2032,31 +2032,31 @@ export class DatabaseStorage implements IStorage {
 
   async getDealDocuments(dealId: number): Promise<any[]> {
     try {
+      // Try to get documents using flexible column names
       const documents = await db.execute(sql`
         SELECT 
           td.id,
-          td.deal_id as "dealId",
           td.step_id as "stepId",
-          td.document_name as "fileName",
-          td.file_path as "filePath",
-          td.file_size as "fileSize",
-          td.file_type as "fileType",
-          td.uploaded_by as "uploadedBy",
-          td.created_at as "createdAt",
-          td.updated_at as "updatedAt",
-          CONCAT(u.first_name, ' ', u.last_name) as "uploaderName",
+          COALESCE(td.document_name, td.document_type, td.original_filename, 'Document') as "fileName",
+          COALESCE(td.file_path, td.stored_filename, '') as "filePath",
+          COALESCE(td.file_size, 0) as "fileSize",
+          COALESCE(td.file_type, td.mime_type, 'unknown') as "fileType",
+          COALESCE(td.uploaded_by, 0) as "uploadedBy",
+          COALESCE(td.created_at, td.uploaded_at, CURRENT_TIMESTAMP) as "createdAt",
+          COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Unknown User') as "uploaderName",
           ts.step_number as "stepNumber",
           ts.step_name as "stepName"
         FROM transaction_documents td
         LEFT JOIN users u ON td.uploaded_by = u.id
         LEFT JOIN transaction_steps ts ON td.step_id = ts.id
-        WHERE td.deal_id = ${dealId}
-        ORDER BY ts.step_number, td.created_at DESC
+        WHERE ts.deal_id = ${dealId}
+        ORDER BY ts.step_number, td.id DESC
       `);
       
       return documents.rows || [];
     } catch (error) {
       console.error('Error fetching deal documents:', error);
+      // Return empty array if query fails
       return [];
     }
   }
