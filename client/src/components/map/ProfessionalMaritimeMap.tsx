@@ -524,6 +524,9 @@ export default function ProfessionalMaritimeMap({
                 const lat = parseCoordinate(refinery.lat);
                 const lng = parseCoordinate(refinery.lng);
                 
+                // Debug coordinates for refineries  
+                console.log(`Refinery ${refinery.name}: lat=${refinery.lat}, lng=${refinery.lng}, parsed: [${lat}, ${lng}]`);
+                
                 if (!lat || !lng) return null;
                 
                 return (
@@ -554,6 +557,9 @@ export default function ProfessionalMaritimeMap({
               {filteredRefineries.map((refinery: RefineryType) => {
                 const lat = parseCoordinate(refinery.lat);
                 const lng = parseCoordinate(refinery.lng);
+                
+                // Debug coordinates for refineries  
+                console.log(`Refinery ${refinery.name}: lat=${refinery.lat}, lng=${refinery.lng}, parsed: [${lat}, ${lng}]`);
                 
                 if (!lat || !lng) return null;
                 
