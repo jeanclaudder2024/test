@@ -312,7 +312,7 @@ export default function AdvancedMaritimeMap() {
           </svg>
         </div>
         <div class="vessel-label">${vessel.name}</div>
-        ${vessel.speed ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
+        ${vessel.speed && typeof vessel.speed === 'number' ? `<div class="vessel-speed">${vessel.speed.toFixed(1)} kn</div>` : ''}
       </div>
     `;
     
@@ -694,10 +694,10 @@ export default function AdvancedMaritimeMap() {
                         </Badge>
                       </p>
                       {vessel.speed !== undefined && (
-                        <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
+                        <p><span className="font-medium">Speed:</span> {vessel.speed && typeof vessel.speed === 'number' ? vessel.speed.toFixed(1) : 'N/A'} knots</p>
                       )}
                       {vessel.course !== undefined && (
-                        <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
+                        <p><span className="font-medium">Course:</span> {vessel.course && typeof vessel.course === 'number' ? vessel.course.toFixed(0) : 'N/A'}°</p>
                       )}
                       {vessel.destinationPort && (
                         <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
