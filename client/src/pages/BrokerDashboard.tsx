@@ -45,34 +45,18 @@ import {
 // Types
 interface Deal {
   id: number;
-  brokerId: number;
-  sellerCompanyId?: number;
-  buyerCompanyId?: number;
-  vesselId: number;
   dealTitle: string;
-  dealDescription: string;
-  cargoType: string;
+  companyName: string;
+  companyId: number;
+  dealValue: string;
+  status: 'active' | 'pending' | 'completed' | 'cancelled';
+  progress: number;
+  startDate: string;
+  expectedCloseDate: string;
+  oilType: string;
   quantity: string;
-  quantityUnit: string;
-  pricePerUnit: string;
-  totalValue: string;
-  currency: string;
-  status: string;
-  priority: string;
-  commissionRate: string;
-  commissionAmount?: string;
-  originPort: string;
-  destinationPort: string;
-  departureDate: string;
-  arrivalDate: string;
-  progressPercentage: number;
-  completionDate?: string;
-  currentStep: number;
-  transactionType: string;
-  overallProgress: string;
-  createdAt: string;
-  updatedAt: string;
   notes?: string;
+  documentsCount: number;
 }
 
 interface Document {
@@ -128,13 +112,6 @@ export default function BrokerDashboard() {
     queryKey: ['/api/broker/deals'],
     retry: false,
   });
-
-  // Auto-select first deal when switching to steps tab
-  useEffect(() => {
-    if (activeTab === 'steps' && deals.length > 0 && !selectedDeal) {
-      setSelectedDeal(deals[0]);
-    }
-  }, [activeTab, deals, selectedDeal]);
 
   // Fetch broker documents
   const { data: documents = [], isLoading: documentsLoading } = useQuery<Document[]>({
@@ -418,7 +395,7 @@ export default function BrokerDashboard() {
                       <div className="flex items-start justify-between">
                         <div>
                           <CardTitle className="text-white">{deal.dealTitle}</CardTitle>
-                          <CardDescription className="text-gray-300">{deal.cargoType} - {deal.transactionType}</CardDescription>
+                          <CardDescription className="text-gray-300">{deal.companyName}</CardDescription>
                         </div>
                         <Badge className={`${getStatusColor(deal.status)} text-white`}>
                           {getStatusIcon(deal.status)}
@@ -429,32 +406,32 @@ export default function BrokerDashboard() {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-400">Total Value</p>
-                          <p className="font-semibold text-white">${deal.totalValue} {deal.currency}</p>
+                          <p className="text-gray-400">Deal Value</p>
+                          <p className="font-semibold text-white">{deal.dealValue}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400">Cargo Type</p>
-                          <p className="font-semibold text-white">{deal.cargoType}</p>
+                          <p className="text-gray-400">Oil Type</p>
+                          <p className="font-semibold text-white">{deal.oilType}</p>
                         </div>
                         <div>
                           <p className="text-gray-400">Quantity</p>
-                          <p className="font-semibold text-white">{deal.quantity} {deal.quantityUnit}</p>
+                          <p className="font-semibold text-white">{deal.quantity}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400">Current Step</p>
-                          <p className="font-semibold text-white">Step {deal.currentStep}</p>
+                          <p className="text-gray-400">Documents</p>
+                          <p className="font-semibold text-white">{deal.documentsCount}</p>
                         </div>
                       </div>
 
                       <div>
                         <div className="flex justify-between text-sm mb-2">
                           <span className="text-gray-400">Progress</span>
-                          <span className="text-white">{deal.overallProgress}%</span>
+                          <span className="text-white">{deal.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-2">
                           <div 
                             className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${deal.overallProgress}%` }}
+                            style={{ width: `${deal.progress}%` }}
                           />
                         </div>
                       </div>
@@ -468,17 +445,6 @@ export default function BrokerDashboard() {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
-                        <Button 
-                          size="sm" 
-                          className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          onClick={() => {
-                            setSelectedDeal(deal);
-                            setActiveTab('steps');
-                          }}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Open Steps
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -489,29 +455,6 @@ export default function BrokerDashboard() {
 
           {/* Steps Tab */}
           <TabsContent value="steps" className="space-y-6">
-            {/* Deal Selector */}
-            <div className="flex items-center gap-4 mb-6">
-              <Label className="text-white font-medium">Select Deal:</Label>
-              <Select
-                value={selectedDeal?.id?.toString() || ''}
-                onValueChange={(value) => {
-                  const deal = deals.find(d => d.id === parseInt(value));
-                  setSelectedDeal(deal || null);
-                }}
-              >
-                <SelectTrigger className="w-80 bg-gray-800 border-gray-600 text-white">
-                  <SelectValue placeholder="Choose a deal to manage steps" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-600">
-                  {deals.map((deal) => (
-                    <SelectItem key={deal.id} value={deal.id.toString()}>
-                      {deal.dealTitle} - {deal.cargoType}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
             <StepManagement selectedDeal={selectedDeal} />
           </TabsContent>
 
@@ -736,50 +679,21 @@ export default function BrokerDashboard() {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-300">Origin Port</Label>
-                    <p className="text-white font-semibold">{selectedDeal.originPort}</p>
+                    <Label className="text-gray-300">Company</Label>
+                    <p className="text-white font-semibold">{selectedDeal.companyName}</p>
                   </div>
                   <div>
-                    <Label className="text-gray-300">Destination Port</Label>
-                    <p className="text-white font-semibold">{selectedDeal.destinationPort}</p>
+                    <Label className="text-gray-300">Deal Value</Label>
+                    <p className="text-white font-semibold">{selectedDeal.dealValue}</p>
                   </div>
                   <div>
-                    <Label className="text-gray-300">Total Value</Label>
-                    <p className="text-white font-semibold">${selectedDeal.totalValue} {selectedDeal.currency}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Cargo Type</Label>
-                    <p className="text-white font-semibold">{selectedDeal.cargoType}</p>
+                    <Label className="text-gray-300">Oil Type</Label>
+                    <p className="text-white font-semibold">{selectedDeal.oilType}</p>
                   </div>
                   <div>
                     <Label className="text-gray-300">Quantity</Label>
-                    <p className="text-white font-semibold">{selectedDeal.quantity} {selectedDeal.quantityUnit}</p>
+                    <p className="text-white font-semibold">{selectedDeal.quantity}</p>
                   </div>
-                  <div>
-                    <Label className="text-gray-300">Price per Unit</Label>
-                    <p className="text-white font-semibold">${selectedDeal.pricePerUnit}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Status</Label>
-                    <p className="text-white font-semibold capitalize">{selectedDeal.status}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Progress</Label>
-                    <p className="text-white font-semibold">{selectedDeal.overallProgress}%</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Transaction Type</Label>
-                    <p className="text-white font-semibold">{selectedDeal.transactionType}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Current Step</Label>
-                    <p className="text-white font-semibold">Step {selectedDeal.currentStep}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label className="text-gray-300">Deal Description</Label>
-                  <p className="text-white mt-1">{selectedDeal.dealDescription}</p>
                 </div>
                 
                 {selectedDeal.notes && (
