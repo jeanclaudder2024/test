@@ -3320,7 +3320,7 @@ export class DatabaseStorage implements IStorage {
         )
       `);
 
-      // Add missing columns to broker_deals table
+      // Add ALL missing columns to broker_deals table
       await db.execute(sql`
         ALTER TABLE broker_deals 
         ADD COLUMN IF NOT EXISTS current_step INTEGER DEFAULT 1 CHECK (current_step BETWEEN 1 AND 8),
@@ -3330,7 +3330,24 @@ export class DatabaseStorage implements IStorage {
         ADD COLUMN IF NOT EXISTS contract_value DECIMAL(15,2),
         ADD COLUMN IF NOT EXISTS commission_rate DECIMAL(5,2) DEFAULT 2.00,
         ADD COLUMN IF NOT EXISTS transaction_status VARCHAR(50) DEFAULT 'pending',
-        ADD COLUMN IF NOT EXISTS priority_level VARCHAR(20) DEFAULT 'medium'
+        ADD COLUMN IF NOT EXISTS priority_level VARCHAR(20) DEFAULT 'medium',
+        ADD COLUMN IF NOT EXISTS overall_progress INTEGER DEFAULT 0 CHECK (overall_progress BETWEEN 0 AND 100),
+        ADD COLUMN IF NOT EXISTS estimated_completion_date DATE,
+        ADD COLUMN IF NOT EXISTS risk_level VARCHAR(20) DEFAULT 'low',
+        ADD COLUMN IF NOT EXISTS compliance_status VARCHAR(30) DEFAULT 'pending',
+        ADD COLUMN IF NOT EXISTS document_count INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS last_activity_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS assigned_admin_id INTEGER REFERENCES users(id),
+        ADD COLUMN IF NOT EXISTS deal_source VARCHAR(50) DEFAULT 'broker_portal',
+        ADD COLUMN IF NOT EXISTS geographic_region VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS vessel_type VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS cargo_specifications TEXT,
+        ADD COLUMN IF NOT EXISTS delivery_terms VARCHAR(50),
+        ADD COLUMN IF NOT EXISTS payment_terms VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS insurance_details TEXT,
+        ADD COLUMN IF NOT EXISTS special_conditions TEXT,
+        ADD COLUMN IF NOT EXISTS internal_notes TEXT,
+        ADD COLUMN IF NOT EXISTS client_communication_log TEXT
       `);
 
       // Update existing deals to have default values
@@ -3340,8 +3357,14 @@ export class DatabaseStorage implements IStorage {
             transaction_type = COALESCE(transaction_type, 'CIF-ASWP'),
             transaction_status = COALESCE(transaction_status, 'pending'),
             priority_level = COALESCE(priority_level, 'medium'),
-            commission_rate = COALESCE(commission_rate, 2.00)
-        WHERE current_step IS NULL OR transaction_type IS NULL
+            commission_rate = COALESCE(commission_rate, 2.00),
+            overall_progress = COALESCE(overall_progress, 0),
+            risk_level = COALESCE(risk_level, 'low'),
+            compliance_status = COALESCE(compliance_status, 'pending'),
+            document_count = COALESCE(document_count, 0),
+            last_activity_date = COALESCE(last_activity_date, CURRENT_TIMESTAMP),
+            deal_source = COALESCE(deal_source, 'broker_portal')
+        WHERE current_step IS NULL OR transaction_type IS NULL OR overall_progress IS NULL
       `);
 
       console.log('Transaction progress tables ensured');

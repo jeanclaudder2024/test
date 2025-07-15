@@ -49,32 +49,36 @@ export function registerBrokerRoutes(app: Express) {
     try {
       const userId = req.user.id;
       
-      // Prepare data matching the database schema
+      // Prepare data matching the Drizzle schema (using camelCase field names)
       const dealData = {
         brokerId: userId,
         sellerCompanyId: req.body.sellerCompanyId || null,
         buyerCompanyId: req.body.buyerCompanyId || null,
         vesselId: req.body.vesselId || null,
-        dealTitle: req.body.dealTitle,
-        dealDescription: req.body.dealDescription,
-        cargoType: req.body.cargoType,
-        quantity: req.body.quantity,
+        dealTitle: req.body.dealTitle || req.body.title || 'Untitled Deal',
+        dealDescription: req.body.dealDescription || req.body.description || null,
+        cargoType: req.body.cargoType || req.body.dealType || 'Oil',
+        quantity: req.body.quantity || '0',
         quantityUnit: req.body.quantityUnit || 'MT',
-        pricePerUnit: req.body.pricePerUnit,
-        totalValue: req.body.totalValue,
+        pricePerUnit: req.body.pricePerUnit || req.body.price || '0',
+        totalValue: req.body.totalValue || '0',
         currency: req.body.currency || 'USD',
         status: req.body.status || 'pending',
         priority: req.body.priority || 'medium',
         commissionRate: req.body.commissionRate || '0.0150',
         commissionAmount: req.body.commissionAmount || null,
-        originPort: req.body.originPort,
-        destinationPort: req.body.destinationPort,
+        originPort: req.body.originPort || req.body.origin || null,
+        destinationPort: req.body.destinationPort || req.body.destination || null,
         // Convert date strings to Date objects if they exist
         departureDate: req.body.departureDate ? new Date(req.body.departureDate) : null,
         arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : null,
         progressPercentage: req.body.progressPercentage || 0,
         completionDate: req.body.completionDate ? new Date(req.body.completionDate) : null,
-        notes: req.body.notes || null
+        notes: req.body.notes || null,
+        // Add the required fields for transaction progress tracking
+        currentStep: 1,
+        transactionType: 'CIF-ASWP',
+        overallProgress: '0.00'
       };
       
       const deal = await storage.createBrokerDeal(dealData);

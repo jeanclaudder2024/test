@@ -5506,26 +5506,56 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
   
-  app.post("/api/broker-deals", async (req, res) => {
+  app.post("/api/broker-deals", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const dealData = req.body;
-      
-      if (!dealData.brokerId || !dealData.sellerId || !dealData.buyerId || !dealData.cargoType ||
-          !dealData.volume || !dealData.price) {
-        return res.status(400).json({ message: 'Missing required fields for deal creation' });
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
       }
       
-      // Simulate creating a deal (would store in database in a real app)
-      const newDeal = {
-        id: Date.now(),
-        ...dealData,
-        brokerName: 'Abdullah Al-Saud', // Would be retrieved from the authenticated user
+      // Prepare data matching the Drizzle schema (using camelCase field names)
+      const dealData = {
+        brokerId: userId,
+        sellerCompanyId: req.body.sellerCompanyId || req.body.sellerId || null,
+        buyerCompanyId: req.body.buyerCompanyId || req.body.buyerId || null,
+        vesselId: req.body.vesselId || null,
+        dealTitle: req.body.dealTitle || req.body.title || 'Untitled Deal',
+        dealDescription: req.body.dealDescription || req.body.description || null,
+        cargoType: req.body.cargoType || req.body.dealType || 'Oil',
+        quantity: req.body.quantity?.toString() || req.body.volume?.toString() || '0',
+        quantityUnit: req.body.quantityUnit || req.body.volumeUnit || 'MT',
+        pricePerUnit: req.body.pricePerUnit?.toString() || req.body.price?.toString() || '0',
+        totalValue: req.body.totalValue?.toString() || (req.body.price * req.body.volume)?.toString() || '0',
+        currency: req.body.currency || 'USD',
+        status: req.body.status || 'pending',
+        priority: req.body.priority || 'medium',
+        commissionRate: req.body.commissionRate?.toString() || '0.0150',
+        commissionAmount: req.body.commissionAmount?.toString() || null,
+        originPort: req.body.originPort || req.body.origin || null,
+        destinationPort: req.body.destinationPort || req.body.destination || null,
+        // Convert date strings to Date objects if they exist
+        departureDate: req.body.departureDate ? new Date(req.body.departureDate) : req.body.estimatedDeparture ? new Date(req.body.estimatedDeparture) : null,
+        arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : req.body.estimatedArrival ? new Date(req.body.estimatedArrival) : null,
+        progressPercentage: req.body.progressPercentage || 0,
+        completionDate: req.body.completionDate ? new Date(req.body.completionDate) : null,
+        notes: req.body.notes || null,
+        // Add the required fields for transaction progress tracking
+        currentStep: 1,
+        transactionType: 'CIF-ASWP',
+        overallProgress: '0.00'
       };
       
-      res.status(201).json(newDeal);
+      console.log("Creating broker deal with data:", dealData);
+      const deal = await storage.createBrokerDeal(dealData);
+      console.log("Broker deal created successfully:", deal);
+      
+      res.status(201).json(deal);
     } catch (error) {
       console.error('Error creating broker deal:', error);
-      res.status(500).json({ message: 'Error creating broker deal' });
+      res.status(500).json({ 
+        message: 'Error creating broker deal',
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
   

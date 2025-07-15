@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 
 // Using local types instead of imports from a separate file
 type Deal = {
@@ -147,18 +147,7 @@ export function DealManager({ brokerId }: DealManagerProps) {
   // Mutation for creating a new deal
   const createDealMutation = useMutation({
     mutationFn: async (dealData: Partial<Deal>) => {
-      const response = await fetch('/api/broker-deals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dealData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create deal');
-      }
-      
+      const response = await apiRequest('POST', '/api/broker-deals', dealData);
       return response.json();
     },
     onSuccess: () => {
