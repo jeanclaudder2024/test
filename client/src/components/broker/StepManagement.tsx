@@ -340,63 +340,13 @@ export function StepManagement({ selectedDeal, onBackToDashboard }: StepManageme
             <CardDescription>{currentStepData.stepDescription}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="details">Details</TabsTrigger>
+            <Tabs defaultValue="documents" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="communication">Communication</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="details" className="space-y-4">
-                <div className="space-y-4">
-                  {currentStepData.adminNotes && (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h4 className="font-medium text-yellow-800 mb-2">Admin Notes</h4>
-                      <p className="text-yellow-700">{currentStepData.adminNotes}</p>
-                    </div>
-                  )}
-                  
-                  {currentStepData.status === 'rejected' && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <h4 className="font-medium text-red-800 mb-2">Step Rejected</h4>
-                      <p className="text-red-700">Please review the admin notes and resubmit with corrections.</p>
-                    </div>
-                  )}
 
-                  {canSubmitStep && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="stepNote">Step Completion Notes</Label>
-                        <Textarea
-                          id="stepNote"
-                          placeholder="Add notes about completing this step..."
-                          value={stepNote}
-                          onChange={(e) => setStepNote(e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <Button 
-                        onClick={() => submitStepMutation.mutate({ 
-                          stepId: currentStepData.id, 
-                          notes: stepNote 
-                        })}
-                        disabled={submitStepMutation.isPending}
-                        className="w-full"
-                      >
-                        {submitStepMutation.isPending ? 'Submitting...' : 'Submit Step for Approval'}
-                      </Button>
-                    </div>
-                  )}
-
-                  {currentStepData.status === 'approved' && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <h4 className="font-medium text-green-800 mb-2">Step Approved</h4>
-                      <p className="text-green-700">This step has been approved by admin. You can proceed to the next step.</p>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
               
               <TabsContent value="documents" className="space-y-4">
                 <div className="space-y-4">
