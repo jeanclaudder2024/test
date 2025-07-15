@@ -703,55 +703,9 @@ export default function OilVesselMap() {
             </LayersControl.BaseLayer>
           </LayersControl>
           
-          {/* Refinery Markers - Rendered First (Bottom Layer) */}
-          {refineries.map((refinery: any, index: number) => {
-            const lat = parseFloat(refinery.latitude?.toString() || '0');
-            const lng = parseFloat(refinery.longitude?.toString() || '0');
-            
-            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return null;
-            
-            // Add small offset to prevent exact overlap with vessels
-            const offsetLat = lat + (index * 0.001);
-            const offsetLng = lng + (index * 0.001);
-            
-            return (
-              <Marker
-                key={`refinery-${refinery.id}`}
-                position={[offsetLat, offsetLng]}
-                icon={createRefineryIcon()}
-                zIndexOffset={-1000}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <div className="font-semibold text-lg mb-2">{refinery.name}</div>
-                    
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Type:</span>
-                        <span className="font-medium">Refinery</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Country:</span>
-                        <span className="font-medium">{refinery.country}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Capacity:</span>
-                        <span className="font-medium">{refinery.capacity || 'N/A'}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Position:</span>
-                        <span className="font-mono text-xs">
-                          {lat.toFixed(4)}, {lng.toFixed(4)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
+          {/* Refinery Markers - Temporarily Hidden to Fix Overlap Issues */}
+          {false && refineries.map((refinery: any, index: number) => {
+            return null;
           })}
           
           {/* Port Markers - Middle Layer */}
