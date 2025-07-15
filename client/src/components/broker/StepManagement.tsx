@@ -19,7 +19,8 @@ import {
   MessageCircle, 
   Send,
   Eye,
-  Download
+  Download,
+  ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -62,9 +63,10 @@ type Deal = {
 
 interface StepManagementProps {
   selectedDeal: Deal | null;
+  onBackToDashboard?: () => void;
 }
 
-export function StepManagement({ selectedDeal }: StepManagementProps) {
+export function StepManagement({ selectedDeal, onBackToDashboard }: StepManagementProps) {
   const [activeStep, setActiveStep] = useState<number>(1);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [stepNote, setStepNote] = useState('');
@@ -262,6 +264,21 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
 
   return (
     <div className="space-y-6">
+      {/* Navigation Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="outline"
+            onClick={onBackToDashboard || (() => window.history.back())}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
+          </Button>
+          <h1 className="text-2xl font-bold text-white">Transaction Steps</h1>
+        </div>
+      </div>
+
       {/* Deal Overview */}
       <Card>
         <CardHeader>

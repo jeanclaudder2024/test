@@ -485,7 +485,10 @@ export default function BrokerDashboard() {
               </Select>
             </div>
             
-            <StepManagement selectedDeal={selectedDeal} />
+            <StepManagement 
+              selectedDeal={selectedDeal} 
+              onBackToDashboard={() => setActiveTab('deals')}
+            />
           </TabsContent>
 
           {/* Documents Tab */}
