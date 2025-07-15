@@ -170,10 +170,10 @@ export default function AdvancedMaritimeMap() {
   // Fetch data using React Query with error handling
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery<any>({
     queryKey: ['/api/vessels/polling'],
-    refetchInterval: realTimeTracking ? 60000 : false, // Reduced to 60 seconds for better performance
+    refetchInterval: realTimeTracking ? 7200000 : false, // 2 hours = 7,200,000 milliseconds
     retry: 1,
     enabled: isAuthenticated,
-    staleTime: 30000 // Cache data for 30 seconds
+    staleTime: 3600000 // Cache data for 1 hour
   });
 
   const vessels = useMemo(() => {
@@ -592,6 +592,7 @@ export default function AdvancedMaritimeMap() {
       >
         {/* Base map layers */}
         <TileLayer
+          key={mapStyle} // Force re-render when map style changes
           attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={mapStyles[mapStyle]}
         />
