@@ -691,7 +691,7 @@ export default function AdvancedMaritimeMap() {
         {/* Vessels Layer - Optimized for performance */}
         {showVessels && (
           <LayerGroup>
-            {filteredVessels.slice(0, 50).map(vessel => ( // Limit to 50 vessels for better performance
+            {filteredVessels.map(vessel => ( // Show all vessels
               <Marker
                 key={`vessel-${vessel.id}`}
                 position={[Number(vessel.lat), Number(vessel.lng)]}
@@ -871,7 +871,7 @@ export default function AdvancedMaritimeMap() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="vessels" className="text-sm flex items-center gap-2">
                   <Ship className="h-4 w-4" />
-                  Vessels (showing 50 of {filteredVessels.length})
+                  Vessels ({filteredVessels.length})
                 </Label>
                 <Switch
                   id="vessels"
