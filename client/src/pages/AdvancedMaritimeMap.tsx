@@ -173,7 +173,10 @@ export default function AdvancedMaritimeMap() {
     refetchInterval: realTimeTracking ? 7200000 : false, // 2 hours = 7,200,000 milliseconds
     retry: 1,
     enabled: isAuthenticated,
-    staleTime: 3600000 // Cache data for 1 hour
+    staleTime: 3600000, // Cache data for 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 
   const vessels = useMemo(() => {
@@ -611,9 +614,10 @@ export default function AdvancedMaritimeMap() {
         )}
 
         <MapControlsInner />
-        <VesselHeatMap />
-        <WeatherOverlay />
-        <VesselRoutes />
+        {/* Disable heavy components for better performance */}
+        {showHeatMap && <VesselHeatMap />}
+        {showWeather && <WeatherOverlay />}
+        {showRoutes && <VesselRoutes />}
 
         {/* Ports Layer */}
         {showPorts && (
@@ -684,41 +688,27 @@ export default function AdvancedMaritimeMap() {
           </LayerGroup>
         )}
 
-        {/* Vessels Layer */}
+        {/* Vessels Layer - Optimized for performance */}
         {showVessels && (
           <LayerGroup>
-            {filteredVessels.map(vessel => (
+            {filteredVessels.slice(0, 50).map(vessel => ( // Limit to 50 vessels for better performance
               <Marker
                 key={`vessel-${vessel.id}`}
                 position={[Number(vessel.lat), Number(vessel.lng)]}
                 icon={getVesselIcon(vessel)}
               >
                 <Popup>
-                  <div className="p-2 min-w-[250px]">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      <Ship className="h-4 w-4" />
+                  <div className="p-2 min-w-[200px]">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Ship className="h-3 w-3" />
                       {vessel.name}
                     </h3>
-                    <div className="mt-2 space-y-1 text-sm">
+                    <div className="mt-1 space-y-1 text-xs">
                       <p><span className="font-medium">Type:</span> {vessel.vesselType}</p>
                       <p><span className="font-medium">IMO:</span> {vessel.imo}</p>
-                      <p><span className="font-medium">Flag:</span> {vessel.flag}</p>
-                      <p><span className="font-medium">Status:</span> 
-                        <Badge variant="default" className="ml-1">
-                          {vessel.status}
-                        </Badge>
-                      </p>
+                      <p><span className="font-medium">Status:</span> {vessel.status}</p>
                       {vessel.speed !== undefined && typeof vessel.speed === 'number' && (
                         <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
-                      )}
-                      {vessel.course !== undefined && typeof vessel.course === 'number' && (
-                        <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
-                      )}
-                      {vessel.destinationPort && (
-                        <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
-                      )}
-                      {vessel.eta && (
-                        <p><span className="font-medium">ETA:</span> {new Date(vessel.eta).toLocaleString()}</p>
                       )}
                     </div>
                   </div>
@@ -750,7 +740,7 @@ export default function AdvancedMaritimeMap() {
               {realTimeTracking && (
                 <Badge variant="default" className="animate-pulse">
                   <Activity className="h-3 w-3 mr-1" />
-                  LIVE
+                  OPTIMIZED
                 </Badge>
               )}
             </CardTitle>
@@ -881,7 +871,7 @@ export default function AdvancedMaritimeMap() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="vessels" className="text-sm flex items-center gap-2">
                   <Ship className="h-4 w-4" />
-                  Vessels ({filteredVessels.length})
+                  Vessels (showing 50 of {filteredVessels.length})
                 </Label>
                 <Switch
                   id="vessels"
