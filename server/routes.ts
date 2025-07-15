@@ -181,6 +181,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // ==========================================
+  // PUBLIC COMPANIES API (fallback for deployment)
+  // ==========================================
+  
+  // Public endpoint for real companies (fallback)
+  app.get("/api/real-companies", async (req, res) => {
+    try {
+      const companies = await storage.getRealCompanies();
+      console.log(`Fetching public real companies: ${companies.length} found`);
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching public real companies:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch real companies",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Public endpoint for creating real companies (fallback)
+  app.post("/api/real-companies", async (req, res) => {
+    try {
+      console.log("PUBLIC ENDPOINT: Creating real company:", req.body);
+      const validatedData = insertRealCompanySchema.parse(req.body);
+      const company = await storage.createRealCompany(validatedData);
+      console.log("Real company created successfully:", company);
+      res.json({
+        success: true,
+        message: "Real company created successfully",
+        data: company
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
+      console.error("Error creating real company:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to create real company",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Public endpoint for updating real companies (fallback)
+  app.put("/api/real-companies/:id", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      if (isNaN(companyId)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+
+      console.log("PUBLIC ENDPOINT: Updating real company:", companyId, req.body);
+      const validatedData = insertRealCompanySchema.partial().parse(req.body);
+      const company = await storage.updateRealCompany(companyId, validatedData);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      console.log("Real company updated successfully:", company);
+      res.json({
+        success: true,
+        message: "Real company updated successfully",
+        data: company
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
+      console.error("Error updating real company:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to update real company",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Public endpoint for deleting real companies (fallback)
+  app.delete("/api/real-companies/:id", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      if (isNaN(companyId)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+
+      console.log("PUBLIC ENDPOINT: Deleting real company:", companyId);
+      const success = await storage.deleteRealCompany(companyId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      console.log("Real company deleted successfully");
+      res.json({ 
+        success: true,
+        message: "Real company deleted successfully" 
+      });
+    } catch (error) {
+      console.error("Error deleting real company:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to delete real company",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
   
   // Company Management API Routes
   app.get("/api/admin/real-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {

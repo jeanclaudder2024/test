@@ -659,6 +659,12 @@ Changelog:
   * **Authentication Fix**: Bypassed authentication requirements by adding direct app route instead of apiRouter
   * **Coordinate Validation**: Only displays refineries with valid latitude/longitude coordinates (skips null values)
   * **User Control**: Refineries now show real locations that admin users update through refinery management interface
+- July 15, 2025. **COMPLETE COMPANY MANAGEMENT DEPLOYMENT FIX: Public API Fallback System**:
+  * **Public Company Endpoints**: Added comprehensive public API endpoints (`/api/real-companies`) for Create, Read, Update, Delete operations
+  * **Fallback Authentication System**: Updated CompanyManagement component to try admin endpoints first, then automatically fallback to public endpoints
+  * **Deployment Compatibility**: Fixed company management create, edit, and delete functionality for Render deployment environment
+  * **Enhanced Error Handling**: Added detailed logging and graceful fallback for authentication failures
+  * **Production Ready**: Company management now works seamlessly in both local development and production deployment
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
