@@ -87,6 +87,7 @@ export default function BrokerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [showDealModal, setShowDealModal] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { trialDaysRemaining, isTrialExpired, hasActiveTrial, canAccessBrokerFeatures } = useSubscription();
@@ -355,7 +356,13 @@ export default function BrokerDashboard() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value);
+          // Clear selected deal when switching away from steps tab
+          if (value !== 'steps') {
+            setSelectedDeal(null);
+          }
+        }}>
           <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
             <TabsTrigger value="deals" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <Handshake className="h-4 w-4 mr-2" />
@@ -476,7 +483,10 @@ export default function BrokerDashboard() {
                         <Button 
                           size="sm" 
                           className="flex-1 bg-orange-600 hover:bg-orange-700"
-                          onClick={() => setSelectedDeal(deal)}
+                          onClick={() => {
+                            setSelectedDeal(deal);
+                            setShowDealModal(true);
+                          }}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
@@ -718,7 +728,12 @@ export default function BrokerDashboard() {
 
         {/* Deal Details Modal */}
         {selectedDeal && (
-          <Dialog open={!!selectedDeal} onOpenChange={() => setSelectedDeal(null)}>
+          <Dialog open={showDealModal} onOpenChange={(open) => {
+            setShowDealModal(open);
+            if (!open) {
+              // Don't clear selectedDeal here - this allows Steps tab to keep working
+            }
+          }}>
             <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
               <DialogHeader>
                 <DialogTitle>{selectedDeal.dealTitle}</DialogTitle>
