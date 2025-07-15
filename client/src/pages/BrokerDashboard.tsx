@@ -16,6 +16,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import PaymentReminder from '@/components/PaymentReminder';
 import CreateDealDialog from '@/components/broker/CreateDealDialog';
 import SimpleOilTradingPrices from '@/pages/SimpleOilTradingPrices';
+import { StepManagement } from '@/components/broker/StepManagement';
 import { 
   Handshake, 
   FileText, 
@@ -319,10 +320,14 @@ export default function BrokerDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
+          <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
             <TabsTrigger value="deals" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <Handshake className="h-4 w-4 mr-2" />
               Deals
+            </TabsTrigger>
+            <TabsTrigger value="steps" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Steps
             </TabsTrigger>
             <TabsTrigger value="documents" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <FileText className="h-4 w-4 mr-2" />
@@ -446,6 +451,11 @@ export default function BrokerDashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Steps Tab */}
+          <TabsContent value="steps" className="space-y-6">
+            <StepManagement selectedDeal={selectedDeal} />
           </TabsContent>
 
           {/* Documents Tab */}

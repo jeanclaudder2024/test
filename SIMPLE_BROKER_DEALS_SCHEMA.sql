@@ -73,12 +73,49 @@ CREATE TABLE IF NOT EXISTS transaction_documents (
     uploaded_at TIMESTAMP DEFAULT NOW()
 );
 
+-- STEP 3.1: Create broker_documents table (fix missing columns)
+CREATE TABLE IF NOT EXISTS broker_documents (
+    id SERIAL PRIMARY KEY,
+    broker_id INTEGER NOT NULL,
+    deal_id INTEGER,
+    document_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    file_size INTEGER,
+    file_path VARCHAR(500) NOT NULL,
+    description TEXT,
+    uploaded_by INTEGER NOT NULL,
+    download_count INTEGER DEFAULT 0,
+    is_public BOOLEAN DEFAULT FALSE,
+    tags TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- STEP 3.2: Create broker_admin_files table (fix missing columns)
+CREATE TABLE IF NOT EXISTS broker_admin_files (
+    id SERIAL PRIMARY KEY,
+    broker_id INTEGER NOT NULL,
+    admin_id INTEGER NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    file_size INTEGER,
+    file_path VARCHAR(500) NOT NULL,
+    description TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    sent_at TIMESTAMP DEFAULT NOW(),
+    read_at TIMESTAMP
+);
+
 -- STEP 4: Create deal_messages table
 CREATE TABLE IF NOT EXISTS deal_messages (
     id SERIAL PRIMARY KEY,
     deal_id INTEGER NOT NULL,
     sender_id INTEGER NOT NULL,
     recipient_id INTEGER,
+    receiver_id INTEGER,
     message_type VARCHAR(50) DEFAULT 'general',
     subject VARCHAR(255),
     message_content TEXT NOT NULL,

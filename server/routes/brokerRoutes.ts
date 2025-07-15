@@ -369,4 +369,94 @@ export function registerBrokerRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to generate sample data' });
     }
   });
+
+  // Get transaction steps for a deal
+  app.get('/api/broker-deals/:dealId/steps', authenticateToken, async (req, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      const steps = await storage.getTransactionSteps(dealId);
+      res.json(steps);
+    } catch (error) {
+      console.error('Error fetching transaction steps:', error);
+      res.status(500).json({ error: 'Failed to fetch transaction steps' });
+    }
+  });
+
+  // Submit transaction step
+  app.patch('/api/transaction-steps/:stepId/submit', authenticateToken, async (req, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      const { notes } = req.body;
+      
+      const updatedStep = await storage.submitTransactionStep(stepId, notes);
+      res.json(updatedStep);
+    } catch (error) {
+      console.error('Error submitting transaction step:', error);
+      res.status(500).json({ error: 'Failed to submit transaction step' });
+    }
+  });
+
+  // Get documents for a transaction step
+  app.get('/api/transaction-steps/:stepId/documents', authenticateToken, async (req, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      const documents = await storage.getTransactionStepDocuments(stepId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching step documents:', error);
+      res.status(500).json({ error: 'Failed to fetch step documents' });
+    }
+  });
+
+  // Upload transaction document
+  app.post('/api/transaction-documents/upload', authenticateToken, upload.single('file'), async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const file = req.file;
+      const { stepId, dealId, documentType } = req.body;
+
+      if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const documentData = {
+        stepId: parseInt(stepId),
+        dealId: parseInt(dealId),
+        documentType: documentType || 'Transaction Document',
+        originalFilename: file.originalname,
+        storedFilename: file.filename,
+        filePath: file.path,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        uploadedBy: userId
+      };
+
+      const document = await storage.createTransactionDocument(documentData);
+      res.json(document);
+    } catch (error) {
+      console.error('Error uploading transaction document:', error);
+      res.status(500).json({ error: 'Failed to upload transaction document' });
+    }
+  });
+
+  // Send deal message
+  app.post('/api/deal-messages', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { dealId, messageContent, messageType } = req.body;
+
+      const messageData = {
+        dealId: parseInt(dealId),
+        senderId: userId,
+        messageContent,
+        messageType: messageType || 'general'
+      };
+
+      const message = await storage.createDealMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      console.error('Error sending deal message:', error);
+      res.status(500).json({ error: 'Failed to send deal message' });
+    }
+  });
 }

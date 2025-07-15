@@ -165,6 +165,17 @@ export interface IStorage {
   updateBrokerDeal(dealId: number, brokerId: number, dealData: any): Promise<any>;
   deleteBrokerDeal(dealId: number, brokerId: number): Promise<boolean>;
   
+  // Transaction Step methods
+  getTransactionSteps(dealId: number): Promise<TransactionStep[]>;
+  submitTransactionStep(stepId: number, notes?: string): Promise<TransactionStep>;
+  
+  // Transaction Document methods
+  getTransactionStepDocuments(stepId: number): Promise<TransactionDocument[]>;
+  createTransactionDocument(document: InsertTransactionDocument): Promise<TransactionDocument>;
+  
+  // Deal Message methods
+  createDealMessage(message: InsertDealMessage): Promise<DealMessage>;
+  
   // Broker Document methods
   getBrokerDocuments(brokerId: number): Promise<any[]>;
   getBrokerDocument(documentId: number, brokerId: number): Promise<any | undefined>;
@@ -3650,6 +3661,80 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('Error updating broker stats:', error);
+    }
+  }
+
+  // Transaction Step Management
+  async getTransactionSteps(dealId: number): Promise<TransactionStep[]> {
+    try {
+      const steps = await db.select()
+        .from(transactionSteps)
+        .where(eq(transactionSteps.dealId, dealId))
+        .orderBy(transactionSteps.stepNumber);
+      return steps;
+    } catch (error) {
+      console.error('Error fetching transaction steps:', error);
+      return [];
+    }
+  }
+
+  async submitTransactionStep(stepId: number, notes?: string): Promise<TransactionStep> {
+    try {
+      const [updatedStep] = await db
+        .update(transactionSteps)
+        .set({
+          status: 'submitted',
+          submittedAt: new Date(),
+          brokerNotes: notes,
+          updatedAt: new Date()
+        })
+        .where(eq(transactionSteps.id, stepId))
+        .returning();
+      return updatedStep;
+    } catch (error) {
+      console.error('Error submitting transaction step:', error);
+      throw error;
+    }
+  }
+
+  // Transaction Document Management
+  async getTransactionStepDocuments(stepId: number): Promise<TransactionDocument[]> {
+    try {
+      const documents = await db.select()
+        .from(transactionDocuments)
+        .where(eq(transactionDocuments.stepId, stepId))
+        .orderBy(desc(transactionDocuments.uploadedAt));
+      return documents;
+    } catch (error) {
+      console.error('Error fetching transaction step documents:', error);
+      return [];
+    }
+  }
+
+  async createTransactionDocument(document: InsertTransactionDocument): Promise<TransactionDocument> {
+    try {
+      const [newDocument] = await db
+        .insert(transactionDocuments)
+        .values(document)
+        .returning();
+      return newDocument;
+    } catch (error) {
+      console.error('Error creating transaction document:', error);
+      throw error;
+    }
+  }
+
+  // Deal Message Management
+  async createDealMessage(message: InsertDealMessage): Promise<DealMessage> {
+    try {
+      const [newMessage] = await db
+        .insert(dealMessages)
+        .values(message)
+        .returning();
+      return newMessage;
+    } catch (error) {
+      console.error('Error creating deal message:', error);
+      throw error;
     }
   }
 }
