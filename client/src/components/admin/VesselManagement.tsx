@@ -375,9 +375,17 @@ export default function VesselManagement() {
       return response.json();
     },
     onSuccess: () => {
-      // Force immediate refresh of vessel data
+      // Force immediate refresh of ALL vessel-related data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      
+      // Force refetch of all vessel endpoints
       queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
       
       // Reset form and close dialog
       setIsDialogOpen(false);
@@ -386,12 +394,15 @@ export default function VesselManagement() {
       
       toast({ 
         title: "Success", 
-        description: "Vessel created successfully - refreshing list..." 
+        description: "Vessel created successfully - refreshing all vessel data..." 
       });
       
-      // Force a second refresh after a short delay to ensure data appears
+      // Force a second refresh after a short delay to ensure data appears everywhere
       setTimeout(() => {
         queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+        queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+        queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
       }, 1000);
     },
     onError: (error) => {
@@ -479,8 +490,17 @@ export default function VesselManagement() {
       return response.json();
     },
     onSuccess: () => {
+      // Force refresh of ALL vessel-related data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      
       queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
+      
       setIsDialogOpen(false);
       setFormData(defaultFormData);
       setEditingVessel(null);
@@ -504,7 +524,17 @@ export default function VesselManagement() {
       return response.json();
     },
     onSuccess: () => {
+      // Force refresh of ALL vessel-related data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      
+      queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
+      
       toast({ title: "Success", description: "Vessel deleted successfully" });
     },
     onError: (error) => {
@@ -528,7 +558,17 @@ export default function VesselManagement() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Force refresh of ALL vessel-related data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      
+      queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
+      
       toast({ 
         title: "Deal Information Updated", 
         description: `Successfully updated ${data.updatedCount} vessels with complete deal information`
