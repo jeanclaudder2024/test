@@ -719,7 +719,7 @@ export default function AdvancedMaritimeMap() {
       </MapContainer>
 
       {/* Enhanced Control Panel */}
-      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
+      <div className="absolute top-4 left-4 z-[1000] max-w-sm" style={{ zIndex: 1000 }}>
         {!isControlPanelCollapsed ? (
           <Card className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl">
             <CardHeader className="pb-3">
@@ -759,11 +759,11 @@ export default function AdvancedMaritimeMap() {
             {/* Map Style Selector */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Map Style</Label>
-              <Select value={mapStyle} onValueChange={(value: any) => setMapStyle(value)}>
-                <SelectTrigger>
-                  <SelectValue />
+              <Select value={mapStyle} onValueChange={(value: keyof typeof mapStyles) => setMapStyle(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select map style" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]" style={{ zIndex: 9999 }}>
                   <SelectItem value="standard">Light (Default)</SelectItem>
                   <SelectItem value="satellite">Satellite</SelectItem>
                   <SelectItem value="ocean">Ocean</SelectItem>
