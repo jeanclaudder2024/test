@@ -3667,21 +3667,10 @@ export class DatabaseStorage implements IStorage {
   // Transaction Step Management
   async getTransactionSteps(dealId: number): Promise<TransactionStep[]> {
     try {
-      let steps = await db.select()
+      const steps = await db.select()
         .from(transactionSteps)
         .where(eq(transactionSteps.dealId, dealId))
         .orderBy(transactionSteps.stepNumber);
-      
-      // If no steps exist, create them
-      if (steps.length === 0) {
-        console.log(`No transaction steps found for deal ${dealId}, creating default steps...`);
-        await this.createTransactionSteps(dealId);
-        steps = await db.select()
-          .from(transactionSteps)
-          .where(eq(transactionSteps.dealId, dealId))
-          .orderBy(transactionSteps.stepNumber);
-      }
-      
       return steps;
     } catch (error) {
       console.error('Error fetching transaction steps:', error);

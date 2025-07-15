@@ -462,10 +462,30 @@ export default function BrokerDashboard() {
 
           {/* Steps Tab */}
           <TabsContent value="steps" className="space-y-6">
-            <StepManagement 
-              selectedDeal={selectedDeal} 
-              onBackToDashboard={() => setActiveTab('deals')}
-            />
+            {/* Deal Selector */}
+            <div className="flex items-center gap-4 mb-6">
+              <Label className="text-white font-medium">Select Deal:</Label>
+              <Select
+                value={selectedDeal?.id?.toString() || ''}
+                onValueChange={(value) => {
+                  const deal = deals.find(d => d.id === parseInt(value));
+                  setSelectedDeal(deal || null);
+                }}
+              >
+                <SelectTrigger className="w-80 bg-gray-800 border-gray-600 text-white">
+                  <SelectValue placeholder="Choose a deal to manage steps" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-600">
+                  {deals.map((deal) => (
+                    <SelectItem key={deal.id} value={deal.id.toString()}>
+                      {deal.dealTitle} - {deal.companyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <StepManagement selectedDeal={selectedDeal} />
           </TabsContent>
 
           {/* Documents Tab */}
