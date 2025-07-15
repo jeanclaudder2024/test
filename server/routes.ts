@@ -14553,12 +14553,44 @@ Generate a professional, detailed document that incorporates the vessel informat
         return res.status(400).json({ message: "Invalid deal ID" });
       }
 
-      const steps = await storage.getTransactionSteps(dealId);
+      let steps = await storage.getTransactionSteps(dealId);
+      
+      // If no steps exist, create them
+      if (steps.length === 0) {
+        console.log(`Creating transaction steps for deal ${dealId}`);
+        await storage.createTransactionSteps(dealId);
+        steps = await storage.getTransactionSteps(dealId);
+      }
+      
       res.json(steps);
     } catch (error) {
       console.error("Error fetching transaction steps:", error);
       res.status(500).json({ 
         message: "Failed to fetch transaction steps",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create transaction steps for all existing deals (admin only)
+  app.post("/api/admin/create-missing-steps", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const deals = await storage.getBrokerDeals();
+      let createdCount = 0;
+      
+      for (const deal of deals) {
+        const existingSteps = await storage.getTransactionSteps(deal.id);
+        if (existingSteps.length === 0) {
+          await storage.createTransactionSteps(deal.id);
+          createdCount++;
+        }
+      }
+      
+      res.json({ message: `Created transaction steps for ${createdCount} deals` });
+    } catch (error) {
+      console.error("Error creating missing transaction steps:", error);
+      res.status(500).json({ 
+        message: "Failed to create missing transaction steps",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

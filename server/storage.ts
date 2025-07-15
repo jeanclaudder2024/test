@@ -1578,8 +1578,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Broker Deals Methods
-  async getBrokerDeals(brokerId: number): Promise<any[]> {
+  async getBrokerDeals(brokerId?: number): Promise<any[]> {
     try {
+      // If no brokerId is provided, get all deals
+      if (!brokerId) {
+        const results = await db.select().from(brokerDeals).orderBy(brokerDeals.createdAt);
+        return results || [];
+      }
+      
       const results = await db.execute(sql`
         SELECT 
           bd.id,

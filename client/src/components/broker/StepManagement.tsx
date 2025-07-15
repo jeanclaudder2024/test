@@ -74,6 +74,15 @@ export function StepManagement({ selectedDeal }: StepManagementProps) {
   // Fetch transaction steps for the selected deal
   const { data: steps = [], isLoading: stepsLoading, refetch: refetchSteps } = useQuery<TransactionStep[]>({
     queryKey: ['/api/broker-deals', selectedDeal?.id, 'steps'],
+    queryFn: async () => {
+      const response = await fetch(`/api/broker-deals/${selectedDeal?.id}/steps`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch transaction steps');
+      return response.json();
+    },
     enabled: !!selectedDeal?.id,
   });
 
