@@ -3320,6 +3320,19 @@ export class DatabaseStorage implements IStorage {
         )
       `);
 
+      // Add missing current_step column to broker_deals table
+      await db.execute(sql`
+        ALTER TABLE broker_deals 
+        ADD COLUMN IF NOT EXISTS current_step INTEGER DEFAULT 1 CHECK (current_step BETWEEN 1 AND 8)
+      `);
+
+      // Update existing deals to have current_step = 1
+      await db.execute(sql`
+        UPDATE broker_deals 
+        SET current_step = 1 
+        WHERE current_step IS NULL
+      `);
+
       console.log('Transaction progress tables ensured');
     } catch (error) {
       console.error('Error ensuring transaction tables:', error);
