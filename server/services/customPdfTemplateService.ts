@@ -147,50 +147,54 @@ export class CustomPdfTemplateService {
   private addCustomHeader(doc: any, colors: any, logoBase64: string | null, secondaryLogoBase64: string | null, options: DocumentOptions): void {
     const pageWidth = doc.page.width;
     
-    // Header background with gradient effect
-    doc.rect(0, 0, pageWidth, 120)
-       .fillAndStroke(colors.primary, colors.primary);
+    // Clean white background (no colored header background like the image)
+    doc.rect(0, 0, pageWidth, 100)
+       .fillAndStroke('#ffffff', '#ffffff');
     
-    // Add logos if available
-    if (logoBase64) {
-      try {
-        doc.image(logoBase64, 50, 20, { width: 60, height: 60 });
-      } catch (error) {
-        console.error('Error adding primary logo:', error);
-      }
-    }
-    
-    // Company branding
-    doc.fontSize(28)
-       .fillColor('#ffffff')
-       .font('Helvetica-Bold')
-       .text('PETRODEALHUB', 130, 30);
-    
-    doc.fontSize(12)
-       .fillColor('#e0e7ff')
-       .font('Helvetica')
-       .text('Legal Document Services', 130, 55);
-    
-    // Secondary logo (Legal Document Services)
-    if (secondaryLogoBase64) {
-      try {
-        doc.image(secondaryLogoBase64, pageWidth - 110, 20, { width: 60, height: 60 });
-      } catch (error) {
-        console.error('Error adding secondary logo:', error);
-      }
-    }
-    
-    // Document type and date
+    // Left side: "LEGAL DOCUMENT SERVICES" exactly like the image
     doc.fontSize(14)
-       .fillColor('#ffffff')
+       .fillColor('#333333')
        .font('Helvetica-Bold')
-       .text(options.documentType.toUpperCase(), 400, 35);
+       .text('LEGAL DOCUMENT', 50, 30);
+    
+    doc.fontSize(8)
+       .fillColor('#666666')
+       .font('Helvetica')
+       .text('S E R V I C E S', 52, 50);
+    
+    // Right side: "PetroDealHub" branding exactly like the image
+    doc.fontSize(28)
+       .fillColor('#B0C4DE')  // Light blue color matching the image
+       .font('Helvetica-Bold')
+       .text('PetroDealHub', pageWidth - 220, 25);
     
     doc.fontSize(10)
-       .fillColor('#e0e7ff')
+       .fillColor('#B0C4DE')
        .font('Helvetica')
-       .text(`Generated: ${new Date().toLocaleDateString()}`, 400, 55)
-       .text(`Time: ${new Date().toLocaleTimeString()}`, 400, 70);
+       .text('Connecting Tankers, Refineries, and Deals', pageWidth - 220, 55);
+    
+    // Move down for content spacing
+    doc.y = 120;
+    
+    // Add the large central logo from your template assets
+    if (logoBase64) {
+      try {
+        // Center the large logo like in your image (around page center)
+        const logoSize = 150;
+        const centerX = (pageWidth - logoSize) / 2;
+        const logoY = 200;
+        
+        doc.image(logoBase64, centerX, logoY, { width: logoSize, height: logoSize });
+        
+        // Move content below the large central logo
+        doc.y = logoY + logoSize + 50;
+      } catch (error) {
+        console.error('Error adding central logo:', error);
+      }
+    }
+    
+    // Add "CLIENT COPY" watermark like in your image
+    this.addClientCopyWatermark(doc, pageWidth);
   }
 
   private addVesselInformation(doc: any, vessel: VesselData, colors: any): void {
@@ -263,50 +267,51 @@ export class CustomPdfTemplateService {
       .trim();
   }
 
+  private addClientCopyWatermark(doc: any, pageWidth: number): void {
+    // Add "CLIENT COPY" watermark like in your background image
+    doc.fontSize(36)
+       .fillColor('#FFB6C1')  // Light pink color like in the image
+       .font('Helvetica-Bold')
+       .rotate(25)  // Slight diagonal rotation like in your image
+       .text('CLIENT COPY', pageWidth - 250, 650, { opacity: 0.3 })
+       .rotate(-25);  // Reset rotation
+  }
+
   private addCustomFooter(doc: any, colors: any, secondaryLogoBase64: string | null): void {
     const pageHeight = doc.page.height;
-    const footerY = pageHeight - 100;
+    const pageWidth = doc.page.width;
     
-    // Footer separator line
-    doc.strokeColor(colors.secondary)
-       .lineWidth(1)
-       .moveTo(50, footerY)
-       .lineTo(545, footerY)
-       .stroke();
+    // Footer positioned at bottom like your image
+    const footerY = pageHeight - 60;
     
-    // Legal text and verification
-    doc.fontSize(9)
-       .fillColor('#666666')
-       .font('Helvetica')
-       .text('This document is officially recognized within the PetroDealHub platform under its legal terms and privacy policy.', 
-             50, footerY + 15);
+    // Clean footer background (no colored background like your image)
+    doc.rect(0, footerY, pageWidth, 60)
+       .fillAndStroke('#ffffff', '#ffffff');
     
-    doc.text('All rights reserved. Unauthorized use, modification, or distribution is strictly prohibited.', 
-             50, footerY + 30);
+    // Add small fingerprint/security icon like in your image
+    const iconY = footerY + 10;
+    doc.rect(50, iconY, 15, 20)
+       .fillAndStroke('#4FACFE', '#4FACFE');
     
-    doc.fillColor(colors.primary)
-       .text('Visit: https://www.petrodealhub.com/legal', 50, footerY + 45);
-    
-    // Company contact information
-    doc.fontSize(10)
-       .fillColor('#374151')
-       .font('Helvetica-Bold')
-       .text('PetroDealHub Maritime Solutions', 400, footerY + 15);
-    
-    doc.fontSize(9)
-       .fillColor('#666666')
-       .font('Helvetica')
-       .text('Email: support@petrodealhub.com', 400, footerY + 30)
-       .text('Web: www.petrodealhub.com', 400, footerY + 45);
-    
-    // Small secondary logo in footer if available
-    if (secondaryLogoBase64) {
-      try {
-        doc.image(secondaryLogoBase64, 520, footerY + 20, { width: 25, height: 25 });
-      } catch (error) {
-        console.error('Error adding footer logo:', error);
-      }
+    // Add vertical lines pattern for fingerprint effect
+    for (let i = 0; i < 5; i++) {
+      doc.moveTo(52 + i * 2, iconY + 2)
+         .lineTo(52 + i * 2, iconY + 18)
+         .stroke('#ffffff');
     }
+    
+    // Legal text exactly like your image
+    doc.fontSize(8)
+       .fillColor('#333333')
+       .font('Helvetica')
+       .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved. Unauthorized use,', 75, footerY + 15)
+       .text('modification, or distribution of this document is strictly prohibited. For full legal terms, visit:', 75, footerY + 28);
+    
+    // Website link in blue
+    doc.fontSize(8)
+       .fillColor('#4FACFE')
+       .font('Helvetica')
+       .text('https://www.petrodealhub.com/legal', 430, footerY + 28);
   }
 }
 
