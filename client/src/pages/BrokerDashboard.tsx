@@ -142,7 +142,12 @@ export default function BrokerDashboard() {
   // Download document mutation
   const downloadMutation = useMutation({
     mutationFn: async (documentId: number) => {
-      const response = await fetch(`/api/broker/documents/${documentId}/download`);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/broker/documents/${documentId}/download`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
       if (!response.ok) throw new Error('Download failed');
       return response.blob();
     },
@@ -178,8 +183,14 @@ export default function BrokerDashboard() {
       if (dealId) formData.append('dealId', dealId.toString());
       formData.append('description', description);
       
+      // Get auth token from localStorage
+      const token = localStorage.getItem('authToken');
+      
       const response = await fetch('/api/broker/documents/upload', {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: formData,
       });
       
@@ -205,8 +216,12 @@ export default function BrokerDashboard() {
   // Mark admin file as read
   const markAsReadMutation = useMutation({
     mutationFn: async (fileId: number) => {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/broker/admin-files/${fileId}/mark-read`, {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       if (!response.ok) throw new Error('Failed to mark as read');
       return response.json();
