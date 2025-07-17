@@ -310,7 +310,7 @@ All technical systems meet international maritime standards and regulatory requi
       
       toast({
         title: "PDF Downloaded",
-        description: `${doc.title} downloaded successfully with company logo`,
+        description: `${doc.title} downloaded successfully with your custom template design`,
       });
     } catch (error) {
       console.error('PDF download error:', error);
