@@ -96,7 +96,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
     onSuccess: (data) => {
       toast({
         title: "Article Generated Successfully",
-        description: "Professional article has been created and is ready for download.",
+        description: "Professional article has been generated and is ready for download.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/vessels', vesselId, 'articles'] });
       setSelectedArticleType(null);
@@ -176,10 +176,10 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Generate Professional Articles
+            Get Professional Articles
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Create professional documentation for {vesselName}
+            Get professional documentation for {vesselName}
           </p>
         </CardHeader>
         <CardContent>
@@ -229,7 +229,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Generate Article
+                  Get Article
                 </>
               )}
             </Button>
@@ -256,7 +256,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium mb-2">No Articles Generated</h3>
               <p className="text-gray-600">
-                Generate your first professional article using the options above.
+                Get your first professional article using the options above.
               </p>
             </div>
           ) : (

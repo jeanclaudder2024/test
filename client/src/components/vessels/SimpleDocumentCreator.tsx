@@ -90,8 +90,8 @@ export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorP
     saveDocuments(updatedDocuments);
 
     toast({
-      title: "Document Created",
-      description: `"${title}" has been created successfully.`
+      title: "Document Generated",
+      description: `"${title}" has been generated successfully.`
     });
 
     // Reset form
@@ -180,10 +180,10 @@ export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorP
           <FileText className="h-8 w-8 text-blue-600" />
           <h2 className="text-2xl font-bold text-gray-900">Professional Articles</h2>
         </div>
-        <p className="text-gray-600">Create and manage documents for {vessel.name}</p>
+        <p className="text-gray-600">Get and manage documents for {vessel.name}</p>
       </div>
 
-      {/* Create Document Button */}
+      {/* Get Document Button */}
       <div>
         <Button 
           onClick={() => setShowCreateDialog(true)} 
@@ -191,7 +191,7 @@ export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorP
           size="lg"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Create New Document
+          Get New Document
         </Button>
       </div>
 
@@ -316,7 +316,7 @@ export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorP
                 onClick={editingDocument ? updateDocument : createDocument} 
                 className="flex-1"
               >
-                {editingDocument ? 'Update Document' : 'Create Document'}
+                {editingDocument ? 'Update Document' : 'Get Document'}
               </Button>
             </div>
           </div>
