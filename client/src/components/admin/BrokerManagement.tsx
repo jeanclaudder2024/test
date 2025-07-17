@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +13,7 @@ import TransactionProgress from "@/components/broker/TransactionProgress";
 import BrokerDetails from "./BrokerDetails";
 import { 
   Users, 
+  Plus, 
   Search, 
   Mail, 
   Building2, 
@@ -23,6 +25,7 @@ import {
   Clock,
   DollarSign,
   Activity,
+  UserPlus,
   Filter,
   Target,
   Eye,
@@ -125,7 +128,30 @@ export function BrokerManagement() {
     return matchesSearch && matchesStatus;
   });
 
-
+  // Create broker user mutation
+  const createBrokerMutation = useMutation({
+    mutationFn: async (brokerData: { email: string; firstName: string; lastName: string; password: string }) => {
+      return await apiRequest('/api/admin/brokers', {
+        method: 'POST',
+        body: JSON.stringify(brokerData),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Broker account created successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/brokers'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create broker account",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Edit file mutation
   const editFileMutation = useMutation({
@@ -270,10 +296,17 @@ export function BrokerManagement() {
           <h2 className="text-2xl font-bold text-gray-900">Broker Management</h2>
           <p className="text-gray-600">Manage broker accounts, deals, and file sharing</p>
         </div>
+        <Button 
+          onClick={() => setActiveTab('create')}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Broker
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-white border">
+        <TabsList className="grid w-full grid-cols-5 bg-white border">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Overview
@@ -289,6 +322,10 @@ export function BrokerManagement() {
           <TabsTrigger value="files" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Files
+          </TabsTrigger>
+          <TabsTrigger value="create" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create
           </TabsTrigger>
         </TabsList>
 
@@ -953,7 +990,80 @@ export function BrokerManagement() {
           </Dialog>
         </TabsContent>
 
-
+        <TabsContent value="create" className="space-y-6">
+          <Card className="bg-white border border-gray-200">
+            <CardHeader>
+              <CardTitle>Create New Broker Account</CardTitle>
+              <CardDescription>Add a new broker user with subscription access</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  createBrokerMutation.mutate({
+                    email: formData.get('email') as string,
+                    firstName: formData.get('firstName') as string,
+                    lastName: formData.get('lastName') as string,
+                    password: formData.get('password') as string,
+                  });
+                }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      required
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      required
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="Enter email address"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="Enter password"
+                    minLength={6}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={createBrokerMutation.isPending}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  {createBrokerMutation.isPending ? 'Creating...' : 'Create Broker Account'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
