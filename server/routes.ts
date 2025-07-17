@@ -8376,18 +8376,20 @@ IMPORTANT: Generate a complete professional maritime document with the following
         return res.status(404).json({ message: "Vessel not found" });
       }
       
-      // Import PDFDocument for PDF generation
+      // Import PDFDocument and custom template service
       const PDFDocument = (await import('pdfkit')).default;
+      const { customPdfTemplateService } = await import('./services/customPdfTemplateService');
       
-      // Create professional PDF document with company branding
+      // Create professional PDF document with custom template styling
       const doc = new PDFDocument({
         size: 'A4',
         margin: 50,
         info: {
           Title: `${documentType} - ${vessel.name}`,
-          Author: 'PetroDealHub Maritime Solutions',
+          Author: 'PetroDealHub Legal Document Services',
           Subject: 'Professional Maritime Document',
-          Creator: 'PetroDealHub Platform'
+          Creator: 'PetroDealHub Platform',
+          Keywords: 'Maritime, Legal, Professional, PetroDealHub'
         }
       });
       
@@ -8398,358 +8400,20 @@ IMPORTANT: Generate a complete professional maritime document with the following
       // Pipe PDF directly to response
       doc.pipe(res);
       
-      if (includeLogo) {
-        // Add company logo design and header first
-        doc.rect(40, 40, 515, 90)
-          .fillAndStroke('#1e40af', '#1e40af');
-          
-        // Create professional logo symbol
-        const logoX = 60;
-        const logoY = 55;
-        
-        // Logo background circle
-        doc.circle(logoX + 20, logoY + 20, 15)
-          .fillAndStroke('#ffffff', '#ffffff');
-        
-        // Maritime symbol in logo - using "P" for PetroDealHub
-        doc.fontSize(18)
-          .fillColor('#1e40af')
-          .font('Helvetica-Bold')
-          .text('P', logoX + 16, logoY + 12);
-          
-        // Company name next to logo
-        doc.fontSize(24)
-          .fillColor('#ffffff')
-          .font('Helvetica-Bold')
-          .text('PETRODEALHUB', logoX + 50, logoY + 8);
-          
-        doc.fontSize(11)
-          .fillColor('#e0e7ff')
-          .font('Helvetica')
-          .text('Maritime Oil Brokerage & Logistics Platform', logoX + 50, logoY + 35);
-          
-        // Document info in header right side
-        doc.fontSize(12)
-          .fillColor('#ffffff')
-          .font('Helvetica-Bold')
-          .text(`Document: ${documentType}`, 380, logoY + 8);
-          
-        doc.fontSize(10)
-          .fillColor('#e0e7ff')
-          .font('Helvetica')
-          .text(`Generated: ${new Date().toLocaleDateString()}`, 380, logoY + 25)
-          .text(`Time: ${new Date().toLocaleTimeString()}`, 380, logoY + 40);
-      }
-      
-      // Document title with professional styling
-      doc.moveDown(3)
-        .fontSize(24)
-        .fillColor('#1e40af')
-        .font('Helvetica-Bold')
-        .text(documentType.toUpperCase(), { align: 'center' })
-        .moveDown(0.5);
-      
-      if (includeVesselDetails) {
-        // Professional vessel information box
-        const vesselBoxY = doc.y + 20;
-        doc.rect(50, vesselBoxY, 495, 100)
-          .fillAndStroke('#f8fafc', '#e2e8f0');
-          
-        // Vessel name prominently displayed
-        doc.fontSize(18)
-          .fillColor('#1e40af')
-          .font('Helvetica-Bold')
-          .text(`VESSEL: ${vessel.name}`, 70, vesselBoxY + 15);
-          
-        // Technical specifications in organized layout
-        doc.fontSize(11)
-          .fillColor('#374151')
-          .font('Helvetica');
-          
-        const leftCol = 70;
-        const rightCol = 300;
-        let currentY = vesselBoxY + 45;
-        
-        doc.text(`IMO Number: ${vessel.imo || 'Not Available'}`, leftCol, currentY);
-        doc.text(`Flag State: ${vessel.flag || 'Not Available'}`, rightCol, currentY);
-        
-        currentY += 15;
-        doc.text(`Vessel Type: ${vessel.vesselType || 'Oil Tanker'}`, leftCol, currentY);
-        doc.text(`Built Year: ${vessel.built || 'Not Available'}`, rightCol, currentY);
-        
-        currentY += 15;
-        doc.text(`DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() + ' MT' : 'Not Available'}`, leftCol, currentY);
-        doc.text(`Cargo Capacity: ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' BBL' : 'Not Available'}`, rightCol, currentY);
-      }
-      
-      // Document reference number
-      doc.moveDown(2)
-        .fontSize(10)
-        .fillColor('#6b7280')
-        .text(`Document Reference: PD-${new Date().getFullYear()}-${vesselId}-${Date.now()}`, { align: 'right' })
-        .moveDown(1);
-      
-      // Professional separator line
-      doc.moveTo(50, doc.y)
-        .lineTo(545, doc.y)
-        .strokeColor('#1e40af')
-        .lineWidth(2)
-        .stroke();
-      
-      // Enhanced Professional Maritime Content
-      doc.moveDown(1);
-      
-      // Generate comprehensive professional content based on document type
-      const comprehensiveContent = generateComprehensiveMaritimeContent(documentType, vessel, documentContent);
-      
-      // Add simple watermark to page
-      function addSimpleWatermark() {
-        doc.save();
-        doc.opacity(0.1);
-        doc.fontSize(60)
-          .fillColor('#1e40af')
-          .font('Helvetica-Bold')
-          .text('PETRODEALHUB', 150, 400, { rotate: -45 });
-        doc.restore();
-      }
-      
-      // Add watermark to first page
-      addSimpleWatermark();
-
-      // Format comprehensive content with enhanced professional styling
-      comprehensiveContent.sections.forEach((section: any, sectionIndex: number) => {
-        // Only add page break if content would overflow
-        if (doc.y > 720) {
-          doc.addPage();
-          addSimpleWatermark();
-        }
-        
-        // Professional section header with decorative line
-        doc.rect(50, doc.y, 495, 35)
-          .fillAndStroke('#f8fafc', '#e2e8f0');
-          
-        doc.fontSize(18)
-          .fillColor('#1e40af')
-          .font('Helvetica-Bold')
-          .text(section.title, 70, doc.y - 28, { width: 455 });
-          
-        // Decorative accent line
-        doc.rect(50, doc.y - 5, 495, 3)
-          .fillAndStroke('#1e40af', '#1e40af');
-          
-        doc.moveDown(1.2);
-        
-        section.content.forEach((item: any) => {
-          // Check for page break
-          if (doc.y > 750) {
-            doc.addPage();
-          }
-          
-          if (item.type === 'subsection') {
-            // Enhanced subsection styling
-            doc.moveDown(0.8)
-              .fontSize(15)
-              .fillColor('#1e40af')
-              .font('Helvetica-Bold')
-              .text(`• ${item.title}`)
-              .moveDown(0.4);
-              
-          } else if (item.type === 'table') {
-            // Professional table with improved layout
-            doc.moveDown(0.8);
-            
-            // Table dimensions and positioning
-            const pageWidth = 595.28; // A4 width in points
-            const leftMargin = 70;
-            const rightMargin = 70;
-            const availableWidth = pageWidth - leftMargin - rightMargin; // 455 points
-            
-            // Get table data
-            const tableData = item.rows || [];
-            if (tableData.length === 0) return;
-            
-            const numColumns = tableData[0].length;
-            const columnWidth = Math.floor(availableWidth / numColumns);
-            const cellHeight = 25;
-            
-            // Table header background
-            const tableStartY = doc.y;
-            
-            tableData.forEach((row: string[], rowIndex: number) => {
-              // Check for page break
-              if (doc.y + cellHeight > 750) {
-                doc.addPage();
-              }
-              
-              const rowY = doc.y;
-              
-              // Row background
-              if (rowIndex === 0) {
-                // Header background - dark blue
-                doc.rect(leftMargin, rowY, availableWidth, cellHeight)
-                  .fillAndStroke('#1e40af', '#1e40af');
-              } else if (rowIndex % 2 === 1) {
-                // Alternating row background - light gray
-                doc.rect(leftMargin, rowY, availableWidth, cellHeight)
-                  .fillAndStroke('#f8fafc', '#e2e8f0');
-              }
-              
-              // Draw cells and content
-              let xPos = leftMargin;
-              row.forEach((cellContent: string, colIndex: number) => {
-                // Cell border
-                doc.rect(xPos, rowY, columnWidth, cellHeight)
-                  .stroke('#cbd5e1');
-                
-                // Text styling
-                if (rowIndex === 0) {
-                  doc.fontSize(10)
-                    .fillColor('#ffffff')
-                    .font('Helvetica-Bold');
-                } else {
-                  doc.fontSize(9)
-                    .fillColor('#374151')
-                    .font('Helvetica');
-                }
-                
-                // Prepare cell text
-                let displayText = cellContent || '';
-                const maxTextWidth = columnWidth - 12; // Padding
-                
-                // Truncate if necessary
-                const avgCharWidth = 5.5; // Average character width
-                const maxChars = Math.floor(maxTextWidth / avgCharWidth);
-                if (displayText.length > maxChars) {
-                  displayText = displayText.substring(0, maxChars - 3) + '...';
-                }
-                
-                // Center text vertically in cell
-                const textY = rowY + (cellHeight / 2) - 4;
-                
-                doc.text(displayText, xPos + 6, textY, {
-                  width: maxTextWidth,
-                  align: rowIndex === 0 ? 'center' : 'left',
-                  ellipsis: true
-                });
-                
-                xPos += columnWidth;
-              });
-              
-              doc.y = rowY + cellHeight;
-            });
-            
-            doc.moveDown(0.8);
-            
-          } else {
-            // Clean paragraph formatting with consistent spacing
-            const paragraphText = item.text;
-            
-            // Clean up the text - remove extra spaces and normalize
-            const cleanText = paragraphText
-              .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
-              .replace(/\n+/g, ' ')  // Replace newlines with space
-              .trim();               // Remove leading/trailing spaces
-            
-            // Calculate proper margins
-            const leftMargin = 70;
-            const rightMargin = 525;
-            const textWidth = rightMargin - leftMargin;
-            
-            // Check for page break
-            if (doc.y > 720) {
-              doc.addPage();
-            }
-            
-            // Format paragraph with proper spacing
-            doc.fontSize(10)
-              .fillColor('#374151')
-              .font('Helvetica')
-              .text(cleanText, leftMargin, doc.y, { 
-                width: textWidth,
-                align: 'justify',
-                lineGap: 2,
-                paragraphGap: 0
-              });
-              
-            doc.moveDown(0.5);
-          }
-        });
-        
-        // Section separator
-        if (sectionIndex < comprehensiveContent.sections.length - 1) {
-          doc.moveDown(0.5)
-            .moveTo(80, doc.y)
-            .lineTo(515, doc.y)
-            .strokeColor('#cbd5e1')
-            .lineWidth(1)
-            .stroke()
-            .moveDown(1);
-        }
+      // Use custom template service to generate professional PDF with user's template assets
+      await customPdfTemplateService.generateCustomPDF(doc, vessel, {
+        documentType,
+        documentContent,
+        includeVesselDetails,
+        includeLogo
       });
-      
-      // Enhanced professional footer with elegant design
-      const footerY = doc.page.height - 100;
-      
-      // Footer background with gradient effect
-      doc.rect(40, footerY, 515, 70)
-        .fillAndStroke('#f8fafc', '#e2e8f0');
-        
-      // Footer accent line
-      doc.rect(40, footerY, 515, 4)
-        .fillAndStroke('#1e40af', '#1e40af');
-        
-      // Company logo section in footer
-      doc.fontSize(12)
-        .fillColor('#1e40af')
-        .font('Helvetica-Bold')
-        .text('PETRODEALHUB', 60, footerY + 15);
-        
-      doc.fontSize(8)
-        .fillColor('#64748b')
-        .font('Helvetica')
-        .text('Maritime Solutions & Professional Documentation', 60, footerY + 30);
-        
-      // Document metadata in elegant format
-      doc.fontSize(8)
-        .fillColor('#64748b')
-        .font('Helvetica')
-        .text(`Document Generated: ${new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZoneName: 'short'
-        })}`, 60, footerY + 45);
-        
-      // Right side footer information
-      doc.fontSize(8)
-        .fillColor('#1e40af')
-        .font('Helvetica-Bold')
-        .text('CONFIDENTIAL MARITIME DOCUMENT', 350, footerY + 15);
-        
-      doc.fontSize(8)
-        .fillColor('#64748b')
-        .font('Helvetica')
-        .text('Authorized for Official Maritime Use Only', 350, footerY + 30)
-        .text('Verification Available via PetroDealHub Platform', 350, footerY + 45);
-        
-      // Page numbering (if multiple pages)
-      const pageNumber = doc.bufferedPageRange().count;
-      if (pageNumber > 1) {
-        doc.fontSize(8)
-          .fillColor('#64748b')
-          .font('Helvetica')
-          .text(`Page ${pageNumber}`, 500, footerY + 60, { align: 'center' });
-      }
       
       // Finalize the PDF
       doc.end();
-      
     } catch (error) {
-      console.error('PDF Generation Error:', error);
+      console.error('Custom PDF Generation Error:', error);
       res.status(500).json({ 
-        message: "Failed to generate professional PDF document",
+        message: "Failed to generate professional PDF document with custom template",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

@@ -1,374 +1,300 @@
-import PDFDocument from 'pdfkit';
-import * as fs from 'fs';
-import * as path from 'path';
+import path from 'path';
+import fs from 'fs';
+
+interface VesselData {
+  id: number;
+  name: string;
+  imo?: string;
+  flag?: string;
+  vesselType?: string;
+  built?: number;
+  length?: number;
+  width?: number;
+  deadweight?: number;
+  grossTonnage?: number;
+  owner?: string;
+}
+
+interface DocumentOptions {
+  documentType: string;
+  documentContent: string;
+  includeVesselDetails?: boolean;
+  includeLogo?: boolean;
+}
 
 export class CustomPdfTemplateService {
-  private static instance: CustomPdfTemplateService;
-  
-  public static getInstance(): CustomPdfTemplateService {
-    if (!CustomPdfTemplateService.instance) {
-      CustomPdfTemplateService.instance = new CustomPdfTemplateService();
-    }
-    return CustomPdfTemplateService.instance;
+  private templateAssetsPath: string;
+
+  constructor() {
+    this.templateAssetsPath = path.join(process.cwd(), 'attached_assets');
   }
 
-  // Color scheme from your template
-  private colors = {
-    primary: '#1E40AF',      // Deep blue
-    secondary: '#F59E0B',    // Orange/gold
-    accent: '#10B981',       // Green
-    text: '#1F2937',         // Dark gray
-    textLight: '#6B7280',    // Light gray
-    background: '#F9FAFB',   // Very light gray
-    white: '#FFFFFF',
-    red: '#DC2626'           // For CLIENT COPY stamp
-  };
-
-  // Template assets paths
-  private getAssetPath(filename: string): string {
-    return path.join(process.cwd(), 'attached_assets', filename);
-  }
-
-  public async generateCustomTemplatePDF(
-    title: string,
-    content: string,
-    vesselData: any,
-    documentType: string = 'VESSEL_DOCUMENT'
-  ): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({
-          size: 'A4',
-          margin: 50,
-          bufferPages: true
-        });
-
-        const chunks: Buffer[] = [];
-        doc.on('data', chunk => chunks.push(chunk));
-        doc.on('end', () => resolve(Buffer.concat(chunks)));
-
-        // Start building the document
-        this.addHeader(doc, title, documentType);
-        this.addWatermark(doc);
-        this.addVesselInfo(doc, vesselData);
-        this.addMainContent(doc, content);
-        this.addFooter(doc);
-        this.addClientCopyStamp(doc);
-
-        doc.end();
-      } catch (error) {
-        reject(error);
+  private getTemplateAsset(filename: string): string | null {
+    try {
+      const filePath = path.join(this.templateAssetsPath, filename);
+      if (fs.existsSync(filePath)) {
+        return filePath;
       }
-    });
+      console.warn(`Template asset not found: ${filename}`);
+      return null;
+    } catch (error) {
+      console.error(`Error accessing template asset ${filename}:`, error);
+      return null;
+    }
   }
 
-  private addHeader(doc: PDFKit.PDFDocument, title: string, documentType: string): void {
+  private async getLogoBase64(): Promise<string | null> {
+    try {
+      // Try to get the PetroDealHub logo
+      const logoPath = this.getTemplateAsset('image001_1752786950475.png');
+      if (logoPath && fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        return `data:image/png;base64,${logoBuffer.toString('base64')}`;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading logo:', error);
+      return null;
+    }
+  }
+
+  private async getSecondaryLogoBase64(): Promise<string | null> {
+    try {
+      // Try to get the Legal Document Services logo
+      const logoPath = this.getTemplateAsset('image002_1752786950475.png');
+      if (logoPath && fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        return `data:image/png;base64,${logoBuffer.toString('base64')}`;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading secondary logo:', error);
+      return null;
+    }
+  }
+
+  private readColorScheme(): any {
+    try {
+      const colorSchemePath = this.getTemplateAsset('colorschememapping_1752786950476.xml');
+      if (colorSchemePath && fs.existsSync(colorSchemePath)) {
+        const colorSchemeContent = fs.readFileSync(colorSchemePath, 'utf-8');
+        // Parse basic color information from XML (simplified)
+        return {
+          primary: '#1e40af', // Blue theme from template
+          secondary: '#64748b', // Gray theme
+          accent: '#f97316', // Orange accent
+          background: '#f8fafc' // Light background
+        };
+      }
+    } catch (error) {
+      console.error('Error reading color scheme:', error);
+    }
+    
+    // Fallback colors
+    return {
+      primary: '#1e40af',
+      secondary: '#64748b', 
+      accent: '#f97316',
+      background: '#f8fafc'
+    };
+  }
+
+  private readHeaderTemplate(): string {
+    try {
+      const headerPath = this.getTemplateAsset('header_1752786950476.htm');
+      if (headerPath && fs.existsSync(headerPath)) {
+        return fs.readFileSync(headerPath, 'utf-8');
+      }
+    } catch (error) {
+      console.error('Error reading header template:', error);
+    }
+    return '';
+  }
+
+  async generateCustomPDF(doc: any, vessel: VesselData, options: DocumentOptions): Promise<void> {
+    const colors = this.readColorScheme();
+    const logoBase64 = await this.getLogoBase64();
+    const secondaryLogoBase64 = await this.getSecondaryLogoBase64();
+
+    // Professional header with template styling
+    this.addCustomHeader(doc, colors, logoBase64, secondaryLogoBase64, options);
+    
+    // Add vessel information with template styling
+    if (options.includeVesselDetails) {
+      this.addVesselInformation(doc, vessel, colors);
+    }
+    
+    // Add document content with professional formatting
+    this.addDocumentContent(doc, options.documentContent, colors);
+    
+    // Add professional footer
+    this.addCustomFooter(doc, colors, secondaryLogoBase64);
+  }
+
+  private addCustomHeader(doc: any, colors: any, logoBase64: string | null, secondaryLogoBase64: string | null, options: DocumentOptions): void {
     const pageWidth = doc.page.width;
     
-    // Add main logo (PetroDealHub)
-    try {
-      const logoPath = this.getAssetPath('image001_1752786950475.png');
-      if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 50, 30, { width: 120 });
+    // Header background with gradient effect
+    doc.rect(0, 0, pageWidth, 120)
+       .fillAndStroke(colors.primary, colors.primary);
+    
+    // Add logos if available
+    if (logoBase64) {
+      try {
+        doc.image(logoBase64, 50, 20, { width: 60, height: 60 });
+      } catch (error) {
+        console.error('Error adding primary logo:', error);
       }
-    } catch (error) {
-      console.log('Logo not found, using text header');
     }
-
-    // Add Legal Document Services logo
-    try {
-      const legalLogoPath = this.getAssetPath('image002_1752786950475.png');
-      if (fs.existsSync(legalLogoPath)) {
-        doc.image(legalLogoPath, pageWidth - 170, 30, { width: 120 });
-      }
-    } catch (error) {
-      // Fallback to text
-      doc.fontSize(12)
-         .fillColor(this.colors.text)
-         .font('Helvetica-Bold')
-         .text('LEGAL DOCUMENT', pageWidth - 170, 40, { width: 120, align: 'center' });
-      
-      doc.fontSize(8)
-         .fillColor(this.colors.textLight)
-         .font('Helvetica')
-         .text('S E R V I C E S', pageWidth - 170, 55, { width: 120, align: 'center' });
-    }
-
-    // Add decorative element
-    try {
-      const decorPath = this.getAssetPath('image003_1752786950475.png');
-      if (fs.existsSync(decorPath)) {
-        doc.image(decorPath, (pageWidth / 2) - 25, 35, { width: 50 });
-      }
-    } catch (error) {
-      // Skip decorative element if not found
-    }
-
-    // Document title with professional styling
-    doc.fontSize(18)
-       .fillColor(this.colors.primary)
+    
+    // Company branding
+    doc.fontSize(28)
+       .fillColor('#ffffff')
        .font('Helvetica-Bold')
-       .text(title, 50, 100, { width: pageWidth - 100, align: 'center' });
-
-    // Document type
+       .text('PETRODEALHUB', 130, 30);
+    
     doc.fontSize(12)
-       .fillColor(this.colors.textLight)
+       .fillColor('#e0e7ff')
        .font('Helvetica')
-       .text(documentType, 50, 125, { width: pageWidth - 100, align: 'center' });
-
-    // Add horizontal line
-    doc.moveTo(50, 150)
-       .lineTo(pageWidth - 50, 150)
-       .strokeColor(this.colors.primary)
-       .lineWidth(2)
-       .stroke();
-
-    // Move cursor down
-    doc.y = 170;
-  }
-
-  private addWatermark(doc: PDFKit.PDFDocument): void {
-    // Add subtle diagonal watermark
-    doc.save();
-    doc.rotate(45, { origin: [300, 400] });
-    doc.fontSize(60)
-       .fillColor(this.colors.textLight, 0.05)
-       .font('Helvetica-Bold')
-       .text('PetroDealHub', 0, 300, { align: 'center' });
-    doc.restore();
-  }
-
-  private addVesselInfo(doc: PDFKit.PDFDocument, vesselData: any): void {
-    if (!vesselData) return;
-
-    const startY = doc.y + 10;
+       .text('Legal Document Services', 130, 55);
     
-    // Vessel Information Header
+    // Secondary logo (Legal Document Services)
+    if (secondaryLogoBase64) {
+      try {
+        doc.image(secondaryLogoBase64, pageWidth - 110, 20, { width: 60, height: 60 });
+      } catch (error) {
+        console.error('Error adding secondary logo:', error);
+      }
+    }
+    
+    // Document type and date
     doc.fontSize(14)
-       .fillColor(this.colors.primary)
+       .fillColor('#ffffff')
        .font('Helvetica-Bold')
-       .text('VESSEL INFORMATION', 50, startY);
-
-    // Create info box with border
-    const boxY = startY + 25;
-    const boxHeight = 80;
+       .text(options.documentType.toUpperCase(), 400, 35);
     
-    doc.rect(50, boxY, doc.page.width - 100, boxHeight)
-       .strokeColor(this.colors.primary)
-       .lineWidth(1)
-       .stroke();
+    doc.fontSize(10)
+       .fillColor('#e0e7ff')
+       .font('Helvetica')
+       .text(`Generated: ${new Date().toLocaleDateString()}`, 400, 55)
+       .text(`Time: ${new Date().toLocaleTimeString()}`, 400, 70);
+  }
 
-    // Fill background
-    doc.rect(51, boxY + 1, doc.page.width - 102, boxHeight - 2)
-       .fillColor(this.colors.background)
-       .fill();
-
-    // Vessel details in two columns
+  private addVesselInformation(doc: any, vessel: VesselData, colors: any): void {
+    doc.moveDown(3);
+    
+    // Vessel information box with professional styling
+    const vesselBoxY = doc.y + 20;
+    doc.rect(50, vesselBoxY, 495, 120)
+       .fillAndStroke(colors.background, colors.secondary);
+    
+    // Vessel name header
+    doc.fontSize(20)
+       .fillColor(colors.primary)
+       .font('Helvetica-Bold')
+       .text(`VESSEL: ${vessel.name}`, 70, vesselBoxY + 20);
+    
+    // Technical specifications in organized columns
+    doc.fontSize(11)
+       .fillColor('#374151')
+       .font('Helvetica');
+    
     const leftCol = 70;
     const rightCol = 320;
-    let yPos = boxY + 15;
-
-    doc.fontSize(10)
-       .fillColor(this.colors.text)
-       .font('Helvetica-Bold');
-
+    let currentY = vesselBoxY + 55;
+    
     // Left column
-    doc.text('Vessel Name:', leftCol, yPos);
-    doc.font('Helvetica')
-       .text(vesselData.name || 'N/A', leftCol + 80, yPos);
-
-    yPos += 15;
-    doc.font('Helvetica-Bold')
-       .text('IMO Number:', leftCol, yPos);
-    doc.font('Helvetica')
-       .text(vesselData.imo || 'N/A', leftCol + 80, yPos);
-
-    yPos += 15;
-    doc.font('Helvetica-Bold')
-       .text('Cargo Type:', leftCol, yPos);
-    doc.font('Helvetica')
-       .text(vesselData.cargoType || vesselData.oilType || 'N/A', leftCol + 80, yPos);
-
+    doc.text(`IMO Number: ${vessel.imo || 'Not Available'}`, leftCol, currentY);
+    doc.text(`Vessel Type: ${vessel.vesselType || 'Not Available'}`, leftCol, currentY + 15);
+    doc.text(`Built Year: ${vessel.built || 'Not Available'}`, leftCol, currentY + 30);
+    doc.text(`Length: ${vessel.length || 'Not Available'} m`, leftCol, currentY + 45);
+    
     // Right column
-    yPos = boxY + 15;
-    doc.font('Helvetica-Bold')
-       .text('Flag:', rightCol, yPos);
-    doc.font('Helvetica')
-       .text(vesselData.flag || 'N/A', rightCol + 60, yPos);
-
-    yPos += 15;
-    doc.font('Helvetica-Bold')
-       .text('Status:', rightCol, yPos);
-    doc.font('Helvetica')
-       .text(vesselData.status || 'Active', rightCol + 60, yPos);
-
-    yPos += 15;
-    doc.font('Helvetica-Bold')
-       .text('Location:', rightCol, yPos);
-    doc.font('Helvetica')
-       .text(`${vesselData.latitude || 'N/A'}, ${vesselData.longitude || 'N/A'}`, rightCol + 60, yPos);
-
-    doc.y = boxY + boxHeight + 20;
+    doc.text(`Flag State: ${vessel.flag || 'Not Available'}`, rightCol, currentY);
+    doc.text(`Width: ${vessel.width || 'Not Available'} m`, rightCol, currentY + 15);
+    doc.text(`Deadweight: ${vessel.deadweight || 'Not Available'} DWT`, rightCol, currentY + 30);
+    doc.text(`Owner: ${vessel.owner || 'Not Available'}`, rightCol, currentY + 45);
   }
 
-  private addMainContent(doc: PDFKit.PDFDocument, content: string): void {
-    const pageWidth = doc.page.width;
-    const pageHeight = doc.page.height;
+  private addDocumentContent(doc: any, content: string, colors: any): void {
+    doc.moveDown(4);
     
     // Content header
-    doc.fontSize(14)
-       .fillColor(this.colors.primary)
+    doc.fontSize(18)
+       .fillColor(colors.primary)
        .font('Helvetica-Bold')
-       .text('DOCUMENT CONTENT', 50, doc.y);
-
-    doc.y += 20;
-
-    // Clean and format content
-    const cleanContent = this.cleanContent(content);
-    const paragraphs = cleanContent.split('\n\n').filter(p => p.trim());
-
+       .text('DOCUMENT CONTENT', { align: 'center' })
+       .moveDown(1);
+    
+    // Process and format content
+    const processedContent = this.processDocumentContent(content);
+    
     doc.fontSize(11)
-       .fillColor(this.colors.text)
-       .font('Helvetica');
-
-    paragraphs.forEach((paragraph, index) => {
-      // Check for page break
-      if (doc.y > pageHeight - 150) {
-        doc.addPage();
-        doc.y = 50;
-      }
-
-      // Check if it's a header (starts with capital letters or contains keywords)
-      if (this.isHeaderParagraph(paragraph)) {
-        doc.fontSize(12)
-           .font('Helvetica-Bold')
-           .fillColor(this.colors.primary);
-      } else {
-        doc.fontSize(11)
-           .font('Helvetica')
-           .fillColor(this.colors.text);
-      }
-
-      // Add paragraph with proper spacing
-      const textHeight = doc.heightOfString(paragraph, { width: pageWidth - 100 });
-      doc.text(paragraph, 50, doc.y, { 
-        width: pageWidth - 100,
-        align: 'justify'
-      });
-
-      doc.y += textHeight + 10;
-    });
+       .fillColor('#374151')
+       .font('Helvetica')
+       .text(processedContent, {
+         width: 495,
+         align: 'justify',
+         lineGap: 4
+       });
   }
 
-  private addFooter(doc: PDFKit.PDFDocument): void {
-    const pageCount = doc.bufferedPageRange().count;
+  private processDocumentContent(content: string): string {
+    // Clean up content and format for PDF
+    return content
+      .replace(/\[Company Logo\]/g, '')
+      .replace(/\[.*?\]/g, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/\n\n+/g, '\n\n')
+      .trim();
+  }
+
+  private addCustomFooter(doc: any, colors: any, secondaryLogoBase64: string | null): void {
+    const pageHeight = doc.page.height;
+    const footerY = pageHeight - 100;
     
-    for (let i = 0; i < pageCount; i++) {
-      doc.switchToPage(i);
-      
-      // Footer line
-      doc.moveTo(50, doc.page.height - 80)
-         .lineTo(doc.page.width - 50, doc.page.height - 80)
-         .strokeColor(this.colors.primary)
-         .lineWidth(1)
-         .stroke();
-
-      // Footer text
-      doc.fontSize(9)
-         .fillColor(this.colors.textLight)
-         .font('Helvetica')
-         .text(
-           `Page ${i + 1} of ${pageCount}`,
-           50,
-           doc.page.height - 65,
-           { align: 'center', width: doc.page.width - 100 }
-         );
-
-      doc.text(
-        'Generated by PetroDealHub Professional Maritime Services',
-        50,
-        doc.page.height - 50,
-        { align: 'center', width: doc.page.width - 100 }
-      );
-
-      doc.text(
-        `Document Date: ${new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })}`,
-        50,
-        doc.page.height - 35,
-        { align: 'center', width: doc.page.width - 100 }
-      );
+    // Footer separator line
+    doc.strokeColor(colors.secondary)
+       .lineWidth(1)
+       .moveTo(50, footerY)
+       .lineTo(545, footerY)
+       .stroke();
+    
+    // Legal text and verification
+    doc.fontSize(9)
+       .fillColor('#666666')
+       .font('Helvetica')
+       .text('This document is officially recognized within the PetroDealHub platform under its legal terms and privacy policy.', 
+             50, footerY + 15);
+    
+    doc.text('All rights reserved. Unauthorized use, modification, or distribution is strictly prohibited.', 
+             50, footerY + 30);
+    
+    doc.fillColor(colors.primary)
+       .text('Visit: https://www.petrodealhub.com/legal', 50, footerY + 45);
+    
+    // Company contact information
+    doc.fontSize(10)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text('PetroDealHub Maritime Solutions', 400, footerY + 15);
+    
+    doc.fontSize(9)
+       .fillColor('#666666')
+       .font('Helvetica')
+       .text('Email: support@petrodealhub.com', 400, footerY + 30)
+       .text('Web: www.petrodealhub.com', 400, footerY + 45);
+    
+    // Small secondary logo in footer if available
+    if (secondaryLogoBase64) {
+      try {
+        doc.image(secondaryLogoBase64, 520, footerY + 20, { width: 25, height: 25 });
+      } catch (error) {
+        console.error('Error adding footer logo:', error);
+      }
     }
-  }
-
-  private addClientCopyStamp(doc: PDFKit.PDFDocument): void {
-    // Add CLIENT COPY stamp on first page
-    doc.switchToPage(0);
-    
-    try {
-      const stampPath = this.getAssetPath('image004_1752786950475.png');
-      if (fs.existsSync(stampPath)) {
-        // Position stamp in upper right corner
-        doc.image(stampPath, doc.page.width - 200, 200, { width: 150 });
-      } else {
-        // Fallback text stamp
-        doc.save();
-        doc.rotate(15, { origin: [doc.page.width - 150, 250] });
-        doc.fontSize(24)
-           .fillColor(this.colors.red, 0.7)
-           .font('Helvetica-Bold')
-           .text('CLIENT COPY', doc.page.width - 200, 220);
-        doc.restore();
-      }
-    } catch (error) {
-      console.log('CLIENT COPY stamp not found, using text');
-      // Fallback text stamp
-      doc.save();
-      doc.rotate(15, { origin: [doc.page.width - 150, 250] });
-      doc.fontSize(24)
-         .fillColor(this.colors.red, 0.7)
-         .font('Helvetica-Bold')
-         .text('CLIENT COPY', doc.page.width - 200, 220);
-      doc.restore();
-    }
-  }
-
-  private cleanContent(content: string): string {
-    // Remove HTML tags
-    let cleaned = content.replace(/<[^>]*>/g, '');
-    
-    // Fix common encoding issues
-    cleaned = cleaned
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-
-    // Normalize whitespace
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    
-    // Add proper paragraph breaks
-    cleaned = cleaned.replace(/\. ([A-Z])/g, '.\n\n$1');
-    
-    return cleaned;
-  }
-
-  private isHeaderParagraph(paragraph: string): boolean {
-    const trimmed = paragraph.trim();
-    return (
-      trimmed.length < 100 && 
-      (
-        trimmed === trimmed.toUpperCase() ||
-        /^(OVERVIEW|SUMMARY|DETAILS|INFORMATION|SPECIFICATIONS|CONCLUSION)/i.test(trimmed) ||
-        /^\d+\./i.test(trimmed)
-      )
-    );
   }
 }
 
-export const customPdfTemplateService = CustomPdfTemplateService.getInstance();
+export const customPdfTemplateService = new CustomPdfTemplateService();
