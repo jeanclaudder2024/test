@@ -108,6 +108,135 @@ export default function BrokerDashboard() {
   // Show payment reminder if trial is ending or expired
   const shouldShowPaymentReminder = hasActiveTrial && (trialDaysRemaining <= 2 || isTrialExpired);
 
+  // Transaction Documents Section Component
+  const TransactionDocumentsSection = () => {
+    const { data: allTransactionDocuments = [], isLoading: documentsLoading } = useQuery({
+      queryKey: ['/api/broker/all-transaction-documents'],
+      queryFn: async () => {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/broker/all-transaction-documents', {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch transaction documents');
+        return response.json();
+      },
+      staleTime: 0
+    });
+
+    const downloadTransactionDocument = useMutation({
+      mutationFn: async (documentId: number) => {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`/api/transaction-documents/${documentId}/download`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
+        });
+        if (!response.ok) throw new Error('Failed to download document');
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `transaction-document-${documentId}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      },
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Document downloaded successfully",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Download Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+
+    const formatFileSize = (bytes: number) => {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    const getDocumentIcon = (mimeType: string) => {
+      if (mimeType.includes('pdf')) return '📄';
+      if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+      if (mimeType.includes('image')) return '🖼️';
+      if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
+      return '📄';
+    };
+
+    if (documentsLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-400">Loading documents...</span>
+        </div>
+      );
+    }
+
+    if (allTransactionDocuments.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <FileText className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+          <p className="text-gray-400">No documents uploaded yet</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Documents will appear here when you upload them through transaction steps
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {allTransactionDocuments.map((doc) => (
+          <div key={doc.id} className="border border-gray-600 rounded-lg p-4 hover:bg-gray-700/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">{getDocumentIcon(doc.mimeType)}</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">{doc.originalFilename}</h3>
+                  <p className="text-sm text-gray-400">{doc.documentType}</p>
+                  <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                    <span>{formatFileSize(doc.fileSize)}</span>
+                    <span>Deal: {doc.dealTitle}</span>
+                    <span>Step: {doc.stepName}</span>
+                    <span>{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Badge variant="outline" className="text-green-400 border-green-400">
+                  Uploaded
+                </Badge>
+                <Button 
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => downloadTransactionDocument.mutate(doc.id)}
+                  disabled={downloadTransactionDocument.isPending}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // Fetch broker deals
   const { data: deals = [], isLoading: dealsLoading } = useQuery<Deal[]>({
     queryKey: ['/api/broker/deals'],
@@ -666,58 +795,16 @@ export default function BrokerDashboard() {
               </CardContent>
             </Card>
 
-            {/* Regular Documents Section */}
+            {/* Transaction Documents Section */}
             <Card className="bg-gray-800/90 border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white">Your Documents</CardTitle>
                 <CardDescription className="text-gray-300">
-                  Documents you have uploaded
+                  Documents you have uploaded through transaction steps
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredDocuments.map((doc) => (
-                    <Card key={doc.id} className="bg-gray-700/50 border-gray-600">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
-                              <FileText className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-white">{doc.name}</h3>
-                              <p className="text-sm text-gray-400">{doc.type}</p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm text-gray-300">
-                          <div className="flex justify-between">
-                            <span>Size:</span>
-                            <span>{doc.size}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Uploaded:</span>
-                            <span>{doc.uploadDate}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Downloads:</span>
-                            <span>{doc.downloadCount}</span>
-                          </div>
-                        </div>
-
-                        <Button 
-                          className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
-                          onClick={() => downloadMutation.mutate(doc.id)}
-                          disabled={downloadMutation.isPending}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <TransactionDocumentsSection />
               </CardContent>
             </Card>
           </TabsContent>

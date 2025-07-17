@@ -3899,6 +3899,49 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getAllTransactionDocumentsByBroker(brokerId: number): Promise<any[]> {
+    try {
+      const documents = await db.select({
+        id: transactionDocuments.id,
+        stepId: transactionDocuments.stepId,
+        dealId: transactionDocuments.dealId,
+        documentType: transactionDocuments.documentType,
+        originalFilename: transactionDocuments.originalFilename,
+        storedFilename: transactionDocuments.storedFilename,
+        filePath: transactionDocuments.filePath,
+        fileSize: transactionDocuments.fileSize,
+        mimeType: transactionDocuments.mimeType,
+        uploadedBy: transactionDocuments.uploadedBy,
+        uploadedAt: transactionDocuments.uploadedAt,
+        dealTitle: brokerDeals.dealTitle,
+        stepName: transactionSteps.stepName,
+        stepNumber: transactionSteps.stepNumber
+      })
+      .from(transactionDocuments)
+      .leftJoin(transactionSteps, eq(transactionDocuments.stepId, transactionSteps.id))
+      .leftJoin(brokerDeals, eq(transactionDocuments.dealId, brokerDeals.id))
+      .where(eq(brokerDeals.brokerId, brokerId))
+      .orderBy(desc(transactionDocuments.uploadedAt));
+      
+      return documents;
+    } catch (error) {
+      console.error('Error fetching all transaction documents for broker:', error);
+      return [];
+    }
+  }
+
+  async getTransactionDocumentById(documentId: number): Promise<TransactionDocument | undefined> {
+    try {
+      const [document] = await db.select()
+        .from(transactionDocuments)
+        .where(eq(transactionDocuments.id, documentId));
+      return document;
+    } catch (error) {
+      console.error('Error fetching transaction document by ID:', error);
+      return undefined;
+    }
+  }
+
   // Deal Message Management
   async createDealMessage(message: InsertDealMessage): Promise<DealMessage> {
     try {

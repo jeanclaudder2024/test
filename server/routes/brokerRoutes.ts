@@ -221,6 +221,48 @@ export function registerBrokerRoutes(app: Express) {
     }
   });
 
+  // Get all transaction documents for broker
+  app.get('/api/broker/all-transaction-documents', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const documents = await storage.getAllTransactionDocumentsByBroker(userId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching all transaction documents:', error);
+      res.status(500).json({ error: 'Failed to fetch transaction documents' });
+    }
+  });
+
+  // Download transaction document
+  app.get('/api/transaction-documents/:id/download', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const documentId = parseInt(req.params.id);
+      
+      // Get document details
+      const document = await storage.getTransactionDocumentById(documentId);
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+      
+      // Verify user has access to this document (must be the broker who uploaded it)
+      if (document.uploadedBy !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      // Send file
+      res.download(document.filePath, document.originalFilename, (err) => {
+        if (err) {
+          console.error('Error downloading transaction document:', err);
+          res.status(500).json({ error: 'Download failed' });
+        }
+      });
+    } catch (error) {
+      console.error('Error downloading transaction document:', error);
+      res.status(500).json({ error: 'Failed to download document' });
+    }
+  });
+
   // Get broker profile
   app.get('/api/broker/profile', authenticateToken, async (req, res) => {
     try {
