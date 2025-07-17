@@ -153,52 +153,90 @@ export class CustomPdfTemplateService {
   }
 
   private addVesselContentToTemplate(doc: any, vessel: VesselData, options: DocumentOptions): void {
-    // Position content to not overlap with existing template elements
-    // Template has header, centered logo, and footer already
+    // Position content in open areas between header and footer of your template
+    // Based on your template layout, we need to position content carefully
     
-    // Main content area - positioned between logo and footer
-    const contentY = 500; // Below the centered logo area
+    // First content area - upper middle section (after header, before central logo)
+    const upperContentY = 140; // After header area
     
-    // Vessel information section
-    doc.fontSize(14)
+    // Document title
+    doc.fontSize(16)
        .fillColor('#1e40af')
        .font('Helvetica-Bold')
-       .text('VESSEL CERTIFICATION', 70, contentY, {
-         width: 450,
+       .text(options.documentType || 'VESSEL DOCUMENTATION', 80, upperContentY, {
+         width: 440,
          align: 'center'
        });
     
-    // Vessel details in clean format matching template style
-    doc.fontSize(11)
+    // Vessel name prominently displayed
+    doc.fontSize(14)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(`VESSEL: ${vessel.name || 'N/A'}`, 80, upperContentY + 30, {
+         width: 440,
+         align: 'center'
+       });
+    
+    // Vessel basic info in two columns
+    doc.fontSize(10)
        .fillColor('#374151')
        .font('Helvetica')
-       .text(`Vessel Name: ${vessel.name || 'N/A'}`, 100, contentY + 40)
-       .text(`IMO Number: ${vessel.imo || 'N/A'}`, 100, contentY + 60)
-       .text(`Flag State: ${vessel.flag || 'N/A'}`, 100, contentY + 80)
-       .text(`Vessel Type: ${vessel.vesselType || 'N/A'}`, 100, contentY + 100);
+       .text(`IMO: ${vessel.imo || 'N/A'}`, 100, upperContentY + 60)
+       .text(`Type: ${vessel.vesselType || 'N/A'}`, 100, upperContentY + 80)
+       .text(`Flag: ${vessel.flag || 'N/A'}`, 100, upperContentY + 100);
     
-    // Technical specifications in right column
-    doc.text(`DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() : 'N/A'} tonnes`, 320, contentY + 40)
-       .text(`Built: ${vessel.built || 'N/A'}`, 320, contentY + 60)
-       .text(`Length: ${vessel.length || 'N/A'} m`, 320, contentY + 80)
-       .text(`Beam: ${vessel.width || 'N/A'} m`, 320, contentY + 100);
+    // Right column
+    doc.text(`DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() : 'N/A'}`, 320, upperContentY + 60)
+       .text(`Built: ${vessel.built || 'N/A'}`, 320, upperContentY + 80)
+       .text(`Length: ${vessel.length || 'N/A'} m`, 320, upperContentY + 100);
     
-    // Document type and content
-    doc.fontSize(10)
-       .fillColor('#6b7280')
-       .text(`Document Type: ${options.documentType}`, 100, contentY + 140);
+    // Main content area - below central logo
+    const lowerContentY = 460; // Below central logo area
     
+    // Document content area
     if (options.documentContent) {
+      // Clean the content
+      const cleanContent = this.processDocumentContent(options.documentContent);
+      
+      // Split content into manageable chunks
+      const lines = cleanContent.split('\n').filter(line => line.trim());
+      let currentY = lowerContentY;
+      
       doc.fontSize(9)
          .fillColor('#374151')
-         .text(this.processDocumentContent(options.documentContent), 100, contentY + 170, {
-           width: 400,
-           align: 'justify',
-           lineGap: 3
-         });
+         .font('Helvetica');
+      
+      lines.forEach((line, index) => {
+        if (currentY > 650) return; // Don't overlap footer
+        
+        const trimmedLine = line.trim();
+        if (trimmedLine.length > 0) {
+          // Handle different types of content
+          if (trimmedLine.endsWith(':') || trimmedLine.toUpperCase() === trimmedLine) {
+            // Headers/titles
+            doc.fontSize(10)
+               .font('Helvetica-Bold')
+               .text(trimmedLine, 80, currentY, {
+                 width: 440,
+                 align: 'left'
+               });
+            currentY += 16;
+          } else {
+            // Regular content
+            doc.fontSize(9)
+               .font('Helvetica')
+               .text(trimmedLine, 80, currentY, {
+                 width: 440,
+                 align: 'justify',
+                 lineGap: 2
+               });
+            currentY += 14;
+          }
+        }
+      });
     }
     
-    // Add document date and reference in a clean area
+    // Document metadata in footer area (but not overlapping footer)
     const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -206,9 +244,31 @@ export class CustomPdfTemplateService {
     });
     
     doc.fontSize(8)
-       .fillColor('#9ca3af')
-       .text(`Document Date: ${currentDate}`, 100, 720)
-       .text(`Reference: PDH-${vessel.imo || 'UNKNOWN'}-${Date.now().toString().slice(-6)}`, 100, 735);
+       .fillColor('#6b7280')
+       .font('Helvetica')
+       .text(`Document Date: ${currentDate}`, 80, 680)
+       .text(`Reference: PDH-${vessel.imo || 'UNKNOWN'}-${Date.now().toString().slice(-6)}`, 80, 695);
+  }
+
+  private processDocumentContent(content: string): string {
+    if (!content) return '';
+    
+    // Remove HTML tags and clean content
+    let cleanContent = content
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&amp;/g, '&') // Replace HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim();
+    
+    // Split into paragraphs and clean up
+    const paragraphs = cleanContent.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+    
+    return paragraphs.join('\n\n');
   }
 
   private addFullPageBackground(doc: any, backgroundImageBase64: string): void {
