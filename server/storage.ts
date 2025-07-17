@@ -1703,29 +1703,13 @@ export class DatabaseStorage implements IStorage {
   // Admin Broker Files Methods
   async getAdminBrokerFiles(brokerId: number): Promise<any[]> {
     try {
-      const results = await db.execute(sql`
-        SELECT 
-          id,
-          file_name,
-          original_name,
-          file_type,
-          file_size,
-          sent_date,
-          sent_by,
-          description,
-          category,
-          priority,
-          broker_id,
-          file_path,
-          is_read,
-          read_at,
-          created_at
-        FROM broker_admin_files
-        WHERE broker_id = ${brokerId}
-        ORDER BY sent_date DESC
-      `);
+      console.log(`Fetching admin broker files for broker ID: ${brokerId}`);
       
-      return results.rows || [];
+      // Use Drizzle ORM instead of raw SQL
+      const files = await db.select().from(brokerAdminFiles).where(eq(brokerAdminFiles.brokerId, brokerId));
+      
+      console.log(`Found ${files.length} files for broker ${brokerId}`);
+      return files;
     } catch (error) {
       console.error('Error fetching admin broker files:', error);
       return [];
@@ -1734,28 +1718,13 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAdminBrokerFiles(): Promise<any[]> {
     try {
-      const results = await db.execute(sql`
-        SELECT 
-          id,
-          file_name,
-          original_name,
-          file_type,
-          file_size,
-          sent_date,
-          sent_by,
-          description,
-          category,
-          priority,
-          broker_id,
-          file_path,
-          is_read,
-          read_at,
-          created_at
-        FROM broker_admin_files
-        ORDER BY sent_date DESC
-      `);
+      console.log('Fetching all admin broker files');
       
-      return results.rows || [];
+      // Use Drizzle ORM instead of raw SQL
+      const files = await db.select().from(brokerAdminFiles).orderBy(desc(brokerAdminFiles.sentDate));
+      
+      console.log(`Found ${files.length} total admin broker files`);
+      return files;
     } catch (error) {
       console.error('Error fetching all admin broker files:', error);
       return [];

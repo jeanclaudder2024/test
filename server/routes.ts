@@ -75,7 +75,8 @@ import {
   vesselPortConnections,
   oilTypes,
   regions,
-  userSubscriptions
+  userSubscriptions,
+  brokerAdminFiles
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -12867,10 +12868,15 @@ Note: This document contains real vessel operational data and should be treated 
         SELECT * FROM broker_admin_files ORDER BY created_at DESC;
       `);
       
+      // Also test Drizzle ORM query
+      const drizzleFiles = await db.select().from(brokerAdminFiles);
+      
       res.json({ 
         tableExists: (tableExists.rows || []).length > 0,
         totalFiles: (allFiles.rows || []).length,
-        files: allFiles.rows || []
+        files: allFiles.rows || [],
+        drizzleFiles: drizzleFiles,
+        drizzleCount: drizzleFiles.length
       });
     } catch (error) {
       console.error("Error debugging broker files:", error);

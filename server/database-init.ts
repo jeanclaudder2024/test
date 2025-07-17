@@ -108,31 +108,7 @@ export async function initializeCustomAuthTables() {
         )
       `);
 
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS broker_admin_files (
-          id SERIAL PRIMARY KEY,
-          
-          file_name VARCHAR(255) NOT NULL,
-          file_path VARCHAR(500) NOT NULL,
-          file_size INTEGER NOT NULL,
-          mime_type VARCHAR(100),
-          
-          title VARCHAR(255) NOT NULL,
-          description TEXT,
-          category VARCHAR(100) DEFAULT 'general',
-          priority VARCHAR(20) DEFAULT 'normal',
-          
-          target_brokers TEXT,
-          requires_acknowledgment BOOLEAN DEFAULT FALSE,
-          expiry_date DATE,
-          
-          status VARCHAR(50) DEFAULT 'active',
-          created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-          
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+
 
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS broker_admin_file_acknowledgments (
@@ -217,9 +193,9 @@ export async function initializeCustomAuthTables() {
         )
       `);
 
-      // Create admin broker files table
+      // Create broker admin files table (matches schema)
       await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS admin_broker_files (
+        CREATE TABLE IF NOT EXISTS broker_admin_files (
           id SERIAL PRIMARY KEY,
           file_name TEXT NOT NULL,
           original_name TEXT NOT NULL,
