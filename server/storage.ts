@@ -1650,25 +1650,17 @@ export class DatabaseStorage implements IStorage {
   // Broker Documents Methods
   async getBrokerDocuments(brokerId: number): Promise<any[]> {
     try {
-      const results = await db.execute(sql`
-        SELECT 
-          id,
-          name,
-          type,
-          size,
-          upload_date,
-          uploaded_by,
-          download_count,
-          deal_id,
-          is_admin_file,
-          broker_id,
-          file_path
-        FROM broker_documents
-        WHERE broker_id = ${brokerId}
-        ORDER BY upload_date DESC
-      `);
+      console.log(`Fetching documents for broker ID: ${brokerId}`);
       
-      return results.rows || [];
+      // Get broker's own documents from broker_documents table
+      const brokerDocs = await db
+        .select()
+        .from(brokerDocuments)
+        .where(eq(brokerDocuments.brokerId, brokerId))
+        .orderBy(brokerDocuments.createdAt);
+      
+      console.log(`Found ${brokerDocs.length} broker documents`);
+      return brokerDocs;
     } catch (error) {
       console.error('Error fetching broker documents:', error);
       return [];
