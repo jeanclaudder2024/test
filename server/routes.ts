@@ -12932,20 +12932,31 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ message: "Broker ID is required" });
       }
 
-      const fileData = {
+      console.log("Admin User ID:", adminUserId);
+      console.log("File data being sent:", {
         brokerId: parseInt(brokerId),
-        sentByUserId: adminUserId,
         fileName: file.filename,
         originalName: file.originalname,
         fileType: file.mimetype,
         fileSize: `${(file.size / 1024).toFixed(1)} KB`,
         filePath: file.path,
+        sentBy: `Admin User ${adminUserId}`,
         description: description || 'Admin file',
         category: category || 'other',
-        priority: priority || 'medium',
-        requiresSignature: false,
-        expiresAt: undefined,
-        notes: ''
+        priority: priority || 'medium'
+      });
+
+      const fileData = {
+        brokerId: parseInt(brokerId),
+        fileName: file.filename,
+        originalName: file.originalname,
+        fileType: file.mimetype,
+        fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+        filePath: file.path,
+        sentBy: `Admin User ${adminUserId}`,
+        description: description || 'Admin file',
+        category: category || 'other',
+        priority: priority || 'medium'
       };
 
       const brokerFile = await storage.createAdminBrokerFile(fileData);

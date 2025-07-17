@@ -1763,6 +1763,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAdminBrokerFile(file: InsertBrokerAdminFile): Promise<BrokerAdminFile> {
+    console.log("Storage method received file data:", file);
+    console.log("sentBy field value:", file.sentBy);
     const [newFile] = await db.insert(brokerAdminFiles).values(file).returning();
     return newFile;
   }
