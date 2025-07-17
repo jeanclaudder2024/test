@@ -1,4 +1,4 @@
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, or } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
@@ -1707,15 +1707,20 @@ export class DatabaseStorage implements IStorage {
         SELECT 
           id,
           file_name,
+          original_name,
           file_type,
           file_size,
           sent_date,
           sent_by,
           description,
           category,
+          priority,
           broker_id,
-          file_path
-        FROM admin_broker_files
+          file_path,
+          is_read,
+          read_at,
+          created_at
+        FROM broker_admin_files
         WHERE broker_id = ${brokerId}
         ORDER BY sent_date DESC
       `);
@@ -1727,31 +1732,61 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createAdminBrokerFile(file: InsertAdminBrokerFile): Promise<AdminBrokerFile> {
-    const [newFile] = await db.insert(adminBrokerFiles).values(file).returning();
+  async getAllAdminBrokerFiles(): Promise<any[]> {
+    try {
+      const results = await db.execute(sql`
+        SELECT 
+          id,
+          file_name,
+          original_name,
+          file_type,
+          file_size,
+          sent_date,
+          sent_by,
+          description,
+          category,
+          priority,
+          broker_id,
+          file_path,
+          is_read,
+          read_at,
+          created_at
+        FROM broker_admin_files
+        ORDER BY sent_date DESC
+      `);
+      
+      return results.rows || [];
+    } catch (error) {
+      console.error('Error fetching all admin broker files:', error);
+      return [];
+    }
+  }
+
+  async createAdminBrokerFile(file: InsertBrokerAdminFile): Promise<BrokerAdminFile> {
+    const [newFile] = await db.insert(brokerAdminFiles).values(file).returning();
     return newFile;
   }
 
-  async getBrokerFile(fileId: number): Promise<AdminBrokerFile | undefined> {
-    const [file] = await db.select().from(adminBrokerFiles).where(eq(adminBrokerFiles.id, fileId));
+  async getBrokerFile(fileId: number): Promise<BrokerAdminFile | undefined> {
+    const [file] = await db.select().from(brokerAdminFiles).where(eq(brokerAdminFiles.id, fileId));
     return file;
   }
 
   async markBrokerFileAsRead(fileId: number): Promise<void> {
-    await db.update(adminBrokerFiles)
+    await db.update(brokerAdminFiles)
       .set({ isRead: true, readAt: new Date() })
-      .where(eq(adminBrokerFiles.id, fileId));
+      .where(eq(brokerAdminFiles.id, fileId));
   }
 
   async markAdminFileAsRead(fileId: number): Promise<void> {
     await db
-      .update(adminBrokerFiles)
+      .update(brokerAdminFiles)
       .set({ isRead: true, readAt: new Date() })
-      .where(eq(adminBrokerFiles.id, fileId));
+      .where(eq(brokerAdminFiles.id, fileId));
   }
 
   async deleteAdminBrokerFile(id: number): Promise<boolean> {
-    await db.delete(adminBrokerFiles).where(eq(adminBrokerFiles.id, id));
+    await db.delete(brokerAdminFiles).where(eq(brokerAdminFiles.id, id));
     return true;
   }
 

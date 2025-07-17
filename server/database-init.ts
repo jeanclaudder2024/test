@@ -342,6 +342,38 @@ export async function initializeCustomAuthTables() {
     } catch (error) {
       console.log('Transaction tables setup skipped:', error.message);
     }
+
+    // Create broker admin files table
+    try {
+      // First drop and recreate the table
+      await db.execute(sql`
+        DROP TABLE IF EXISTS broker_admin_files CASCADE;
+      `);
+      
+      await db.execute(sql`
+        CREATE TABLE broker_admin_files (
+          id SERIAL PRIMARY KEY,
+          broker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          file_name VARCHAR(255) NOT NULL,
+          original_name VARCHAR(255) NOT NULL,
+          file_type VARCHAR(50) NOT NULL,
+          file_size VARCHAR(50) NOT NULL,
+          file_path VARCHAR(500) NOT NULL,
+          sent_date TIMESTAMP DEFAULT NOW(),
+          sent_by VARCHAR(255) NOT NULL,
+          description TEXT,
+          category VARCHAR(50) NOT NULL DEFAULT 'other',
+          priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+          is_read BOOLEAN DEFAULT false,
+          read_at TIMESTAMP,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      
+      console.log('Broker admin files table created successfully');
+    } catch (error) {
+      console.log('Broker admin files table setup failed:', error.message);
+    }
     
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);

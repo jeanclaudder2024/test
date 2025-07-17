@@ -12768,6 +12768,25 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Get admin files sent to a specific broker
+  app.get("/api/admin/broker-files/:brokerId", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      if (isNaN(brokerId)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
+      }
+      
+      const files = await storage.getAdminBrokerFiles(brokerId);
+      res.json(files);
+    } catch (error) {
+      console.error("Error fetching admin broker files for broker:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch admin broker files",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Get broker uploaded documents (Admin only)
   app.get("/api/admin/broker/:brokerId/documents", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
@@ -12806,6 +12825,62 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Debug: Create broker admin files table
+  app.post("/api/admin/create-broker-table", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      await db.execute(sql`
+        DROP TABLE IF EXISTS broker_admin_files CASCADE;
+        CREATE TABLE broker_admin_files (
+          id SERIAL PRIMARY KEY,
+          broker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          file_name VARCHAR(255) NOT NULL,
+          original_name VARCHAR(255) NOT NULL,
+          file_type VARCHAR(50) NOT NULL,
+          file_size VARCHAR(50) NOT NULL,
+          file_path VARCHAR(500) NOT NULL,
+          sent_date TIMESTAMP DEFAULT NOW(),
+          sent_by VARCHAR(255) NOT NULL,
+          description TEXT,
+          category VARCHAR(50) NOT NULL DEFAULT 'other',
+          priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+          is_read BOOLEAN DEFAULT false,
+          read_at TIMESTAMP,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+      res.json({ message: "Table created successfully" });
+    } catch (error) {
+      console.error("Error creating table:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Debug: Check broker admin files table
+  app.get("/api/admin/debug-broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const tableExists = await db.execute(sql`
+        SELECT table_name FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'broker_admin_files';
+      `);
+      
+      const allFiles = await db.execute(sql`
+        SELECT * FROM broker_admin_files ORDER BY created_at DESC;
+      `);
+      
+      res.json({ 
+        tableExists: (tableExists.rows || []).length > 0,
+        totalFiles: (allFiles.rows || []).length,
+        files: allFiles.rows || []
+      });
+    } catch (error) {
+      console.error("Error debugging broker files:", error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Unknown error",
+        details: error
+      });
+    }
+  });
+
   // Send admin file to broker (Admin only)
   app.post("/api/admin/broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
@@ -12816,18 +12891,15 @@ Note: This document contains real vessel operational data and should be treated 
 
       const fileData = {
         brokerId: req.body.brokerId,
-        sentByUserId: adminUserId,
-        fileName: `admin_file_${Date.now()}.pdf`,
+        fileName: req.body.fileName || `admin_file_${Date.now()}.pdf`,
         originalName: req.body.originalName || "admin_document.pdf",
         fileType: req.body.fileType || "application/pdf",
         fileSize: req.body.fileSize || "1.2 MB",
-        filePath: `/uploads/admin/broker/${req.body.brokerId}/file_${Date.now()}.pdf`,
+        filePath: req.body.filePath || `/uploads/admin/broker/${req.body.brokerId}/file_${Date.now()}.pdf`,
+        sentBy: `Admin User ${adminUserId}`,
         description: req.body.description,
         category: req.body.category || "other",
-        priority: req.body.priority || "normal",
-        requiresSignature: req.body.requiresSignature || false,
-        expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
-        notes: req.body.notes
+        priority: req.body.priority || "medium"
       };
 
       const file = await storage.createAdminBrokerFile(fileData);
