@@ -588,49 +588,123 @@ export default function BrokerDashboard() {
               </Dialog>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDocuments.map((doc) => (
-                <Card key={doc.id} className="bg-gray-800/90 border-gray-700">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
-                          <FileText className="h-5 w-5 text-white" />
+            {/* Admin Files Section */}
+            <Card className="bg-gray-800/90 border-gray-700 mb-6">
+              <CardHeader>
+                <CardTitle className="text-white">Admin Files</CardTitle>
+                <CardDescription className="text-gray-300">
+                  Files sent to you by the administration
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {adminFiles.map((file) => (
+                    <div key={file.id} className="border border-gray-600 rounded-lg p-4 hover:bg-gray-700/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            file.priority === 'urgent' ? 'bg-red-600' : 
+                            file.priority === 'high' ? 'bg-orange-600' : 
+                            file.priority === 'medium' ? 'bg-yellow-600' : 'bg-green-600'
+                          }`}>
+                            <FileText className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-white">{file.originalName}</h3>
+                            <p className="text-sm text-gray-400">{file.description}</p>
+                            <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                              <span>{file.fileSize}</span>
+                              <span>Category: {file.category}</span>
+                              <span>{new Date(file.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white">{doc.name}</h3>
-                          <p className="text-sm text-gray-400">{doc.type}</p>
+                        <div className="flex items-center space-x-3">
+                          <Badge variant={file.priority === 'urgent' ? 'destructive' : 'default'}>
+                            {file.priority}
+                          </Badge>
+                          <Badge variant={file.isRead ? 'default' : 'secondary'}>
+                            {file.isRead ? 'Read' : 'New'}
+                          </Badge>
+                          <Button 
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => {
+                              window.open(`/api/broker-files/${file.id}/download`, '_blank');
+                            }}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </Button>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="space-y-2 text-sm text-gray-300">
-                      <div className="flex justify-between">
-                        <span>Size:</span>
-                        <span>{doc.size}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Uploaded:</span>
-                        <span>{doc.uploadDate}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Downloads:</span>
-                        <span>{doc.downloadCount}</span>
-                      </div>
+                  ))}
+                  
+                  {adminFiles.length === 0 && (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-400">No admin files available</p>
                     </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-                    <Button 
-                      className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
-                      onClick={() => downloadMutation.mutate(doc.id)}
-                      disabled={downloadMutation.isPending}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* Regular Documents Section */}
+            <Card className="bg-gray-800/90 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Your Documents</CardTitle>
+                <CardDescription className="text-gray-300">
+                  Documents you have uploaded
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredDocuments.map((doc) => (
+                    <Card key={doc.id} className="bg-gray-700/50 border-gray-600">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-white">{doc.name}</h3>
+                              <p className="text-sm text-gray-400">{doc.type}</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm text-gray-300">
+                          <div className="flex justify-between">
+                            <span>Size:</span>
+                            <span>{doc.size}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Uploaded:</span>
+                            <span>{doc.uploadDate}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Downloads:</span>
+                            <span>{doc.downloadCount}</span>
+                          </div>
+                        </div>
+
+                        <Button 
+                          className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
+                          onClick={() => downloadMutation.mutate(doc.id)}
+                          disabled={downloadMutation.isPending}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Admin Files Tab */}

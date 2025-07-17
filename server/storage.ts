@@ -1732,6 +1732,17 @@ export class DatabaseStorage implements IStorage {
     return newFile;
   }
 
+  async getBrokerFile(fileId: number): Promise<AdminBrokerFile | undefined> {
+    const [file] = await db.select().from(adminBrokerFiles).where(eq(adminBrokerFiles.id, fileId));
+    return file;
+  }
+
+  async markBrokerFileAsRead(fileId: number): Promise<void> {
+    await db.update(adminBrokerFiles)
+      .set({ isRead: true, readAt: new Date() })
+      .where(eq(adminBrokerFiles.id, fileId));
+  }
+
   async markAdminFileAsRead(fileId: number): Promise<void> {
     await db
       .update(adminBrokerFiles)

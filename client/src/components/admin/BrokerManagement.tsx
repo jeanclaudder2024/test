@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TransactionProgress from "@/components/broker/TransactionProgress";
@@ -561,9 +562,172 @@ export function BrokerManagement() {
 
         <TabsContent value="files" className="space-y-6">
           <Card className="bg-white border border-gray-200">
-            <CardHeader>
-              <CardTitle>Admin Files Shared with Brokers</CardTitle>
-              <CardDescription>Manage files sent to broker accounts</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Admin Files Shared with Brokers</CardTitle>
+                <CardDescription>Manage files sent to broker accounts</CardDescription>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Send File to Broker
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Send File to Broker</DialogTitle>
+                    <DialogDescription>
+                      Upload and send a file to a specific broker account
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      const fileInput = e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement;
+                      const file = fileInput?.files?.[0];
+                      
+                      if (!file) {
+                        toast({
+                          title: "Error",
+                          description: "Please select a file to upload",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
+                      const brokerId = formData.get('brokerId') as string;
+                      const description = formData.get('description') as string;
+                      const category = formData.get('category') as string;
+                      const priority = formData.get('priority') as string;
+
+                      if (!brokerId) {
+                        toast({
+                          title: "Error",
+                          description: "Please select a broker",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
+                      try {
+                        const uploadFormData = new FormData();
+                        uploadFormData.append('file', file);
+                        uploadFormData.append('brokerId', brokerId);
+                        uploadFormData.append('description', description);
+                        uploadFormData.append('category', category);
+                        uploadFormData.append('priority', priority);
+
+                        const response = await fetch('/api/admin/broker-files/upload', {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                          },
+                          body: uploadFormData,
+                        });
+
+                        if (!response.ok) {
+                          throw new Error('Upload failed');
+                        }
+
+                        toast({
+                          title: "Success",
+                          description: "File sent to broker successfully",
+                        });
+                        
+                        queryClient.invalidateQueries({ queryKey: ['/api/admin/broker-files'] });
+                        
+                        // Reset form
+                        e.currentTarget.reset();
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to send file. Please try again.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="brokerId">Select Broker</Label>
+                      <select
+                        id="brokerId"
+                        name="brokerId"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Choose a broker...</option>
+                        {brokers.map((broker) => (
+                          <option key={broker.id} value={broker.id}>
+                            {broker.firstName} {broker.lastName} ({broker.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="file">Select File</Label>
+                      <Input
+                        id="file"
+                        name="file"
+                        type="file"
+                        required
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.xls,.xlsx"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        name="description"
+                        required
+                        placeholder="Enter file description..."
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Category</Label>
+                        <select
+                          id="category"
+                          name="category"
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="contract">Contract</option>
+                          <option value="compliance">Compliance</option>
+                          <option value="legal">Legal</option>
+                          <option value="technical">Technical</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="priority">Priority</Label>
+                        <select
+                          id="priority"
+                          name="priority"
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                      Send File to Broker
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
               {filesLoading ? (

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import multer from 'multer';
 import { storage } from "./storage";
 import authRoutes from "./routes/authRoutes";
 import { registerBrokerRoutes } from "./routes/brokerRoutes";
@@ -104,6 +105,47 @@ import { directPdfRouter } from './routes/direct-pdf';
 import { enhancedPdfRouter } from './routes/enhanced-pdf';
 import { reliablePdfRouter } from './routes/reliable-pdf';
 import { maritimeRoutesRouter } from './routes/maritime-routes';
+
+// Configure multer for file uploads
+const storage_multer = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'admin', 'broker-files');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'broker-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage_multer,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, Word, Excel, Text, and Image files are allowed.'));
+    }
+  }
+});
 
 // Helper function to get subscription limits based on plan
 function getSubscriptionLimits(planId: number | null) {
@@ -12765,6 +12807,112 @@ Note: This document contains real vessel operational data and should be treated 
       console.error("Error sending admin file to broker:", error);
       res.status(500).json({ 
         message: "Failed to send file to broker",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Upload file to broker (Admin only) - File upload endpoint
+  app.post("/api/admin/broker-files/upload", authenticateToken, requireAdmin, upload.single('file'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ message: "Admin not authenticated" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { brokerId, description, category, priority } = req.body;
+      
+      if (!brokerId) {
+        return res.status(400).json({ message: "Broker ID is required" });
+      }
+
+      const fileData = {
+        brokerId: parseInt(brokerId),
+        sentByUserId: adminUserId,
+        fileName: file.filename,
+        originalName: file.originalname,
+        fileType: file.mimetype,
+        fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+        filePath: file.path,
+        description: description || 'Admin file',
+        category: category || 'other',
+        priority: priority || 'medium',
+        requiresSignature: false,
+        expiresAt: undefined,
+        notes: ''
+      };
+
+      const brokerFile = await storage.createAdminBrokerFile(fileData);
+      res.status(201).json(brokerFile);
+    } catch (error) {
+      console.error("Error uploading admin file to broker:", error);
+      res.status(500).json({ 
+        message: "Failed to upload file to broker",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get admin files for current broker
+  app.get("/api/broker/admin-files", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const files = await storage.getAdminBrokerFiles(userId);
+      res.json(files);
+    } catch (error) {
+      console.error("Error fetching broker admin files:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch admin files",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Download broker file (Broker only)
+  app.get("/api/broker-files/:fileId/download", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const fileId = parseInt(req.params.fileId);
+      const file = await storage.getBrokerFile(fileId);
+      
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      // Check if user is the broker who should receive this file
+      if (file.brokerId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Mark file as read
+      await storage.markBrokerFileAsRead(fileId);
+
+      // Send file
+      const filePath = path.resolve(file.filePath);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found on server" });
+      }
+
+      res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
+      res.setHeader('Content-Type', file.fileType);
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error("Error downloading broker file:", error);
+      res.status(500).json({ 
+        message: "Failed to download file",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
