@@ -386,6 +386,11 @@ export default function VesselDetail() {
       }
     }
     
+    // If ports are still loading, show loading message
+    if (ports.length === 0) {
+      return 'Loading port info...';
+    }
+    
     // If it's a number but we can't find the port, show it as is
     return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
@@ -407,6 +412,11 @@ export default function VesselDetail() {
       }
     }
     
+    // If ports are still loading, show loading message
+    if (ports.length === 0) {
+      return 'Loading port info...';
+    }
+    
     // If it's a number but we can't find the port, show it as is
     return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
@@ -426,6 +436,11 @@ export default function VesselDetail() {
       if (port) {
         return `${port.name}, ${port.country}`;
       }
+    }
+    
+    // If ports are still loading, show loading message
+    if (ports.length === 0) {
+      return 'Loading port info...';
     }
     
     // If it's a number but we can't find the port, show it as is
@@ -469,7 +484,9 @@ export default function VesselDetail() {
           headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
         });
         if (response.status === 200) {
-          setPorts(response.data);
+          // Handle both response formats: { ports: [...] } or direct array
+          const portsData = response.data.ports || response.data;
+          setPorts(Array.isArray(portsData) ? portsData : []);
         }
       } catch (error) {
         console.error('Failed to fetch ports for map:', error);
@@ -477,7 +494,9 @@ export default function VesselDetail() {
         try {
           const response = await axios.get('/api/ports');
           if (response.status === 200) {
-            setPorts(response.data);
+            // Handle both response formats: { ports: [...] } or direct array
+            const portsData = response.data.ports || response.data;
+            setPorts(Array.isArray(portsData) ? portsData : []);
           }
         } catch (fallbackError) {
           console.error('Fallback ports fetch also failed:', fallbackError);
@@ -991,7 +1010,7 @@ export default function VesselDetail() {
                             <div className="font-medium">
                               {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
                                 ? vessel.destinationPort.split(':')[2]
-                                : getPortName(vessel.destinationPort)}
+                                : getDestinationPortName(vessel.destinationPort)}
                             </div>
                             {vessel.estimatedArrivalTime && (
                               <div className="text-xs text-muted-foreground mt-0.5">
