@@ -1855,7 +1855,12 @@ export class DatabaseStorage implements IStorage {
         .from(users)
         .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.userId))
         .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
-        .where(eq(subscriptionPlans.name, 'brokers'));
+        .where(
+          or(
+            eq(users.role, 'broker'),
+            eq(subscriptionPlans.canAccessBrokerFeatures, true)
+          )
+        );
 
       return brokerUsers;
     } catch (error) {

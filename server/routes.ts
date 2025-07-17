@@ -12673,7 +12673,7 @@ Note: This document contains real vessel operational data and should be treated 
         firstName,
         lastName,
         password: hashedPassword,
-        role: 'user'
+        role: 'broker'
       });
 
       res.status(201).json(brokerUser);
@@ -12681,6 +12681,35 @@ Note: This document contains real vessel operational data and should be treated 
       console.error("Error creating broker:", error);
       res.status(500).json({ 
         message: "Failed to create broker",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create test broker user endpoint
+  app.post("/api/admin/create-test-broker", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check if test broker already exists
+      const existingUser = await storage.getUserByEmail("broker@test.com");
+      if (existingUser) {
+        return res.status(409).json({ message: "Test broker already exists" });
+      }
+
+      // Create test broker user
+      const hashedPassword = await hashPassword("broker123");
+      const testBroker = await storage.createBrokerUser({
+        email: "broker@test.com",
+        firstName: "Test",
+        lastName: "Broker",
+        password: hashedPassword,
+        role: 'broker'
+      });
+
+      res.status(201).json({ message: "Test broker created successfully", broker: testBroker });
+    } catch (error) {
+      console.error("Error creating test broker:", error);
+      res.status(500).json({ 
+        message: "Failed to create test broker",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

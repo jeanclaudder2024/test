@@ -217,6 +217,27 @@ export async function initializeCustomAuthTables() {
         )
       `);
 
+      // Create admin broker files table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS admin_broker_files (
+          id SERIAL PRIMARY KEY,
+          file_name TEXT NOT NULL,
+          original_name TEXT NOT NULL,
+          file_type TEXT NOT NULL,
+          file_size TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          description TEXT,
+          category TEXT NOT NULL DEFAULT 'other',
+          priority TEXT NOT NULL DEFAULT 'medium',
+          sent_by TEXT NOT NULL,
+          sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          broker_id INTEGER NOT NULL REFERENCES users(id),
+          is_read BOOLEAN DEFAULT FALSE,
+          read_at TIMESTAMP,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       console.log("All broker tables created successfully");
     } catch (error) {
       console.log('Broker tables creation skipped:', error);
