@@ -28,7 +28,9 @@ import {
   UserPlus,
   Filter,
   Target,
-  Eye
+  Eye,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -88,6 +90,10 @@ export function BrokerManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedBroker, setSelectedBroker] = useState<BrokerUser | null>(null);
   const [showBrokerDetails, setShowBrokerDetails] = useState(false);
+  const [editingFile, setEditingFile] = useState<AdminBrokerFile | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<AdminBrokerFile | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -129,6 +135,70 @@ export function BrokerManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to create broker account",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit file mutation
+  const editFileMutation = useMutation({
+    mutationFn: async (data: { id: number; description: string; category: string; priority: string }) => {
+      const response = await fetch(`/api/admin/broker-files/${data.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          description: data.description,
+          category: data.category,
+          priority: data.priority
+        })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "File updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/broker-files'] });
+      setShowEditDialog(false);
+      setEditingFile(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update file",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete file mutation
+  const deleteFileMutation = useMutation({
+    mutationFn: async (fileId: number) => {
+      const response = await fetch(`/api/admin/broker-files/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "File deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/broker-files'] });
+      setShowDeleteDialog(false);
+      setFileToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete file",
         variant: "destructive",
       });
     },
@@ -628,9 +698,12 @@ export function BrokerManagement() {
                         });
 
                         if (!response.ok) {
-                          throw new Error('Upload failed');
+                          const errorData = await response.json();
+                          throw new Error(errorData.message || 'Upload failed');
                         }
 
+                        const result = await response.json();
+                        
                         toast({
                           title: "Success",
                           description: "File sent to broker successfully",
@@ -641,9 +714,10 @@ export function BrokerManagement() {
                         // Reset form
                         e.currentTarget.reset();
                       } catch (error) {
+                        console.error('File upload error:', error);
                         toast({
                           title: "Error",
-                          description: "Failed to send file. Please try again.",
+                          description: error instanceof Error ? error.message : "Failed to send file. Please try again.",
                           variant: "destructive",
                         });
                       }
@@ -763,6 +837,30 @@ export function BrokerManagement() {
                           <Badge variant={file.isRead ? 'default' : 'secondary'}>
                             {file.isRead ? 'Read' : 'Unread'}
                           </Badge>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingFile(file);
+                                setShowEditDialog(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setFileToDelete(file);
+                                setShowDeleteDialog(true);
+                              }}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -771,6 +869,124 @@ export function BrokerManagement() {
               )}
             </CardContent>
           </Card>
+
+          {/* Edit File Dialog */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit File Details</DialogTitle>
+                <DialogDescription>
+                  Update the file description, category, and priority
+                </DialogDescription>
+              </DialogHeader>
+              {editingFile && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    editFileMutation.mutate({
+                      id: editingFile.id,
+                      description: formData.get('description') as string,
+                      category: formData.get('category') as string,
+                      priority: formData.get('priority') as string,
+                    });
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-description">Description</Label>
+                    <Textarea
+                      id="edit-description"
+                      name="description"
+                      defaultValue={editingFile.description}
+                      required
+                      placeholder="Enter file description..."
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-category">Category</Label>
+                      <select
+                        id="edit-category"
+                        name="category"
+                        defaultValue={editingFile.category}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="contract">Contract</option>
+                        <option value="compliance">Compliance</option>
+                        <option value="legal">Legal</option>
+                        <option value="technical">Technical</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-priority">Priority</Label>
+                      <select
+                        id="edit-priority"
+                        name="priority"
+                        defaultValue={editingFile.priority}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={editFileMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
+                      {editFileMutation.isPending ? 'Updating...' : 'Update File'}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete File Dialog */}
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete File</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete this file? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              {fileToDelete && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900">{fileToDelete.originalName}</h4>
+                    <p className="text-sm text-gray-600">{fileToDelete.description}</p>
+                    <p className="text-xs text-gray-500 mt-1">To: {fileToDelete.brokerName}</p>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="destructive"
+                      disabled={deleteFileMutation.isPending}
+                      onClick={() => deleteFileMutation.mutate(fileToDelete.id)}
+                    >
+                      {deleteFileMutation.isPending ? 'Deleting...' : 'Delete File'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="create" className="space-y-6">

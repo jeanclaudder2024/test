@@ -12978,6 +12978,68 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Update admin broker file (Admin only)
+  app.put("/api/admin/broker-files/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const fileId = parseInt(req.params.id);
+      if (isNaN(fileId)) {
+        return res.status(400).json({ message: "Invalid file ID" });
+      }
+
+      const { description, category, priority } = req.body;
+      
+      const updatedFile = await storage.updateAdminBrokerFile(fileId, {
+        description,
+        category,
+        priority
+      });
+
+      if (!updatedFile) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      res.json(updatedFile);
+    } catch (error) {
+      console.error("Error updating admin broker file:", error);
+      res.status(500).json({ 
+        message: "Failed to update admin broker file",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete admin broker file (Admin only)
+  app.delete("/api/admin/broker-files/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const fileId = parseInt(req.params.id);
+      if (isNaN(fileId)) {
+        return res.status(400).json({ message: "Invalid file ID" });
+      }
+
+      const fileToDelete = await storage.getBrokerFile(fileId);
+      if (!fileToDelete) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      // Delete the physical file
+      const filePath = path.resolve(fileToDelete.filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      // Delete from database
+      await storage.deleteAdminBrokerFile(fileId);
+
+      res.json({ message: "File deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting admin broker file:", error);
+      res.status(500).json({ 
+        message: "Failed to delete admin broker file",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Get admin files for current broker
   app.get("/api/broker/admin-files", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {

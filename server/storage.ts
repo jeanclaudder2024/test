@@ -1757,6 +1757,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(brokerAdminFiles.id, fileId));
   }
 
+  async updateAdminBrokerFile(id: number, updates: Partial<InsertBrokerAdminFile>): Promise<BrokerAdminFile | undefined> {
+    try {
+      const [updatedFile] = await db
+        .update(brokerAdminFiles)
+        .set(updates)
+        .where(eq(brokerAdminFiles.id, id))
+        .returning();
+      return updatedFile;
+    } catch (error) {
+      console.error('Error updating admin broker file:', error);
+      return undefined;
+    }
+  }
+
   async deleteAdminBrokerFile(id: number): Promise<boolean> {
     await db.delete(brokerAdminFiles).where(eq(brokerAdminFiles.id, id));
     return true;
