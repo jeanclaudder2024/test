@@ -218,7 +218,7 @@ export class CustomPdfTemplateService {
        .text(`Gross Tonnage: ${vessel.grossTonnage ? vessel.grossTonnage.toLocaleString() + ' GT' : 'Not Available'}`, rightColX, specsY + 92);
     
     // Main document content area - positioned below logo with professional margins
-    const contentStartY = 480;
+    const contentStartY = 380; // Moved up to have more space for content
     
     if (options.documentContent) {
       // Professional content header
@@ -237,51 +237,122 @@ export class CustomPdfTemplateService {
          .lineWidth(1)
          .stroke();
       
-      // Process and display content professionally
+      // Process and display ALL content professionally - enhanced to show complete data
       const cleanContent = this.processDocumentContent(options.documentContent);
-      const paragraphs = cleanContent.split('\n\n').filter(p => p.trim());
+      
+      // Split content into sentences and paragraphs for better display
+      const sections = cleanContent.split(/\n{2,}/).filter(section => section.trim());
       
       let currentY = contentStartY + 35;
-      const maxY = 650; // Don't overlap footer
+      const maxY = 680; // Extended space for more content
+      let pageCount = 1;
       
-      paragraphs.forEach((paragraph, index) => {
-        if (currentY > maxY) return;
-        
-        const trimmedParagraph = paragraph.trim();
-        if (trimmedParagraph.length > 0) {
-          // Check if it's a header (all caps or ends with colon)
-          if (trimmedParagraph.endsWith(':') || trimmedParagraph === trimmedParagraph.toUpperCase()) {
-            // Header styling
-            doc.fontSize(11)
-               .fillColor('#1e40af')
-               .font('Helvetica-Bold')
-               .text(trimmedParagraph, leftMargin, currentY, {
-                 width: contentWidth,
-                 align: 'left',
-                 lineGap: 4
-               });
-            currentY += 20;
-          } else {
-            // Regular paragraph styling
-            doc.fontSize(10)
-               .fillColor('#374151')
-               .font('Helvetica')
-               .text(trimmedParagraph, leftMargin, currentY, {
-                 width: contentWidth,
-                 align: 'justify',
-                 lineGap: 3
-               });
-            
-            // Calculate height and add space between paragraphs
-            const textHeight = doc.heightOfString(trimmedParagraph, {
-              width: contentWidth,
-              align: 'justify',
-              lineGap: 3
+      sections.forEach((section, sectionIndex) => {
+        if (currentY > maxY && pageCount === 1) {
+          // Add new page if content is too long
+          doc.addPage();
+          
+          // Apply background to new page
+          const backgroundImagePath = path.join(this.templateAssetsPath, 'BACKGROUD DOCUMENTS PETRODEALHUB_1752789448946.jpg');
+          if (fs.existsSync(backgroundImagePath)) {
+            doc.image(backgroundImagePath, 0, 0, {
+              width: doc.page.width,
+              height: doc.page.height
             });
-            currentY += textHeight + 12;
           }
+          
+          currentY = 150; // Start from top of new page
+          pageCount++;
+          
+          // Continue with content header on new page
+          doc.fontSize(14)
+             .fillColor('#1e40af')
+             .font('Helvetica-Bold')
+             .text('DOCUMENT CONTENT (CONTINUED)', leftMargin, currentY);
+          
+          currentY += 30;
+        }
+        
+        const trimmedSection = section.trim();
+        if (trimmedSection.length > 0) {
+          // Split section into lines for better processing
+          const lines = trimmedSection.split('\n').filter(line => line.trim());
+          
+          lines.forEach((line, lineIndex) => {
+            const trimmedLine = line.trim();
+            if (trimmedLine.length === 0) return;
+            
+            // Check if it's a header or title
+            if (trimmedLine.endsWith(':') || 
+                trimmedLine.match(/^[A-Z\s]+:?$/) || 
+                trimmedLine.includes('EXECUTIVE SUMMARY') ||
+                trimmedLine.includes('OVERVIEW') ||
+                trimmedLine.includes('SPECIFICATIONS') ||
+                trimmedLine.includes('CONCLUSION')) {
+              
+              // Header styling - make prominent
+              doc.fontSize(12)
+                 .fillColor('#1e40af')
+                 .font('Helvetica-Bold')
+                 .text(trimmedLine, leftMargin, currentY, {
+                   width: contentWidth,
+                   align: 'left',
+                   lineGap: 4
+                 });
+              currentY += 18;
+              
+            } else {
+              // Regular content - ensure all text is displayed
+              doc.fontSize(9)
+                 .fillColor('#374151')
+                 .font('Helvetica')
+                 .text(trimmedLine, leftMargin, currentY, {
+                   width: contentWidth,
+                   align: 'justify',
+                   lineGap: 2
+                 });
+              
+              // Calculate actual height and move cursor
+              const textHeight = doc.heightOfString(trimmedLine, {
+                width: contentWidth,
+                align: 'justify',
+                lineGap: 2
+              });
+              currentY += Math.max(textHeight, 12);
+            }
+            
+            // Check if we need another page
+            if (currentY > maxY && pageCount < 3) {
+              doc.addPage();
+              
+              // Apply background to new page
+              const backgroundImagePath = path.join(this.templateAssetsPath, 'BACKGROUD DOCUMENTS PETRODEALHUB_1752789448946.jpg');
+              if (fs.existsSync(backgroundImagePath)) {
+                doc.image(backgroundImagePath, 0, 0, {
+                  width: doc.page.width,
+                  height: doc.page.height
+                });
+              }
+              
+              currentY = 150;
+              pageCount++;
+              
+              // Add continuation header
+              doc.fontSize(14)
+                 .fillColor('#1e40af')
+                 .font('Helvetica-Bold')
+                 .text(`DOCUMENT CONTENT (PAGE ${pageCount})`, leftMargin, currentY);
+              
+              currentY += 30;
+            }
+          });
+          
+          // Add space between sections
+          currentY += 8;
         }
       });
+      
+      console.log(`📄 Generated ${pageCount} page(s) with complete content data`);
     }
     
     // Professional document metadata
@@ -303,7 +374,9 @@ export class CustomPdfTemplateService {
   private processDocumentContent(content: string): string {
     if (!content) return '';
     
-    // Remove HTML tags and clean content
+    console.log('🔍 Processing document content length:', content.length);
+    
+    // Clean content while preserving structure and ALL data
     let cleanContent = content
       .replace(/<[^>]*>/g, '') // Remove HTML tags
       .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
@@ -312,13 +385,23 @@ export class CustomPdfTemplateService {
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/\r\n/g, '\n') // Normalize line endings
+      .replace(/\r/g, '\n') // Normalize line endings
       .trim();
     
-    // Split into paragraphs and clean up
-    const paragraphs = cleanContent.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+    // Preserve all content structure - don't collapse multiple spaces too aggressively
+    cleanContent = cleanContent.replace(/[ \t]+/g, ' '); // Only collapse horizontal spaces
     
-    return paragraphs.join('\n\n');
+    // Preserve paragraph breaks and section structure
+    const lines = cleanContent.split('\n').map(line => line.trim());
+    
+    // Group lines into paragraphs while preserving ALL content
+    const result = lines.join('\n');
+    
+    console.log('✅ Processed content length:', result.length);
+    console.log('📝 First 200 chars:', result.substring(0, 200));
+    
+    return result;
   }
 
   private addFullPageBackground(doc: any, backgroundImageBase64: string): void {
