@@ -3942,6 +3942,39 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getAllBrokerDocumentsForAdmin(): Promise<any[]> {
+    try {
+      const documents = await db.select({
+        id: transactionDocuments.id,
+        stepId: transactionDocuments.stepId,
+        dealId: transactionDocuments.dealId,
+        documentType: transactionDocuments.documentType,
+        originalFilename: transactionDocuments.originalFilename,
+        storedFilename: transactionDocuments.storedFilename,
+        filePath: transactionDocuments.filePath,
+        fileSize: transactionDocuments.fileSize,
+        mimeType: transactionDocuments.mimeType,
+        uploadedBy: transactionDocuments.uploadedBy,
+        uploadedAt: transactionDocuments.uploadedAt,
+        dealTitle: brokerDeals.dealTitle,
+        stepName: transactionSteps.stepName,
+        stepNumber: transactionSteps.stepNumber,
+        brokerEmail: users.email,
+        brokerName: users.username
+      })
+      .from(transactionDocuments)
+      .leftJoin(transactionSteps, eq(transactionDocuments.stepId, transactionSteps.id))
+      .leftJoin(brokerDeals, eq(transactionDocuments.dealId, brokerDeals.id))
+      .leftJoin(users, eq(transactionDocuments.uploadedBy, users.id))
+      .orderBy(desc(transactionDocuments.uploadedAt));
+      
+      return documents;
+    } catch (error) {
+      console.error('Error fetching all broker documents for admin:', error);
+      return [];
+    }
+  }
+
   // Deal Message Management
   async createDealMessage(message: InsertDealMessage): Promise<DealMessage> {
     try {
