@@ -289,41 +289,6 @@ export function registerBrokerRoutes(app: Express) {
 
   // Admin endpoints for broker management
   
-  // Get all broker documents for admin
-  app.get('/api/admin/broker-documents', authenticateToken, async (req, res) => {
-    try {
-      const documents = await storage.getAllBrokerDocumentsForAdmin();
-      res.json(documents);
-    } catch (error) {
-      console.error('Error fetching all broker documents:', error);
-      res.status(500).json({ error: 'Failed to fetch broker documents' });
-    }
-  });
-
-  // Download broker document for admin
-  app.get('/api/admin/broker-documents/:id/download', authenticateToken, async (req, res) => {
-    try {
-      const documentId = parseInt(req.params.id);
-      
-      // Get document details
-      const document = await storage.getTransactionDocumentById(documentId);
-      if (!document) {
-        return res.status(404).json({ error: 'Document not found' });
-      }
-      
-      // Send file
-      res.download(document.filePath, document.originalFilename, (err) => {
-        if (err) {
-          console.error('Error downloading broker document:', err);
-          res.status(500).json({ error: 'Download failed' });
-        }
-      });
-    } catch (error) {
-      console.error('Error downloading broker document:', error);
-      res.status(500).json({ error: 'Failed to download document' });
-    }
-  });
-  
   // Get broker documents for admin
   app.get('/api/admin/brokers/:brokerId/documents', authenticateToken, async (req, res) => {
     try {

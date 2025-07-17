@@ -28,7 +28,6 @@ import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import SimpleOilTypeManagement from "@/components/admin/SimpleOilTypeManagement";
 import LandingPageManager from "@/components/admin/LandingPageManager";
-import { BrokerDocumentsManagement } from "@/components/admin/BrokerDocumentsManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -105,7 +104,6 @@ export default function AdminPanel() {
               <option value="refineries">🏭 Refinery Management</option>
               <option value="documents">📄 Professional Articles</option>
               <option value="brokers">🤝 Broker Management</option>
-              <option value="broker-docs">📋 Broker Documents</option>
               <option value="oil-types">⛽ Oil Types</option>
               <option value="filters">🔧 Filter Management</option>
               <option value="data">💾 Data Management</option>
@@ -192,15 +190,6 @@ export default function AdminPanel() {
               <Users className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Brokers</span>
               <span className="xl:hidden">Brokers</span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="broker-docs" 
-              className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
-            >
-              <FileText className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Broker Docs</span>
-              <span className="xl:hidden">Docs</span>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -426,10 +415,6 @@ export default function AdminPanel() {
 
         <TabsContent value="brokers" className="space-y-4">
           <BrokerManagement />
-        </TabsContent>
-
-        <TabsContent value="broker-docs" className="space-y-4">
-          <BrokerDocumentsManagement />
         </TabsContent>
 
         <TabsContent value="oil-types" className="space-y-4">
