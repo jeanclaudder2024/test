@@ -121,25 +121,94 @@ export class CustomPdfTemplateService {
   }
 
   async generateCustomPDF(doc: any, vessel: VesselData, options: DocumentOptions): Promise<void> {
-    console.log('🎨 Starting custom PDF generation with user background template...');
+    console.log('🎨 Starting custom PDF generation with exact template layout...');
     
-    // Load your background template image (image001.png)
-    const backgroundImageBase64 = await this.getLogoBase64();
-    console.log('🖼️ Background template image loaded:', backgroundImageBase64 ? 'SUCCESS' : 'FAILED');
+    // Use the new background template image that matches your design exactly
+    const backgroundImagePath = path.join(this.templateAssetsPath, 'BACKGROUD DOCUMENTS PETRODEALHUB_1752789448946.jpg');
+    console.log('🖼️ Using new background template:', backgroundImagePath);
     
-    if (backgroundImageBase64) {
-      // Use your template image as full page background
-      this.addFullPageBackground(doc, backgroundImageBase64);
-      console.log('✅ Full page background applied using your template image');
+    if (fs.existsSync(backgroundImagePath)) {
+      // Apply the exact background template from your image
+      doc.image(backgroundImagePath, 0, 0, {
+        width: doc.page.width,
+        height: doc.page.height
+      });
+      console.log('✅ Applied exact background template from your image');
     } else {
       console.log('❌ Background template image not found, using fallback design');
     }
     
-    // Add document content over the background template
-    this.addContentOverBackground(doc, vessel, options);
-    console.log('📝 Document content added over background template');
+    // The template already includes all the design elements:
+    // - "LEGAL DOCUMENT SERVICES" in top left
+    // - "PetroDealHub - Connecting Tankers, Refineries, and Deals" in top right  
+    // - Centered logo with ship and flame design
+    // - "CLIENT COPY" watermark stamp
+    // - Legal footer with fingerprint icon
     
-    console.log('✨ Custom PDF generation completed with your background template design');
+    // Add vessel-specific content in open areas without overlapping template elements
+    this.addVesselContentToTemplate(doc, vessel, options);
+    console.log('📝 Vessel content added to template preserving original design');
+    
+    console.log('✨ PDF generated with exact template layout and vessel data');
+  }
+
+  private addVesselContentToTemplate(doc: any, vessel: VesselData, options: DocumentOptions): void {
+    // Position content to not overlap with existing template elements
+    // Template has header, centered logo, and footer already
+    
+    // Main content area - positioned between logo and footer
+    const contentY = 500; // Below the centered logo area
+    
+    // Vessel information section
+    doc.fontSize(14)
+       .fillColor('#1e40af')
+       .font('Helvetica-Bold')
+       .text('VESSEL CERTIFICATION', 70, contentY, {
+         width: 450,
+         align: 'center'
+       });
+    
+    // Vessel details in clean format matching template style
+    doc.fontSize(11)
+       .fillColor('#374151')
+       .font('Helvetica')
+       .text(`Vessel Name: ${vessel.name || 'N/A'}`, 100, contentY + 40)
+       .text(`IMO Number: ${vessel.imo || 'N/A'}`, 100, contentY + 60)
+       .text(`Flag State: ${vessel.flag || 'N/A'}`, 100, contentY + 80)
+       .text(`Vessel Type: ${vessel.vesselType || 'N/A'}`, 100, contentY + 100);
+    
+    // Technical specifications in right column
+    doc.text(`DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() : 'N/A'} tonnes`, 320, contentY + 40)
+       .text(`Built: ${vessel.built || 'N/A'}`, 320, contentY + 60)
+       .text(`Length: ${vessel.length || 'N/A'} m`, 320, contentY + 80)
+       .text(`Beam: ${vessel.width || 'N/A'} m`, 320, contentY + 100);
+    
+    // Document type and content
+    doc.fontSize(10)
+       .fillColor('#6b7280')
+       .text(`Document Type: ${options.documentType}`, 100, contentY + 140);
+    
+    if (options.documentContent) {
+      doc.fontSize(9)
+         .fillColor('#374151')
+         .text(this.processDocumentContent(options.documentContent), 100, contentY + 170, {
+           width: 400,
+           align: 'justify',
+           lineGap: 3
+         });
+    }
+    
+    // Add document date and reference in a clean area
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    doc.fontSize(8)
+       .fillColor('#9ca3af')
+       .text(`Document Date: ${currentDate}`, 100, 720)
+       .text(`Reference: PDH-${vessel.imo || 'UNKNOWN'}-${Date.now().toString().slice(-6)}`, 100, 735);
   }
 
   private addFullPageBackground(doc: any, backgroundImageBase64: string): void {

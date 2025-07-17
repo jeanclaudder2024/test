@@ -11,6 +11,7 @@ import { FileText, Download, Eye, Palette, Settings, Image, Layout } from "lucid
 import { useToast } from "@/hooks/use-toast";
 
 // Template asset URLs (will be loaded from server)
+const exactTemplate = "/attached_assets/BACKGROUD DOCUMENTS PETRODEALHUB_1752789448946.jpg";
 const mainLogo = "/attached_assets/image001_1752789059844.png";
 const legalLogo = "/attached_assets/image002_1752789059843.png";
 const fingerprintIcon = "/attached_assets/image003_1752789059843.png";
