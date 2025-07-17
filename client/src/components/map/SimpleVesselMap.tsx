@@ -119,19 +119,19 @@ export default function SimpleVesselMap({ vessel, ports = [] }: SimpleVesselMapP
   const getRouteLines = () => {
     const lines: [number, number][][] = [];
     
-    if (departurePort) {
+    if (departurePort && departurePort.lat && departurePort.lng) {
       // Line from departure port to vessel current position
       lines.push([
-        [departurePort.lat, departurePort.lng],
+        [parseFloat(departurePort.lat), parseFloat(departurePort.lng)],
         vesselPosition
       ]);
     }
     
-    if (destinationPort) {
+    if (destinationPort && destinationPort.lat && destinationPort.lng) {
       // Line from vessel current position to destination port
       lines.push([
         vesselPosition,
-        [destinationPort.lat, destinationPort.lng]
+        [parseFloat(destinationPort.lat), parseFloat(destinationPort.lng)]
       ]);
     }
     
@@ -168,8 +168,8 @@ export default function SimpleVesselMap({ vessel, ports = [] }: SimpleVesselMapP
         ))}
 
         {/* Departure Port Marker */}
-        {departurePort && (
-          <Marker position={[departurePort.lat, departurePort.lng]} icon={departurePortIcon}>
+        {departurePort && departurePort.lat && departurePort.lng && (
+          <Marker position={[parseFloat(departurePort.lat), parseFloat(departurePort.lng)]} icon={departurePortIcon}>
             <Popup>
               <div className="text-sm space-y-2 max-w-[200px]">
                 <div className="font-semibold text-base flex items-center">
@@ -178,7 +178,7 @@ export default function SimpleVesselMap({ vessel, ports = [] }: SimpleVesselMapP
                 </div>
                 <div className="space-y-1 text-xs">
                   <div>Country: {departurePort.country}</div>
-                  <div>Position: {departurePort.lat.toFixed(4)}°, {departurePort.lng.toFixed(4)}°</div>
+                  <div>Position: {parseFloat(departurePort.lat || 0).toFixed(4)}°, {parseFloat(departurePort.lng || 0).toFixed(4)}°</div>
                 </div>
                 <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Departure Port</Badge>
               </div>
@@ -187,8 +187,8 @@ export default function SimpleVesselMap({ vessel, ports = [] }: SimpleVesselMapP
         )}
 
         {/* Destination Port Marker */}
-        {destinationPort && (
-          <Marker position={[destinationPort.lat, destinationPort.lng]} icon={destinationPortIcon}>
+        {destinationPort && destinationPort.lat && destinationPort.lng && (
+          <Marker position={[parseFloat(destinationPort.lat), parseFloat(destinationPort.lng)]} icon={destinationPortIcon}>
             <Popup>
               <div className="text-sm space-y-2 max-w-[200px]">
                 <div className="font-semibold text-base flex items-center">
@@ -197,7 +197,7 @@ export default function SimpleVesselMap({ vessel, ports = [] }: SimpleVesselMapP
                 </div>
                 <div className="space-y-1 text-xs">
                   <div>Country: {destinationPort.country}</div>
-                  <div>Position: {destinationPort.lat.toFixed(4)}°, {destinationPort.lng.toFixed(4)}°</div>
+                  <div>Position: {parseFloat(destinationPort.lat || 0).toFixed(4)}°, {parseFloat(destinationPort.lng || 0).toFixed(4)}°</div>
                 </div>
                 <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">Destination Port</Badge>
               </div>
