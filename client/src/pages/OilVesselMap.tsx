@@ -66,6 +66,8 @@ const createVesselIcon = (vesselType: string, vesselName: string) => {
   });
 };
 
+
+
 const createPortIcon = () => {
   return L.divIcon({
     html: `<div style="
@@ -174,6 +176,16 @@ export default function OilVesselMap() {
     retry: 1
   });
   const refineries = Array.isArray(refineriesData) ? refineriesData : [];
+  
+  // Debug refineries data
+  React.useEffect(() => {
+    if (refineries.length > 0) {
+      console.log('Refineries data loaded:', refineries.length, 'refineries');
+      console.log('Sample refinery:', refineries[0]);
+    } else {
+      console.log('No refineries data available');
+    }
+  }, [refineries]);
   
 
 
@@ -707,13 +719,17 @@ export default function OilVesselMap() {
           
           {/* Refinery Markers - Real Locations from Database */}
           {refineries.map((refinery: any) => {
-            const lat = parseFloat(refinery.latitude?.toString() || '0');
-            const lng = parseFloat(refinery.longitude?.toString() || '0');
+            // Try different field names for coordinates
+            const lat = parseFloat(refinery.latitude?.toString() || refinery.lat?.toString() || '0');
+            const lng = parseFloat(refinery.longitude?.toString() || refinery.lng?.toString() || '0');
             
             // Skip refineries with invalid coordinates
             if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+              console.log('Skipping refinery with invalid coordinates:', refinery.name, lat, lng);
               return null;
             }
+            
+            console.log('Rendering refinery:', refinery.name, 'at', lat, lng);
             
             return (
               <Marker
