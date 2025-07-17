@@ -20,6 +20,15 @@ interface DocumentOptions {
   documentContent: string;
   includeVesselDetails?: boolean;
   includeLogo?: boolean;
+  // Design configuration options
+  headerLayout?: 'split' | 'center' | 'left';
+  logoSize?: 'small' | 'medium' | 'large';
+  contentPosition?: 'top' | 'center' | 'bottom';
+  watermarkStyle?: 'diagonal' | 'center' | 'corner';
+  colorScheme?: 'professional' | 'maritime' | 'legal';
+  useClientCopyStamp?: boolean;
+  useSecurityIcon?: boolean;
+  backgroundOverlay?: 'none' | 'subtle' | 'strong';
 }
 
 export class CustomPdfTemplateService {

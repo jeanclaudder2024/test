@@ -163,6 +163,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Supabase Authentication Routes (Primary Auth System)
   // Authentication routes handled in index.ts
   
+  // Serve template assets for PDF generation
+  app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
+  
   const apiRouter = express.Router();
 
   // Initialize passport and session middleware
