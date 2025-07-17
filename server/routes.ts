@@ -12790,6 +12790,54 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Get broker documents for admin (transaction documents uploaded by broker)
+  app.get("/api/admin/broker-documents/:brokerId", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const brokerId = parseInt(req.params.brokerId);
+      if (isNaN(brokerId)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
+      }
+      
+      const documents = await storage.getAllTransactionDocumentsByBroker(brokerId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching broker documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin download transaction document
+  app.get("/api/admin/transaction-documents/:id/download", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      const document = await storage.getTransactionDocumentById(documentId);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Admin can download any transaction document
+      res.download(document.filePath, document.originalFilename, (err) => {
+        if (err) {
+          console.error("Error downloading transaction document:", err);
+          res.status(500).json({ message: "Download failed" });
+        }
+      });
+    } catch (error) {
+      console.error("Error downloading transaction document:", error);
+      res.status(500).json({ 
+        message: "Failed to download document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Get broker uploaded documents (Admin only)
   app.get("/api/admin/broker/:brokerId/documents", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {

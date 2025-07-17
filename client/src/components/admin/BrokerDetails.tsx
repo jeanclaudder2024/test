@@ -40,12 +40,12 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
   const [newMessage, setNewMessage] = useState('');
   const [selectedDeal, setSelectedDeal] = useState<any>(null);
 
-  // Fetch broker documents
+  // Fetch broker documents (transaction documents)
   const { data: documents = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['broker-documents', broker.id],
     queryFn: async () => {
       try {
-        const response = await apiRequest('GET', `/api/admin/brokers/${broker.id}/documents`);
+        const response = await apiRequest('GET', `/api/admin/broker-documents/${broker.id}`);
         return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error('Error fetching documents:', error);
@@ -264,21 +264,27 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
                       <div className="flex items-center space-x-4">
                         <FileText className="h-8 w-8 text-blue-600" />
                         <div>
-                          <p className="font-medium">{doc.fileName}</p>
+                          <p className="font-medium">{doc.originalFilename}</p>
                           <p className="text-sm text-gray-500">
-                            {doc.fileType} • {formatDate(doc.uploadedAt)}
+                            {doc.mimeType} • {formatDate(doc.uploadedAt)}
                           </p>
                           {doc.dealTitle && (
                             <p className="text-xs text-blue-600">Deal: {doc.dealTitle}</p>
                           )}
+                          {doc.stepName && (
+                            <p className="text-xs text-green-600">Step: {doc.stepName}</p>
+                          )}
+                          {doc.documentType && (
+                            <p className="text-xs text-purple-600">Type: {doc.documentType}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`/api/admin/transaction-documents/${doc.id}/download`, '_blank')}
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
