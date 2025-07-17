@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline } from 'react-leaflet';
 import { Icon } from 'leaflet';
-import { Ship, Anchor, MapPin } from 'lucide-react';
+import { Ship, Anchor, MapPin, Navigation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import 'leaflet/dist/leaflet.css';
 
@@ -13,6 +13,14 @@ Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+interface Port {
+  id: number;
+  name: string;
+  country: string;
+  lat: number;
+  lng: number;
+}
+
 interface SimpleVesselMapProps {
   vessel: {
     id: number;
@@ -23,15 +31,37 @@ interface SimpleVesselMapProps {
     flag?: string;
     speed?: string;
     course?: string;
+    departurePort?: string | number;
+    destinationPort?: string | number;
   };
+  ports?: Port[];
 }
 
-export default function SimpleVesselMap({ vessel }: SimpleVesselMapProps) {
+export default function SimpleVesselMap({ vessel, ports = [] }: SimpleVesselMapProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Helper function to find port by ID or name
+  const findPort = (portIdOrName: string | number | undefined): Port | null => {
+    if (!portIdOrName || !ports.length) return null;
+    
+    // Try to find by ID first
+    if (typeof portIdOrName === 'number' || !isNaN(Number(portIdOrName))) {
+      const port = ports.find(p => p.id === Number(portIdOrName));
+      if (port) return port;
+    }
+    
+    // Try to find by name
+    const port = ports.find(p => p.name === portIdOrName);
+    return port || null;
+  };
+
+  // Get departure and destination ports
+  const departurePort = findPort(vessel.departurePort);
+  const destinationPort = findPort(vessel.destinationPort);
 
   if (!isClient) {
     return (
@@ -62,6 +92,54 @@ export default function SimpleVesselMap({ vessel }: SimpleVesselMapProps) {
     popupAnchor: [0, -16]
   });
 
+  // Custom port icons
+  const departurePortIcon = new Icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#16a34a" width="28" height="28">
+        <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
+      </svg>
+    `),
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
+  });
+
+  const destinationPortIcon = new Icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#dc2626" width="28" height="28">
+        <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
+      </svg>
+    `),
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
+  });
+
+  // Calculate route lines
+  const getRouteLines = () => {
+    const lines: [number, number][][] = [];
+    
+    if (departurePort) {
+      // Line from departure port to vessel current position
+      lines.push([
+        [departurePort.lat, departurePort.lng],
+        vesselPosition
+      ]);
+    }
+    
+    if (destinationPort) {
+      // Line from vessel current position to destination port
+      lines.push([
+        vesselPosition,
+        [destinationPort.lat, destinationPort.lng]
+      ]);
+    }
+    
+    return lines;
+  };
+
+  const routeLines = getRouteLines();
+
   return (
     <div className="h-96 rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800">
       <MapContainer
@@ -75,6 +153,58 @@ export default function SimpleVesselMap({ vessel }: SimpleVesselMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
+        {/* Route Lines */}
+        {routeLines.map((line, index) => (
+          <Polyline
+            key={index}
+            positions={line}
+            pathOptions={{
+              color: index === 0 ? '#16a34a' : '#dc2626', // Green for departure route, red for destination route
+              weight: 3,
+              opacity: 0.7,
+              dashArray: '10, 5'
+            }}
+          />
+        ))}
+
+        {/* Departure Port Marker */}
+        {departurePort && (
+          <Marker position={[departurePort.lat, departurePort.lng]} icon={departurePortIcon}>
+            <Popup>
+              <div className="text-sm space-y-2 max-w-[200px]">
+                <div className="font-semibold text-base flex items-center">
+                  <Navigation className="h-4 w-4 mr-1.5 text-green-600" />
+                  {departurePort.name}
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div>Country: {departurePort.country}</div>
+                  <div>Position: {departurePort.lat.toFixed(4)}°, {departurePort.lng.toFixed(4)}°</div>
+                </div>
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Departure Port</Badge>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Destination Port Marker */}
+        {destinationPort && (
+          <Marker position={[destinationPort.lat, destinationPort.lng]} icon={destinationPortIcon}>
+            <Popup>
+              <div className="text-sm space-y-2 max-w-[200px]">
+                <div className="font-semibold text-base flex items-center">
+                  <Anchor className="h-4 w-4 mr-1.5 text-red-600" />
+                  {destinationPort.name}
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div>Country: {destinationPort.country}</div>
+                  <div>Position: {destinationPort.lat.toFixed(4)}°, {destinationPort.lng.toFixed(4)}°</div>
+                </div>
+                <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">Destination Port</Badge>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
         {/* Vessel Marker */}
         <Marker position={vesselPosition} icon={vesselIcon}>
           <Popup>
@@ -89,6 +219,8 @@ export default function SimpleVesselMap({ vessel }: SimpleVesselMapProps) {
                 {vessel.flag && <div>Flag: {vessel.flag}</div>}
                 {vessel.speed && <div>Speed: {vessel.speed} knots</div>}
                 {vessel.course && <div>Course: {vessel.course}°</div>}
+                {departurePort && <div>From: {departurePort.name}</div>}
+                {destinationPort && <div>To: {destinationPort.name}</div>}
               </div>
               <Badge variant="secondary" className="text-xs">Current Position</Badge>
             </div>

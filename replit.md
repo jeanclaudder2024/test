@@ -698,6 +698,15 @@ Changelog:
   * **Template Asset Loading**: Confirmed all template assets loading correctly - primary logo SUCCESS, secondary logo SUCCESS
   * **Clean Design Aesthetic**: Removed colored backgrounds and implemented clean white design matching user's professional document template
   * **Production Ready**: Custom PDF generation now produces documents that exactly match user's provided template design with professional branding
+- July 17, 2025. **ENHANCED VESSEL MAP WITH ROUTE VISUALIZATION: Complete Port Connection and Route Line System**:
+  * **Interactive Route Lines**: Added dashed route lines connecting departure port → vessel → destination port with color coding (green for departure route, red for destination route)
+  * **Port Markers Enhancement**: Added distinctive star-shaped port markers with green for departure ports and red for destination ports
+  * **Port Information Popups**: Enhanced popups showing port details including country, coordinates, and port type (Departure/Destination)
+  * **Vessel Popup Enhancement**: Updated vessel popup to display departure and destination port names in addition to vessel details
+  * **Visual Route System**: Complete visual representation of vessel voyage with clear route progression from origin to destination
+  * **Professional Map Design**: Beautiful color-coded system with proper icons, badges, and visual hierarchy for maritime navigation
+  * **Real-time Integration**: Route lines and port connections dynamically update based on vessel's actual departure and destination port data
+  * **Production Ready**: Enhanced vessel detail page map now shows complete voyage visualization with connected ports and route lines
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)

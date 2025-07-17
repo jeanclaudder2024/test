@@ -828,12 +828,12 @@ export default function VesselDetail() {
                         Live Tracking
                       </CardTitle>
                       <CardDescription>
-                        Real-time position with nearby ports and refineries (20km radius)
+                        Real-time position with connected ports and route lines
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {vessel.currentLat && vessel.currentLng ? (
-                        <SimpleVesselMap vessel={vessel} />
+                        <SimpleVesselMap vessel={vessel} ports={ports} />
                       ) : (
                         <div className="h-96 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                           <div className="text-center text-muted-foreground">
