@@ -58,14 +58,30 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
   // Fetch broker messages
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ['broker-messages', broker.id],
-    queryFn: () => apiRequest('GET', `/api/admin/brokers/${broker.id}/messages`),
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', `/api/admin/broker/${broker.id}/messages`);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        return [];
+      }
+    },
     staleTime: 0
   });
 
   // Fetch broker deals for context
   const { data: brokerDeals = [], isLoading: dealsLoading } = useQuery({
     queryKey: ['broker-deals', broker.id],
-    queryFn: () => apiRequest('GET', `/api/admin/broker-deals`),
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', `/api/admin/broker-deals`);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching deals:', error);
+        return [];
+      }
+    },
     staleTime: 0
   });
 
@@ -75,7 +91,7 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      return apiRequest('POST', `/api/admin/brokers/${broker.id}/messages`, messageData);
+      return apiRequest('POST', `/api/admin/broker/${broker.id}/messages`, messageData);
     },
     onSuccess: () => {
       toast({
