@@ -247,10 +247,10 @@ export default function DocumentManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-900 to-slate-800 bg-clip-text text-transparent">
-            Professional Articles Management
+            Document Management
           </h2>
           <p className="text-slate-600 mt-2">
-            Manage article templates and generated professional documents
+            Manage document templates and generated documents
           </p>
         </div>
         

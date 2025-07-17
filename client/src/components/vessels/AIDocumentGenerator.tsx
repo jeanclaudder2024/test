@@ -128,7 +128,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
     onSuccess: (data) => {
       toast({
         title: "Document Generated Successfully",
-        description: "Professional document has been generated and is ready for download.",
+        description: "Document has been generated and is ready for download.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/generated-documents', vesselId] });
       setSelectedTemplate(null);
@@ -217,10 +217,10 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
         <CardHeader>
           <CardTitle className="flex items-center">
             <BookOpen className="h-5 w-5 mr-2" />
-            Professional Document Templates
+            Document Templates
           </CardTitle>
           <CardDescription>
-            Get professional maritime documentation for {vesselName} organized by category
+            Get maritime documentation for {vesselName} organized by category
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -428,7 +428,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
             Downloaded Documents
           </CardTitle>
           <CardDescription>
-            Professional documents generated for {vesselName}
+            Documents generated for {vesselName}
           </CardDescription>
         </CardHeader>
         <CardContent>

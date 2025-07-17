@@ -704,7 +704,7 @@ export default function VesselDetail() {
                   </TabsTrigger>
                   <TabsTrigger value="articles" className="flex items-center">
                     <FileCheck className="h-4 w-4 mr-2" />
-                    Professional Articles
+                    Documents
                   </TabsTrigger>
                 </TabsList>
                 

@@ -178,7 +178,7 @@ export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorP
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
           <FileText className="h-8 w-8 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Professional Articles</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
         </div>
         <p className="text-gray-600">Get and manage documents for {vessel.name}</p>
       </div>

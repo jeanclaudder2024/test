@@ -150,7 +150,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Professional Articles
+            Documents
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -158,7 +158,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
             <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
             <p className="text-gray-600 mb-4">
-              Please log in to access professional documentation.
+              Please log in to access documentation.
             </p>
             <Button onClick={() => window.location.href = '/api/login'}>
               Sign In to Continue
@@ -176,10 +176,10 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Get Professional Articles
+            Get Documents
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Get professional documentation for {vesselName}
+            Get documentation for {vesselName}
           </p>
         </CardHeader>
         <CardContent>
@@ -229,7 +229,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Get Article
+                  Get Document
                 </>
               )}
             </Button>
@@ -254,9 +254,9 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
           ) : !articles || articles.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Articles Generated</h3>
+              <h3 className="text-lg font-medium mb-2">No Documents Generated</h3>
               <p className="text-gray-600">
-                Get your first professional article using the options above.
+                Get your first document using the options above.
               </p>
             </div>
           ) : (
