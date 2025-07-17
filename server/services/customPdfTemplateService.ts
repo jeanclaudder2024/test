@@ -112,36 +112,86 @@ export class CustomPdfTemplateService {
   }
 
   async generateCustomPDF(doc: any, vessel: VesselData, options: DocumentOptions): Promise<void> {
-    console.log('🎨 Starting custom PDF generation with user template assets...');
+    console.log('🎨 Starting custom PDF generation with user background template...');
     
-    const colors = this.readColorScheme();
-    console.log('📋 Color scheme loaded:', colors);
+    // Load your background template image (image001.png)
+    const backgroundImageBase64 = await this.getLogoBase64();
+    console.log('🖼️ Background template image loaded:', backgroundImageBase64 ? 'SUCCESS' : 'FAILED');
     
-    const logoBase64 = await this.getLogoBase64();
-    console.log('🏢 Primary logo loaded:', logoBase64 ? 'SUCCESS' : 'FAILED');
-    
-    const secondaryLogoBase64 = await this.getSecondaryLogoBase64();
-    console.log('📄 Secondary logo loaded:', secondaryLogoBase64 ? 'SUCCESS' : 'FAILED');
-
-    // Professional header with template styling
-    this.addCustomHeader(doc, colors, logoBase64, secondaryLogoBase64, options);
-    console.log('✅ Custom header added with user branding');
-    
-    // Add vessel information with template styling
-    if (options.includeVesselDetails) {
-      this.addVesselInformation(doc, vessel, colors);
-      console.log('🚢 Vessel information added with custom styling');
+    if (backgroundImageBase64) {
+      // Use your template image as full page background
+      this.addFullPageBackground(doc, backgroundImageBase64);
+      console.log('✅ Full page background applied using your template image');
+    } else {
+      console.log('❌ Background template image not found, using fallback design');
     }
     
-    // Add document content with professional formatting
-    this.addDocumentContent(doc, options.documentContent, colors);
-    console.log('📝 Document content formatted with user template colors');
+    // Add document content over the background template
+    this.addContentOverBackground(doc, vessel, options);
+    console.log('📝 Document content added over background template');
     
-    // Add professional footer
-    this.addCustomFooter(doc, colors, secondaryLogoBase64);
-    console.log('🏁 Custom footer added with branding');
+    console.log('✨ Custom PDF generation completed with your background template design');
+  }
+
+  private addFullPageBackground(doc: any, backgroundImageBase64: string): void {
+    try {
+      // Add your template image as full page background
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      
+      // Place the background image to cover the entire page
+      doc.image(backgroundImageBase64, 0, 0, { 
+        width: pageWidth, 
+        height: pageHeight,
+        fit: [pageWidth, pageHeight],
+        align: 'center',
+        valign: 'center'
+      });
+      
+      console.log('🖼️ Background template image applied to full page');
+    } catch (error) {
+      console.error('Error applying background image:', error);
+    }
+  }
+
+  private addContentOverBackground(doc: any, vessel: VesselData, options: DocumentOptions): void {
+    // Add content positioned over your background template
     
-    console.log('✨ Custom PDF generation completed with user template design');
+    // Document title in center area (where content would normally go)
+    const pageWidth = doc.page.width;
+    const centerX = pageWidth / 2;
+    
+    // Position content in the lower center area of your template
+    doc.fontSize(18)
+       .fillColor('#333333')
+       .font('Helvetica-Bold')
+       .text(options.documentType, centerX - 100, 450, { width: 200, align: 'center' });
+    
+    // Add vessel information if requested
+    if (options.includeVesselDetails && vessel) {
+      doc.fontSize(14)
+         .fillColor('#555555')
+         .font('Helvetica-Bold')
+         .text(`VESSEL: ${vessel.name}`, centerX - 100, 490, { width: 200, align: 'center' });
+      
+      doc.fontSize(11)
+         .fillColor('#666666')
+         .font('Helvetica')
+         .text(`IMO: ${vessel.imo || 'N/A'}`, centerX - 100, 510, { width: 200, align: 'center' })
+         .text(`Type: ${vessel.vesselType || 'N/A'}`, centerX - 100, 525, { width: 200, align: 'center' });
+    }
+    
+    // Add document content in lower area
+    if (options.documentContent) {
+      doc.fontSize(10)
+         .fillColor('#444444')
+         .font('Helvetica')
+         .text(this.processDocumentContent(options.documentContent), 50, 560, { 
+           width: pageWidth - 100, 
+           align: 'left',
+           lineGap: 3
+         });
+    }
   }
 
   private addCustomHeader(doc: any, colors: any, logoBase64: string | null, secondaryLogoBase64: string | null, options: DocumentOptions): void {
