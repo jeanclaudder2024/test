@@ -43,7 +43,15 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
   // Fetch broker documents
   const { data: documents = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['broker-documents', broker.id],
-    queryFn: () => apiRequest('GET', `/api/admin/brokers/${broker.id}/documents`),
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', `/api/admin/brokers/${broker.id}/documents`);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        return [];
+      }
+    },
     staleTime: 0
   });
 

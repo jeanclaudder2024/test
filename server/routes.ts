@@ -12758,7 +12758,9 @@ Note: This document contains real vessel operational data and should be treated 
   // Get all admin files sent to brokers
   app.get("/api/admin/broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
+      console.log("Admin fetching all broker files");
       const files = await storage.getAllAdminBrokerFiles();
+      console.log(`Retrieved ${files.length} admin broker files`);
       res.json(files);
     } catch (error) {
       console.error("Error fetching admin broker files:", error);

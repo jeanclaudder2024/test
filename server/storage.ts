@@ -1718,12 +1718,13 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAdminBrokerFiles(): Promise<any[]> {
     try {
-      console.log('Fetching all admin broker files');
+      console.log('Fetching all admin broker files using Drizzle ORM');
       
-      // Use Drizzle ORM instead of raw SQL
-      const files = await db.select().from(brokerAdminFiles).orderBy(desc(brokerAdminFiles.sentDate));
+      // Use Drizzle ORM to get all files
+      const files = await db.select().from(brokerAdminFiles);
       
       console.log(`Found ${files.length} total admin broker files`);
+      console.log('Files data:', files);
       return files;
     } catch (error) {
       console.error('Error fetching all admin broker files:', error);
@@ -1932,16 +1933,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllAdminBrokerFiles(): Promise<any[]> {
-    try {
-      // For now, return empty array since adminBrokerFiles table doesn't exist
-      // We'll use transaction documents instead
-      return [];
-    } catch (error) {
-      console.error('Error fetching all admin broker files:', error);
-      return [];
-    }
-  }
+
 
   async getBrokerUploadedDocuments(brokerId: number): Promise<any[]> {
     try {
