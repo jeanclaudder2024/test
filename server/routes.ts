@@ -8378,7 +8378,9 @@ IMPORTANT: Generate a complete professional maritime document with the following
       
       // Import PDFDocument and custom template service
       const PDFDocument = (await import('pdfkit')).default;
-      const { customPdfTemplateService } = await import('./services/customPdfTemplateService');
+      console.log('📦 Importing custom PDF template service...');
+      const { customPdfTemplateService } = await import('./services/customPdfTemplateService.js');
+      console.log('✅ Custom PDF template service imported successfully');
       
       // Create professional PDF document with custom template styling
       const doc = new PDFDocument({
@@ -8401,12 +8403,14 @@ IMPORTANT: Generate a complete professional maritime document with the following
       doc.pipe(res);
       
       // Use custom template service to generate professional PDF with user's template assets
+      console.log('🚀 Calling custom PDF template service...');
       await customPdfTemplateService.generateCustomPDF(doc, vessel, {
         documentType,
         documentContent,
         includeVesselDetails,
         includeLogo
       });
+      console.log('🎉 Custom PDF generation completed');
       
       // Finalize the PDF
       doc.end();

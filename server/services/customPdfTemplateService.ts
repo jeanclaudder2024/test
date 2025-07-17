@@ -112,23 +112,36 @@ export class CustomPdfTemplateService {
   }
 
   async generateCustomPDF(doc: any, vessel: VesselData, options: DocumentOptions): Promise<void> {
+    console.log('🎨 Starting custom PDF generation with user template assets...');
+    
     const colors = this.readColorScheme();
+    console.log('📋 Color scheme loaded:', colors);
+    
     const logoBase64 = await this.getLogoBase64();
+    console.log('🏢 Primary logo loaded:', logoBase64 ? 'SUCCESS' : 'FAILED');
+    
     const secondaryLogoBase64 = await this.getSecondaryLogoBase64();
+    console.log('📄 Secondary logo loaded:', secondaryLogoBase64 ? 'SUCCESS' : 'FAILED');
 
     // Professional header with template styling
     this.addCustomHeader(doc, colors, logoBase64, secondaryLogoBase64, options);
+    console.log('✅ Custom header added with user branding');
     
     // Add vessel information with template styling
     if (options.includeVesselDetails) {
       this.addVesselInformation(doc, vessel, colors);
+      console.log('🚢 Vessel information added with custom styling');
     }
     
     // Add document content with professional formatting
     this.addDocumentContent(doc, options.documentContent, colors);
+    console.log('📝 Document content formatted with user template colors');
     
     // Add professional footer
     this.addCustomFooter(doc, colors, secondaryLogoBase64);
+    console.log('🏁 Custom footer added with branding');
+    
+    console.log('✨ Custom PDF generation completed with user template design');
   }
 
   private addCustomHeader(doc: any, colors: any, logoBase64: string | null, secondaryLogoBase64: string | null, options: DocumentOptions): void {
