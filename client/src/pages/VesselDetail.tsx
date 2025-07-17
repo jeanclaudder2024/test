@@ -312,7 +312,7 @@ export default function VesselDetail() {
   const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
-  const [testBrokerOverride, setTestBrokerOverride] = useState<boolean | null>(null);
+  // Remove test broker override - use real subscription data instead
 
   // Create broker deal mutation
   const createBrokerDealMutation = useMutation({
@@ -1278,41 +1278,10 @@ export default function VesselDetail() {
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Test Broker Access Button */}
-                      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-sm text-yellow-800 mb-2">Test Broker Access Control:</p>
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setTestBrokerOverride(true)}
-                            className={testBrokerOverride === true ? "bg-green-100" : ""}
-                          >
-                            Test Broker Access
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setTestBrokerOverride(false)}
-                            className={testBrokerOverride === false ? "bg-red-100" : ""}
-                          >
-                            Test Locked State
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setTestBrokerOverride(null)}
-                            className={testBrokerOverride === null ? "bg-blue-100" : ""}
-                          >
-                            Reset (Use Real)
-                          </Button>
-                        </div>
-                      </div>
 
                       {/* Action Button */}
                       <div className="mt-6">
-                        {(testBrokerOverride !== null ? testBrokerOverride : hasFeature('broker')) ? (
+                        {hasFeature('broker') ? (
                           <Button 
                             className="w-full py-4 px-6 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-700 animate-pulse"
                             style={{
