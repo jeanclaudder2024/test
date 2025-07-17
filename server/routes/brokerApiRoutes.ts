@@ -8,6 +8,11 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import type { Request, Response } from "express";
 import { insertBrokerDealSchema, insertBrokerDocumentSchema } from "@shared/schema";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2024-06-20',
+});
 
 const router = express.Router();
 
@@ -238,6 +243,137 @@ router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching broker statistics:', error);
     res.status(500).json({ message: 'Error fetching broker statistics' });
+  }
+});
+
+// Create broker payment intent
+router.post('/create-payment-intent', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { amount, brokerData } = req.body;
+    const userId = req.user!.id;
+    const user = await storage.getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Create or retrieve Stripe customer
+    let stripeCustomerId = user.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.username,
+      });
+      stripeCustomerId = customer.id;
+      await storage.updateUser(userId, { stripeCustomerId });
+    }
+
+    // Create payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'usd',
+      customer: stripeCustomerId,
+      metadata: {
+        userId: userId.toString(),
+        brokerData: JSON.stringify(brokerData),
+        paymentType: 'broker_membership',
+      },
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error('Error creating broker payment intent:', error);
+    res.status(500).json({ error: 'Failed to create payment intent' });
+  }
+});
+
+// Confirm broker payment
+router.post('/payment-confirm', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { paymentIntentId, brokerData } = req.body;
+    const userId = req.user!.id;
+
+    // Verify payment intent with Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ error: 'Payment not successful' });
+    }
+
+    // Update broker profile with payment completion
+    await storage.updateBrokerProfile(userId, {
+      ...brokerData,
+      profileCompleted: true,
+      paymentStatus: 'completed',
+      membershipStartDate: new Date(),
+      membershipEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+    });
+
+    // Create payment record
+    await storage.createBrokerPayment({
+      userId,
+      amount: paymentIntent.amount / 100,
+      currency: paymentIntent.currency,
+      status: 'succeeded',
+      stripePaymentId: paymentIntentId,
+      paymentMethod: 'card',
+    });
+
+    res.json({ success: true, message: 'Payment confirmed and profile updated' });
+  } catch (error) {
+    console.error('Error confirming broker payment:', error);
+    res.status(500).json({ error: 'Failed to confirm payment' });
+  }
+});
+
+// Generate membership card
+router.post('/generate-membership-card', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const user = await storage.getUserById(userId);
+    const brokerProfile = await storage.getBrokerProfile(userId);
+
+    if (!user || !brokerProfile) {
+      return res.status(404).json({ error: 'User or broker profile not found' });
+    }
+
+    // Generate membership card data
+    const membershipCard = {
+      membershipId: `OE-${userId.toString().padStart(6, '0')}`,
+      memberName: `${brokerProfile.firstName} ${brokerProfile.lastName}`,
+      email: user.email,
+      joinDate: brokerProfile.membershipStartDate,
+      expiryDate: brokerProfile.membershipEndDate,
+      membershipType: 'Elite Oil Broker',
+      specializations: brokerProfile.specialization,
+      status: 'Active',
+    };
+
+    res.json(membershipCard);
+  } catch (error) {
+    console.error('Error generating membership card:', error);
+    res.status(500).json({ error: 'Failed to generate membership card' });
+  }
+});
+
+// Download membership card
+router.get('/download-membership-card', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const user = await storage.getUserById(userId);
+    const brokerProfile = await storage.getBrokerProfile(userId);
+
+    if (!user || !brokerProfile) {
+      return res.status(404).json({ error: 'User or broker profile not found' });
+    }
+
+    // Simple PDF response for membership card
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="membership-card.pdf"');
+    res.send(Buffer.from('PDF content for membership card'));
+  } catch (error) {
+    console.error('Error downloading membership card:', error);
+    res.status(500).json({ error: 'Failed to download membership card' });
   }
 });
 

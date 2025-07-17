@@ -158,6 +158,7 @@ export interface IStorage {
   // Broker methods
   getBrokerProfile(userId: number): Promise<any | undefined>;
   updateBrokerProfile(userId: number, profileData: any): Promise<any>;
+  createBrokerPayment(payment: any): Promise<any>;
   
   // Broker Deal methods
   getBrokerDeals(brokerId: number): Promise<any[]>;
@@ -3192,6 +3193,27 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('Error updating broker profile:', error);
+      throw error;
+    }
+  }
+
+  async createBrokerPayment(payment: any): Promise<any> {
+    try {
+      const [newPayment] = await db
+        .insert(payments)
+        .values({
+          userId: payment.userId,
+          amount: payment.amount,
+          currency: payment.currency,
+          status: payment.status,
+          paymentMethod: payment.paymentMethod,
+          stripePaymentId: payment.stripePaymentId,
+          createdAt: new Date(),
+        })
+        .returning();
+      return newPayment;
+    } catch (error) {
+      console.error('Error creating broker payment:', error);
       throw error;
     }
   }
