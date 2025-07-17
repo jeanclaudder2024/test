@@ -62,6 +62,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     const secondaryNavigation = [
       { name: "Companies", href: "/companies", icon: Briefcase },
       { name: "Oil Prices", href: "/oil-prices", icon: RefreshCw },
+      { name: "PDF Test", href: "/pdf-test", icon: FileText },
       { name: "Broker", href: "/broker-dashboard", icon: Lock },
       { name: "Profile", href: "/profile", icon: User },
       { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },

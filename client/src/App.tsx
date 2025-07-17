@@ -47,6 +47,7 @@ import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import AdminDocumentsSimple from "@/pages/AdminDocumentsSimple";
+import PDFTestPage from "@/pages/PDFTestPage";
 
 import LandingPageManager from "@/pages/LandingPageManager";
 
@@ -87,6 +88,7 @@ function ProtectedRoutes() {
           <Route path="/ports/:id" component={PortDetail} />
           <Route path="/map" component={AdvancedMaritimeMap} />
           <Route path="/oil-vessel-map" component={OilVesselMap} />
+          <Route path="/pdf-test" component={PDFTestPage} />
 
           <Route path="/companies" component={Companies} />
 
