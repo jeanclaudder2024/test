@@ -674,62 +674,6 @@ export default function BrokerDashboard() {
                   className="pl-10 bg-gray-800 border-gray-600 text-white"
                 />
               </div>
-              
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="bg-orange-600 hover:bg-orange-700">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Document
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-800 border-gray-700 text-white">
-                  <DialogHeader>
-                    <DialogTitle>Upload Document</DialogTitle>
-                    <DialogDescription className="text-gray-300">
-                      Upload a new document to your broker account
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="file-upload" className="text-white">Select File</Label>
-                      <Input
-                        id="file-upload"
-                        type="file"
-                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                        className="bg-gray-700 border-gray-600 text-white"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const description = prompt("Enter description for this document:");
-                            if (description) {
-                              uploadMutation.mutate({ file, description });
-                            }
-                          }
-                        }}
-                      />
-                      <p className="text-xs text-gray-400 mt-2">
-                        Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG (max 10MB)
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="deal-select" className="text-white">Link to Deal (Optional)</Label>
-                      <Select>
-                        <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                          <SelectValue placeholder="Select a deal" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-700 border-gray-600">
-                          {deals.map((deal) => (
-                            <SelectItem key={deal.id} value={deal.id.toString()}>
-                              {deal.dealTitle}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
 
             {/* Admin Files Section */}
