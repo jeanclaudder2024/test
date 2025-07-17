@@ -153,101 +153,151 @@ export class CustomPdfTemplateService {
   }
 
   private addVesselContentToTemplate(doc: any, vessel: VesselData, options: DocumentOptions): void {
-    // Position content in open areas between header and footer of your template
-    // Based on your template layout, we need to position content carefully
+    // Professional margins and positioning within your custom template
+    const pageWidth = doc.page.width;
+    const leftMargin = 60;
+    const rightMargin = 60;
+    const contentWidth = pageWidth - leftMargin - rightMargin;
     
-    // First content area - upper middle section (after header, before central logo)
-    const upperContentY = 140; // After header area
+    // Upper content area - professional positioning after header
+    const upperContentY = 150;
     
-    // Document title
-    doc.fontSize(16)
+    // Document title with professional styling
+    doc.fontSize(18)
        .fillColor('#1e40af')
        .font('Helvetica-Bold')
-       .text(options.documentType || 'VESSEL DOCUMENTATION', 80, upperContentY, {
-         width: 440,
+       .text(options.documentType || 'VESSEL DOCUMENTATION', leftMargin, upperContentY, {
+         width: contentWidth,
          align: 'center'
        });
+    
+    // Professional vessel information box
+    const vesselInfoY = upperContentY + 40;
     
     // Vessel name prominently displayed
-    doc.fontSize(14)
-       .fillColor('#374151')
+    doc.fontSize(16)
+       .fillColor('#2563eb')
        .font('Helvetica-Bold')
-       .text(`VESSEL: ${vessel.name || 'N/A'}`, 80, upperContentY + 30, {
-         width: 440,
+       .text(`${vessel.name || 'N/A'}`, leftMargin, vesselInfoY, {
+         width: contentWidth,
          align: 'center'
        });
     
-    // Vessel basic info in two columns
-    doc.fontSize(10)
+    // Professional vessel specifications in organized layout
+    const specsY = vesselInfoY + 35;
+    const leftColX = leftMargin + 20;
+    const rightColX = leftMargin + (contentWidth / 2) + 20;
+    
+    doc.fontSize(11)
        .fillColor('#374151')
-       .font('Helvetica')
-       .text(`IMO: ${vessel.imo || 'N/A'}`, 100, upperContentY + 60)
-       .text(`Type: ${vessel.vesselType || 'N/A'}`, 100, upperContentY + 80)
-       .text(`Flag: ${vessel.flag || 'N/A'}`, 100, upperContentY + 100);
+       .font('Helvetica-Bold');
     
-    // Right column
-    doc.text(`DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() : 'N/A'}`, 320, upperContentY + 60)
-       .text(`Built: ${vessel.built || 'N/A'}`, 320, upperContentY + 80)
-       .text(`Length: ${vessel.length || 'N/A'} m`, 320, upperContentY + 100);
+    // Left column headers
+    doc.text('VESSEL IDENTIFICATION:', leftColX, specsY)
+       .text('TECHNICAL SPECIFICATIONS:', leftColX, specsY + 60);
     
-    // Main content area - below central logo
-    const lowerContentY = 460; // Below central logo area
+    // Right column headers  
+    doc.text('REGISTRY INFORMATION:', rightColX, specsY)
+       .text('CAPACITY DETAILS:', rightColX, specsY + 60);
     
-    // Document content area
+    // Data in professional format
+    doc.fontSize(10)
+       .fillColor('#4b5563')
+       .font('Helvetica');
+    
+    // Left column data
+    doc.text(`IMO Number: ${vessel.imo || 'Not Available'}`, leftColX, specsY + 18)
+       .text(`Vessel Type: ${vessel.vesselType || 'Not Specified'}`, leftColX, specsY + 32)
+       .text(`Year Built: ${vessel.built || 'Not Available'}`, leftColX, specsY + 78)
+       .text(`Length Overall: ${vessel.length || 'Not Available'} meters`, leftColX, specsY + 92);
+    
+    // Right column data
+    doc.text(`Flag State: ${vessel.flag || 'Not Available'}`, rightColX, specsY + 18)
+       .text(`Owner: ${vessel.owner || 'Not Available'}`, rightColX, specsY + 32)
+       .text(`Deadweight: ${vessel.deadweight ? vessel.deadweight.toLocaleString() + ' DWT' : 'Not Available'}`, rightColX, specsY + 78)
+       .text(`Gross Tonnage: ${vessel.grossTonnage ? vessel.grossTonnage.toLocaleString() + ' GT' : 'Not Available'}`, rightColX, specsY + 92);
+    
+    // Main document content area - positioned below logo with professional margins
+    const contentStartY = 480;
+    
     if (options.documentContent) {
-      // Clean the content
+      // Professional content header
+      doc.fontSize(14)
+         .fillColor('#1e40af')
+         .font('Helvetica-Bold')
+         .text('DOCUMENT CONTENT', leftMargin, contentStartY, {
+           width: contentWidth,
+           align: 'left'
+         });
+      
+      // Content separator line
+      doc.moveTo(leftMargin, contentStartY + 20)
+         .lineTo(leftMargin + contentWidth, contentStartY + 20)
+         .strokeColor('#d1d5db')
+         .lineWidth(1)
+         .stroke();
+      
+      // Process and display content professionally
       const cleanContent = this.processDocumentContent(options.documentContent);
+      const paragraphs = cleanContent.split('\n\n').filter(p => p.trim());
       
-      // Split content into manageable chunks
-      const lines = cleanContent.split('\n').filter(line => line.trim());
-      let currentY = lowerContentY;
+      let currentY = contentStartY + 35;
+      const maxY = 650; // Don't overlap footer
       
-      doc.fontSize(9)
-         .fillColor('#374151')
-         .font('Helvetica');
-      
-      lines.forEach((line, index) => {
-        if (currentY > 650) return; // Don't overlap footer
+      paragraphs.forEach((paragraph, index) => {
+        if (currentY > maxY) return;
         
-        const trimmedLine = line.trim();
-        if (trimmedLine.length > 0) {
-          // Handle different types of content
-          if (trimmedLine.endsWith(':') || trimmedLine.toUpperCase() === trimmedLine) {
-            // Headers/titles
-            doc.fontSize(10)
+        const trimmedParagraph = paragraph.trim();
+        if (trimmedParagraph.length > 0) {
+          // Check if it's a header (all caps or ends with colon)
+          if (trimmedParagraph.endsWith(':') || trimmedParagraph === trimmedParagraph.toUpperCase()) {
+            // Header styling
+            doc.fontSize(11)
+               .fillColor('#1e40af')
                .font('Helvetica-Bold')
-               .text(trimmedLine, 80, currentY, {
-                 width: 440,
-                 align: 'left'
+               .text(trimmedParagraph, leftMargin, currentY, {
+                 width: contentWidth,
+                 align: 'left',
+                 lineGap: 4
                });
-            currentY += 16;
+            currentY += 20;
           } else {
-            // Regular content
-            doc.fontSize(9)
+            // Regular paragraph styling
+            doc.fontSize(10)
+               .fillColor('#374151')
                .font('Helvetica')
-               .text(trimmedLine, 80, currentY, {
-                 width: 440,
+               .text(trimmedParagraph, leftMargin, currentY, {
+                 width: contentWidth,
                  align: 'justify',
-                 lineGap: 2
+                 lineGap: 3
                });
-            currentY += 14;
+            
+            // Calculate height and add space between paragraphs
+            const textHeight = doc.heightOfString(trimmedParagraph, {
+              width: contentWidth,
+              align: 'justify',
+              lineGap: 3
+            });
+            currentY += textHeight + 12;
           }
         }
       });
     }
     
-    // Document metadata in footer area (but not overlapping footer)
+    // Professional document metadata
     const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
     
-    doc.fontSize(8)
+    const metadataY = 700;
+    doc.fontSize(9)
        .fillColor('#6b7280')
        .font('Helvetica')
-       .text(`Document Date: ${currentDate}`, 80, 680)
-       .text(`Reference: PDH-${vessel.imo || 'UNKNOWN'}-${Date.now().toString().slice(-6)}`, 80, 695);
+       .text(`Document Generated: ${currentDate}`, leftMargin, metadataY)
+       .text(`Reference ID: PDH-${vessel.imo || 'UNKNOWN'}-${Date.now().toString().slice(-6)}`, leftMargin, metadataY + 12)
+       .text(`Vessel ID: ${vessel.id} | PetroDealHub Legal Document Services`, leftMargin, metadataY + 24);
   }
 
   private processDocumentContent(content: string): string {
