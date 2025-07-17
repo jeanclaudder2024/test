@@ -115,6 +115,19 @@ export function BrokerManagement() {
     retry: false,
   });
 
+  // Filter brokers based on search term and status
+  const filteredBrokers = brokers.filter(broker => {
+    const matchesSearch = searchTerm === '' || 
+      broker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${broker.firstName} ${broker.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && broker.subscription?.status === 'active') ||
+      (statusFilter === 'inactive' && broker.subscription?.status !== 'active');
+    
+    return matchesSearch && matchesStatus;
+  });
+
   // Create broker user mutation
   const createBrokerMutation = useMutation({
     mutationFn: async (brokerData: { email: string; firstName: string; lastName: string; password: string }) => {
@@ -227,18 +240,6 @@ export function BrokerManagement() {
         variant: "destructive",
       });
     },
-  });
-
-  const filteredBrokers = brokers.filter(broker => {
-    const matchesSearch = searchTerm === '' || 
-      broker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${broker.firstName} ${broker.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && broker.subscription?.status === 'active') ||
-      (statusFilter === 'inactive' && broker.subscription?.status !== 'active');
-    
-    return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
