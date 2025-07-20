@@ -65,8 +65,8 @@ export function useSubscription(): SubscriptionFeatures {
   // For trial users, they only get basic plan features regardless of trial plan
   const effectivePlan = hasActiveSubscription ? planId : 1; // Trial users always get basic plan features only
   
-  // For broker features, require PAID subscription (not trial) with Professional+ plan
-  const canAccessBrokerFeatures = hasActiveSubscription && planId >= 2;
+  // Broker features based on one-time membership payment (separate from subscription plans)
+  const canAccessBrokerFeatures = Boolean(user?.hasBrokerMembership);
 
   const features = {
     hasBasicAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
@@ -76,8 +76,8 @@ export function useSubscription(): SubscriptionFeatures {
     hasActiveTrial,
     isTrialExpired: trialExpired || trialDaysRemaining === 0,
     trialDaysRemaining,
-    // FIXED: Broker features require PAID Professional (Plan 2) or Enterprise (Plan 3) subscription - NO trial access
-    canAccessBrokerFeatures: canAccessBrokerFeatures || (user?.role === 'admin'),
+    // Broker features require one-time membership payment (separate from subscription plans)
+    canAccessBrokerFeatures: Boolean(user?.hasBrokerMembership) || (user?.role === 'admin'),
     canAccessAllZones: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     canGenerateDocuments: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
     maxVessels: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 100 : 50, // Basic=50, Professional=100, Enterprise=unlimited

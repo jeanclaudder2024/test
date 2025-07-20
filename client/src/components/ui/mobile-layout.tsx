@@ -63,7 +63,11 @@ export function MobileLayout({ children }: MobileLayoutProps) {
       { name: "Companies", href: "/companies", icon: Briefcase },
       { name: "Oil Prices", href: "/oil-prices", icon: RefreshCw },
       { name: "PDF Test", href: "/pdf-test", icon: FileText },
-      { name: "Broker", href: "/broker-dashboard", icon: Lock },
+      { 
+        name: "Broker", 
+        href: user?.hasBrokerMembership ? "/broker-dashboard" : "/broker-membership", 
+        icon: user?.hasBrokerMembership ? Briefcase : Lock 
+      },
       { name: "Profile", href: "/profile", icon: User },
       { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
       { name: "Pricing", href: "/pricing", icon: ShoppingBag },

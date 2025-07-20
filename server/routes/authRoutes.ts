@@ -90,7 +90,7 @@ router.post('/register', async (req, res) => {
     const { password, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
-      message: 'User registered successfully! Your 5-day Basic plan trial has started. Upgrade to Professional for broker features.',
+      message: 'User registered successfully! Your 5-day Basic plan trial has started. Purchase broker membership for trading features.',
       user: userWithoutPassword,
       token,
       subscription: userSubscription,

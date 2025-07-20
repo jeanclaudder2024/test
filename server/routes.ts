@@ -5248,6 +5248,64 @@ Only use authentic, real-world data for existing refineries.`;
       });
     }
   });
+
+  // Broker membership payment endpoint (one-time $299 payment)
+  app.post("/api/broker-membership-payment", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: 29900, // $299.00 in cents
+        currency: "usd",
+        description: "PetroDealHub Broker Membership - One-time Payment",
+        metadata: {
+          userId: req.user.id.toString(),
+          type: "broker_membership"
+        }
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        amount: 299,
+        description: "Broker Membership - One-time Payment"
+      });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Error creating broker membership payment: " + error.message });
+    }
+  });
+
+  // Confirm broker membership payment completion
+  app.post("/api/confirm-broker-membership", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { paymentIntentId } = req.body;
+      
+      // Verify payment with Stripe
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status === 'succeeded' && paymentIntent.metadata.type === 'broker_membership') {
+        // Update user broker membership status
+        const updatedUser = await storage.updateUserBrokerMembership(req.user.id, paymentIntentId);
+        
+        res.json({ 
+          success: true, 
+          message: "Broker membership activated successfully!",
+          user: updatedUser
+        });
+      } else {
+        res.status(400).json({ message: "Payment verification failed" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: "Error confirming broker membership: " + error.message });
+    }
+  });
   
   // API routes for vessel distribution data
   app.use("/api/distribution", vesselDistributionRouter);

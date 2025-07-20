@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import BrokerLocked from '@/pages/BrokerLocked';
+import { useLocation } from 'wouter';
+import { useEffect } from 'react';
 
 interface BrokerRouteProps {
   children: React.ReactNode;
@@ -8,23 +9,23 @@ interface BrokerRouteProps {
 
 export default function BrokerRoute({ children }: BrokerRouteProps) {
   const { user } = useAuth();
-  const { canAccessBrokerFeatures, isTrialExpired, hasActiveTrial } = useSubscription();
+  const { canAccessBrokerFeatures } = useSubscription();
+  const [, setLocation] = useLocation();
 
   // Admin users always have access
   if (user?.role === 'admin') {
     return <>{children}</>;
   }
 
-  // If trial is expired and user doesn't have active subscription, block access
-  if (isTrialExpired && !canAccessBrokerFeatures) {
-    return <BrokerLocked />;
-  }
-
-  // If user has broker access (trial or paid), allow access
-  if (canAccessBrokerFeatures) {
+  // If user has broker membership, allow access
+  if (canAccessBrokerFeatures || user?.hasBrokerMembership) {
     return <>{children}</>;
   }
 
-  // Default to locked page for users without proper subscription
-  return <BrokerLocked />;
+  // Redirect to broker membership purchase page
+  useEffect(() => {
+    setLocation('/broker-membership');
+  }, [setLocation]);
+
+  return null;
 }

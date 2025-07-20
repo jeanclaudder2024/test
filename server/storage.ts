@@ -65,6 +65,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   updateUserProfile(id: number, profileData: Partial<User>): Promise<User | undefined>;
+  updateUserBrokerMembership(id: number, paymentId: string): Promise<User | undefined>;
   calculateProfileCompleteness(user: User): number;
   
   // Subscription Plan methods
@@ -383,6 +384,20 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...profileData,
         profileCompleteness: completeness,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  async updateUserBrokerMembership(id: number, paymentId: string): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        hasBrokerMembership: true,
+        brokerMembershipDate: new Date(),
+        brokerMembershipPaymentId: paymentId,
         updatedAt: new Date()
       })
       .where(eq(users.id, id))

@@ -63,6 +63,10 @@ export const users = pgTable("users", {
   // Profile completion tracking
   profileCompleteness: integer("profile_completeness").default(0), // 0-100
   onboardingCompleted: boolean("onboarding_completed").default(false),
+  // Broker membership (separate from subscription plans)
+  hasBrokerMembership: boolean("has_broker_membership").default(false),
+  brokerMembershipDate: timestamp("broker_membership_date"),
+  brokerMembershipPaymentId: text("broker_membership_payment_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
