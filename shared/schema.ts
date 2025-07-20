@@ -1957,7 +1957,7 @@ export const brokerCardApplications = pgTable("broker_card_applications", {
   businessPhone: text("business_phone"),
   businessEmail: text("business_email"),
   linkedinProfile: text("linkedin_profile"),
-  references: text("references"),
+  professionalReferences: text("professional_references"),
   
   // Document Paths
   passportPhotoPath: text("passport_photo_path"),

@@ -82,7 +82,7 @@ export default function BrokerCardApplication() {
     businessPhone: '',
     businessEmail: '',
     linkedinProfile: '',
-    references: ''
+    professionalReferences: ''
   });
 
   // Check if user has broker membership
@@ -559,11 +559,11 @@ export default function BrokerCardApplication() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="references">Professional References</Label>
+                  <Label htmlFor="professionalReferences">Professional References</Label>
                   <Textarea
-                    id="references"
-                    value={formData.references}
-                    onChange={(e) => updateFormData('references', e.target.value)}
+                    id="professionalReferences"
+                    value={formData.professionalReferences}
+                    onChange={(e) => updateFormData('professionalReferences', e.target.value)}
                     placeholder="Provide 2-3 professional references with contact information"
                     rows={4}
                   />

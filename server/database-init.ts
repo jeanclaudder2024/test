@@ -402,7 +402,7 @@ export async function initializeCustomAuthTables() {
           business_phone TEXT,
           business_email TEXT,
           linkedin_profile TEXT,
-          references TEXT,
+          professional_references TEXT,
           
           -- Document Paths
           passport_photo_path TEXT,
