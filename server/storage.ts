@@ -50,7 +50,8 @@ import {
   transactionSteps, TransactionStep, InsertTransactionStep,
   transactionDocuments, TransactionDocument, InsertTransactionDocument,
   dealMessages, DealMessage, InsertDealMessage,
-  dealMessageAttachments, DealMessageAttachment, InsertDealMessageAttachment
+  dealMessageAttachments, DealMessageAttachment, InsertDealMessageAttachment,
+  brokerCardApplications, BrokerCardApplication, InsertBrokerCardApplication
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -316,6 +317,13 @@ export interface IStorage {
   // Enhanced Dashboard Methods
   getUserSubscription(userId: number): Promise<any>;
   getUserPayments(userId: number): Promise<any[]>;
+  
+  // Broker Card Application Methods
+  createBrokerCardApplication(application: InsertBrokerCardApplication): Promise<BrokerCardApplication>;
+  getBrokerCardApplication(userId: number): Promise<BrokerCardApplication | undefined>;
+  getBrokerCardApplicationById(id: number): Promise<BrokerCardApplication | undefined>;
+  updateBrokerCardApplication(id: number, updates: Partial<BrokerCardApplication>): Promise<BrokerCardApplication | undefined>;
+  getAllBrokerCardApplications(): Promise<BrokerCardApplication[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3968,6 +3976,74 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating deal message:', error);
       throw error;
+    }
+  }
+
+  // Broker Card Application Management
+  async createBrokerCardApplication(application: InsertBrokerCardApplication): Promise<BrokerCardApplication> {
+    try {
+      const [newApplication] = await db
+        .insert(brokerCardApplications)
+        .values(application)
+        .returning();
+      return newApplication;
+    } catch (error) {
+      console.error('Error creating broker card application:', error);
+      throw error;
+    }
+  }
+
+  async getBrokerCardApplication(userId: number): Promise<BrokerCardApplication | undefined> {
+    try {
+      const [application] = await db
+        .select()
+        .from(brokerCardApplications)
+        .where(eq(brokerCardApplications.submittedBy, userId))
+        .orderBy(desc(brokerCardApplications.submittedAt));
+      return application;
+    } catch (error) {
+      console.error('Error fetching broker card application:', error);
+      return undefined;
+    }
+  }
+
+  async getBrokerCardApplicationById(id: number): Promise<BrokerCardApplication | undefined> {
+    try {
+      const [application] = await db
+        .select()
+        .from(brokerCardApplications)
+        .where(eq(brokerCardApplications.id, id));
+      return application;
+    } catch (error) {
+      console.error('Error fetching broker card application by ID:', error);
+      return undefined;
+    }
+  }
+
+  async updateBrokerCardApplication(id: number, updates: Partial<BrokerCardApplication>): Promise<BrokerCardApplication | undefined> {
+    try {
+      const [updatedApplication] = await db
+        .update(brokerCardApplications)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(brokerCardApplications.id, id))
+        .returning();
+      return updatedApplication;
+    } catch (error) {
+      console.error('Error updating broker card application:', error);
+      return undefined;
+    }
+  }
+
+  async getAllBrokerCardApplications(): Promise<BrokerCardApplication[]> {
+    try {
+      const applications = await db
+        .select()
+        .from(brokerCardApplications)
+        .orderBy(desc(brokerCardApplications.submittedAt));
+      return applications;
+    } catch (error) {
+      console.error('Error fetching all broker card applications:', error);
+      return [];
     }
   }
 }

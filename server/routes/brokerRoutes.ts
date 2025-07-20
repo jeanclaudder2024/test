@@ -25,6 +25,88 @@ const upload = multer({
 });
 
 export function registerBrokerRoutes(app: Express) {
+  // Broker Card Application routes
+  app.post('/api/broker-card-application', authenticateToken, upload.fields([
+    { name: 'passportPhoto', maxCount: 1 },
+    { name: 'passportDocument', maxCount: 1 }
+  ]), async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Check if user already has an application
+      const existingApplication = await storage.getBrokerCardApplication(userId);
+      if (existingApplication) {
+        return res.status(400).json({ error: 'You already have a broker card application' });
+      }
+      
+      // Prepare file paths
+      let passportPhotoPath = null;
+      let passportDocumentPath = null;
+      
+      if (files.passportPhoto && files.passportPhoto[0]) {
+        passportPhotoPath = files.passportPhoto[0].path;
+      }
+      
+      if (files.passportDocument && files.passportDocument[0]) {
+        passportDocumentPath = files.passportDocument[0].path;
+      }
+      
+      // Create application data
+      const applicationData = {
+        submittedBy: userId,
+        fullName: req.body.fullName,
+        dateOfBirth: req.body.dateOfBirth,
+        nationality: req.body.nationality,
+        passportNumber: req.body.passportNumber,
+        passportExpiry: req.body.passportExpiry,
+        placeOfBirth: req.body.placeOfBirth || null,
+        gender: req.body.gender || null,
+        maritalStatus: req.body.maritalStatus || null,
+        streetAddress: req.body.streetAddress,
+        city: req.body.city,
+        state: req.body.state || null,
+        postalCode: req.body.postalCode || null,
+        country: req.body.country,
+        phoneNumber: req.body.phoneNumber,
+        alternatePhone: req.body.alternatePhone || null,
+        emergencyContact: req.body.emergencyContact || null,
+        emergencyPhone: req.body.emergencyPhone || null,
+        companyName: req.body.companyName,
+        jobTitle: req.body.jobTitle,
+        yearsExperience: req.body.yearsExperience,
+        previousLicenses: req.body.previousLicenses || null,
+        specializations: req.body.specializations || null,
+        businessAddress: req.body.businessAddress || null,
+        businessPhone: req.body.businessPhone || null,
+        businessEmail: req.body.businessEmail || null,
+        linkedinProfile: req.body.linkedinProfile || null,
+        references: req.body.references || null,
+        passportPhotoPath,
+        passportDocumentPath,
+        applicationStatus: 'pending'
+      };
+      
+      const application = await storage.createBrokerCardApplication(applicationData);
+      res.json({ success: true, application });
+    } catch (error) {
+      console.error('Error submitting broker card application:', error);
+      res.status(500).json({ error: 'Failed to submit application' });
+    }
+  });
+
+  // Get broker card application
+  app.get('/api/broker-card-application', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const application = await storage.getBrokerCardApplication(userId);
+      res.json(application);
+    } catch (error) {
+      console.error('Error fetching broker card application:', error);
+      res.status(500).json({ error: 'Failed to fetch application' });
+    }
+  });
+
   // Get broker stats
   app.get('/api/broker/stats', authenticateToken, async (req, res) => {
     try {
@@ -683,6 +765,112 @@ export function registerBrokerRoutes(app: Express) {
     } catch (error) {
       console.error('Error downloading membership card:', error);
       res.status(500).json({ error: 'Failed to download membership card' });
+    }
+  });
+
+  // Submit broker card application
+  app.post('/api/broker/submit-card-application', authenticateToken, upload.fields([
+    { name: 'passportPhoto', maxCount: 1 },
+    { name: 'passportDocument', maxCount: 1 }
+  ]), async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Extract form data
+      const applicationData = {
+        // Personal Information
+        fullName: req.body.fullName,
+        dateOfBirth: req.body.dateOfBirth,
+        nationality: req.body.nationality,
+        passportNumber: req.body.passportNumber,
+        passportExpiry: req.body.passportExpiry,
+        placeOfBirth: req.body.placeOfBirth,
+        gender: req.body.gender,
+        maritalStatus: req.body.maritalStatus,
+        
+        // Contact Information
+        streetAddress: req.body.streetAddress,
+        city: req.body.city,
+        state: req.body.state,
+        postalCode: req.body.postalCode,
+        country: req.body.country,
+        phoneNumber: req.body.phoneNumber,
+        alternatePhone: req.body.alternatePhone,
+        emergencyContact: req.body.emergencyContact,
+        emergencyPhone: req.body.emergencyPhone,
+        
+        // Professional Information
+        companyName: req.body.companyName,
+        jobTitle: req.body.jobTitle,
+        yearsExperience: req.body.yearsExperience,
+        previousLicenses: req.body.previousLicenses,
+        specializations: req.body.specializations,
+        businessAddress: req.body.businessAddress,
+        businessPhone: req.body.businessPhone,
+        businessEmail: req.body.businessEmail,
+        linkedinProfile: req.body.linkedinProfile,
+        references: req.body.references,
+        
+        // File paths
+        passportPhotoPath: files.passportPhoto?.[0]?.path || null,
+        passportDocumentPath: files.passportDocument?.[0]?.path || null,
+        
+        // Status and dates
+        applicationStatus: 'pending',
+        submittedAt: new Date(),
+        submittedBy: userId
+      };
+
+      // Save application to database
+      const application = await storage.createBrokerCardApplication(applicationData);
+      
+      // Update user's broker membership status to indicate application submitted
+      await storage.updateUser(userId, {
+        profileCompleteness: 75, // Increase profile completeness
+        onboardingCompleted: true
+      });
+
+      res.json({
+        success: true,
+        message: 'Broker card application submitted successfully',
+        application: {
+          id: application.id,
+          status: application.applicationStatus,
+          submittedAt: application.submittedAt
+        }
+      });
+    } catch (error) {
+      console.error('Error submitting broker card application:', error);
+      res.status(500).json({ error: 'Failed to submit broker card application' });
+    }
+  });
+
+  // Get broker card application status
+  app.get('/api/broker/card-application-status', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const application = await storage.getBrokerCardApplication(userId);
+      
+      if (!application) {
+        return res.json({ 
+          hasApplication: false, 
+          status: null,
+          message: 'No application found' 
+        });
+      }
+
+      res.json({
+        hasApplication: true,
+        status: application.applicationStatus,
+        submittedAt: application.submittedAt,
+        reviewedAt: application.reviewedAt,
+        cardGeneratedAt: application.cardGeneratedAt,
+        adminNotes: application.adminNotes
+      });
+    } catch (error) {
+      console.error('Error fetching broker card application status:', error);
+      res.status(500).json({ error: 'Failed to fetch application status' });
     }
   });
 }

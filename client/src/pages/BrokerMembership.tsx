@@ -61,8 +61,8 @@ const BrokerMembershipForm = () => {
         // Refresh user data to update broker status
         await refreshUser();
         
-        // Redirect to broker dashboard
-        setLocation('/broker-dashboard');
+        // Redirect to broker card application
+        setLocation('/broker-card-application');
       }
     } catch (error: any) {
       toast({

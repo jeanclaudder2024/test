@@ -1920,3 +1920,67 @@ export const insertRegionSchema = createInsertSchema(regions).omit({
 
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
 export type Region = typeof regions.$inferSelect;
+
+// Broker Card Applications
+export const brokerCardApplications = pgTable("broker_card_applications", {
+  id: serial("id").primaryKey(),
+  submittedBy: integer("submitted_by").notNull().references(() => users.id),
+  
+  // Personal Information
+  fullName: text("full_name").notNull(),
+  dateOfBirth: text("date_of_birth").notNull(),
+  nationality: text("nationality").notNull(),
+  passportNumber: text("passport_number").notNull(),
+  passportExpiry: text("passport_expiry").notNull(),
+  placeOfBirth: text("place_of_birth"),
+  gender: text("gender"),
+  maritalStatus: text("marital_status"),
+  
+  // Contact Information
+  streetAddress: text("street_address").notNull(),
+  city: text("city").notNull(),
+  state: text("state"),
+  postalCode: text("postal_code"),
+  country: text("country").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  alternatePhone: text("alternate_phone"),
+  emergencyContact: text("emergency_contact"),
+  emergencyPhone: text("emergency_phone"),
+  
+  // Professional Information
+  companyName: text("company_name").notNull(),
+  jobTitle: text("job_title").notNull(),
+  yearsExperience: text("years_experience").notNull(),
+  previousLicenses: text("previous_licenses"),
+  specializations: text("specializations"),
+  businessAddress: text("business_address"),
+  businessPhone: text("business_phone"),
+  businessEmail: text("business_email"),
+  linkedinProfile: text("linkedin_profile"),
+  references: text("references"),
+  
+  // Document Paths
+  passportPhotoPath: text("passport_photo_path"),
+  passportDocumentPath: text("passport_document_path"),
+  
+  // Application Status
+  applicationStatus: text("application_status").notNull().default("pending"), // pending, under_review, approved, rejected
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  adminNotes: text("admin_notes"),
+  cardGeneratedAt: timestamp("card_generated_at"),
+  cardNumber: text("card_number"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBrokerCardApplicationSchema = createInsertSchema(brokerCardApplications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type BrokerCardApplication = typeof brokerCardApplications.$inferSelect;
+export type InsertBrokerCardApplication = z.infer<typeof insertBrokerCardApplicationSchema>;
