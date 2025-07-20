@@ -63,10 +63,10 @@ router.post('/register', async (req, res) => {
     const trialEndDate = new Date();
     trialEndDate.setDate(trialStartDate.getDate() + 5); // 5-day trial
 
-    // Create subscription with 5-day trial using selected plan
+    // Create subscription with 5-day trial using Basic plan only
     let userSubscription = null;
     try {
-      const selectedPlanId = validatedData.planId || 2; // Default to Professional plan if none provided
+      const selectedPlanId = 1; // Always start with Basic plan (planId: 1) - no broker access
       const [subscription] = await db
         .insert(userSubscriptions)
         .values({
@@ -90,7 +90,7 @@ router.post('/register', async (req, res) => {
     const { password, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
-      message: 'User registered successfully! Your 5-day free trial has started.',
+      message: 'User registered successfully! Your 5-day Basic plan trial has started. Upgrade to Professional for broker features.',
       user: userWithoutPassword,
       token,
       subscription: userSubscription,
@@ -143,7 +143,7 @@ router.post('/login', async (req, res) => {
 
     // Check trial status - Admin users never have trial expiration
     const now = new Date();
-    const trialExpired = user.role === 'admin' ? false : (subscription ? now > new Date(subscription.trialEndDate) : true);
+    const trialExpired = user.role === 'admin' ? false : (subscription && subscription.trialEndDate ? now > new Date(subscription.trialEndDate) : true);
 
     // Generate token
     const token = generateToken(user);

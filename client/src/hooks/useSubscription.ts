@@ -56,28 +56,28 @@ export function useSubscription(): SubscriptionFeatures {
   const hasActiveSubscription = subscription?.status === 'active';
   const hasActiveTrial = subscription?.status === 'trial' && !trialExpired && trialDaysRemaining > 0;
   
-  // For broker features, require payment after trial expires
-  const canAccessBrokerFeaturesAfterTrial = hasActiveSubscription && effectivePlan >= 2;
-
   // Determine subscription level
-  const planId = subscription?.planId || 0;
+  const planId = subscription?.planId || 1; // Default to Basic plan
   const isBasicPlan = planId === 1;
   const isProfessionalPlan = planId === 2;
   const isEnterprisePlan = planId === 3;
 
-  // For trial users, use their actual selected plan limits (no unlimited access)
-  const effectivePlan = planId; // Use actual plan limits even during trial
+  // For trial users, they only get basic plan features regardless of trial plan
+  const effectivePlan = hasActiveSubscription ? planId : 1; // Trial users always get basic plan features only
+  
+  // For broker features, require PAID subscription (not trial) with Professional+ plan
+  const canAccessBrokerFeatures = hasActiveSubscription && planId >= 2;
 
   const features = {
     hasBasicAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
-    hasProfessionalAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
-    hasEnterpriseAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
+    hasProfessionalAccess: hasActiveSubscription && effectivePlan >= 2, // Require paid subscription for Professional features
+    hasEnterpriseAccess: hasActiveSubscription && effectivePlan >= 3, // Require paid subscription for Enterprise features
     hasTrialAccess: hasActiveTrial,
     hasActiveTrial,
     isTrialExpired: trialExpired || trialDaysRemaining === 0,
     trialDaysRemaining,
-    // FIXED: Broker features require Professional (Plan 2) or Enterprise (Plan 3) - trial access only during active trial, payment required after trial
-    canAccessBrokerFeatures: ((hasActiveTrial || canAccessBrokerFeaturesAfterTrial) && effectivePlan >= 2) || (user?.role === 'admin'),
+    // FIXED: Broker features require PAID Professional (Plan 2) or Enterprise (Plan 3) subscription - NO trial access
+    canAccessBrokerFeatures: canAccessBrokerFeatures || (user?.role === 'admin'),
     canAccessAllZones: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     canGenerateDocuments: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
     maxVessels: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 100 : 50, // Basic=50, Professional=100, Enterprise=unlimited

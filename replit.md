@@ -707,6 +707,15 @@ Changelog:
   * **Professional Map Design**: Beautiful color-coded system with proper icons, badges, and visual hierarchy for maritime navigation
   * **Real-time Integration**: Route lines and port connections dynamically update based on vessel's actual departure and destination port data
   * **Production Ready**: Enhanced vessel detail page map now shows complete voyage visualization with connected ports and route lines
+- July 17, 2025. **CRITICAL SECURITY FIX: Broker Access Control Implementation**:
+  * **Fixed Registration Issue**: New users were automatically getting broker access through Professional plan trials - this security vulnerability has been resolved
+  * **Basic Plan Default**: All new user registrations now start with Basic plan (planId: 1) with 5-day trial - NO broker access during trial
+  * **Payment Required for Broker Features**: Broker functionality now requires paid Professional (planId: 2) or Enterprise (planId: 3) subscription - trial access no longer grants broker features
+  * **Enhanced Subscription Logic**: Updated useSubscription hook to enforce that canAccessBrokerFeatures = hasActiveSubscription && planId >= 2 (no trial access)
+  * **Clear Registration Messaging**: Updated registration success message to clarify "5-day Basic plan trial has started. Upgrade to Professional for broker features"
+  * **Secure Revenue Model**: Users must now complete payment process and upgrade their subscription before accessing broker dashboard and deal creation features
+  * **Admin Override**: Admin users maintain unlimited access to all features regardless of subscription status
+  * **Production Security**: Platform now properly enforces subscription-based access control with no unauthorized broker access through free trials
 - July 12, 2025. **OIL VESSEL MAP Z-INDEX LAYERING FIX: Resolved Refineries Appearing Above Vessels**:
   * **Fixed Map Layer Order**: Reorganized marker rendering to proper z-index layering with refineries (bottom), ports (middle), vessels (top)
   * **Enhanced Z-Index Control**: Added explicit zIndexOffset values (-1000 for refineries, 0 for ports, 1000 for vessels)
