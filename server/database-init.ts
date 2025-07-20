@@ -44,6 +44,19 @@ export async function initializeCustomAuthTables() {
       console.log('Subscription plans initialization skipped:', error);
     }
 
+    // Add broker membership columns to users table with snake_case column names matching schema
+    try {
+      await db.execute(sql`
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS has_broker_membership BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS broker_membership_date TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS broker_membership_payment_id TEXT;
+      `);
+      console.log('Broker membership columns added to users table');
+    } catch (error) {
+      console.log('Broker membership columns already exist or error:', error);
+    }
+
     // Create broker tables
     try {
       await db.execute(sql`
