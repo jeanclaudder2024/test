@@ -102,11 +102,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   // Get regions based on selected plan limits
   const getRegionsForPlan = (planId: number) => {
     const plan = plans?.find(p => p.id === planId);
-    if (!plan) return regions; // Show all regions if no plan found
+    if (!plan) return ['Middle East', 'Europe']; // Show only Middle East and Europe by default
     
-    // During registration, show all regions but indicate limitations
-    // The actual limitation will be applied after registration
-    return regions;
+    // Show only Middle East and Europe regions during registration
+    const availableRegions = regions.filter(region => 
+      region === 'Middle East' || region === 'Europe'
+    );
+    return availableRegions;
   };
 
   // Get maximum regions allowed for a plan (for display purposes)
