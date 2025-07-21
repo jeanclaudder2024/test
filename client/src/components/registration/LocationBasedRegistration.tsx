@@ -524,7 +524,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     </div>
   );
 
-  // Step 4: Account Creation with Email and Password (Full page design)
+  // Step 4: Account Creation with Email and Password (Overlay design)
   const AccountCreationStep = () => {
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
@@ -532,22 +532,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                        userPassword === confirmPassword;
 
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center relative overflow-hidden z-50">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
-          <div className="absolute -bottom-8 left-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
-        </div>
-
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-1/4 opacity-20">
-          <Ship className="h-16 w-16 text-blue-300 animate-float" />
-        </div>
-        <div className="absolute bottom-32 right-1/4 opacity-20">
-          <Waves className="h-12 w-12 text-cyan-300 animate-bounce" />
-        </div>
-
+      <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="relative z-10 w-full max-w-md px-6">
           {/* Logo and Header */}
           <div className="text-center mb-8 space-y-6">
@@ -562,22 +547,22 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold text-white mb-2">
                 Create Your Account
               </h1>
-              <p className="text-blue-200 opacity-90">
+              <p className="text-gray-200">
                 Set up your PetroDealHub account to complete registration
               </p>
             </div>
           </div>
 
           {/* Form Card */}
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+          <Card className="bg-slate-800/90 backdrop-blur-md border border-slate-700 shadow-2xl">
             <CardContent className="p-8 space-y-6">
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-300">
                     First Name
                   </Label>
                   <div className="relative">
@@ -587,14 +572,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="John"
-                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="2"
+                      className="pl-10 h-12 bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-300">
                     Last Name
                   </Label>
                   <div className="relative">
@@ -605,7 +590,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Doe"
-                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      className="pl-10 h-12 bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -614,7 +599,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-300">
                   Email Address
                 </Label>
                 <div className="relative">
@@ -625,7 +610,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="your@company.com"
-                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 h-12 bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -633,7 +618,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-300">
                   Password
                 </Label>
                 <div className="relative">
@@ -644,13 +629,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="Create a strong password"
-                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 pr-10 h-12 bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-300"
                   >
                     {showPassword ? <EyeOff /> : <Eye />}
                   </button>
@@ -659,17 +644,17 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {/* Password Requirements */}
                 {userPassword && (
                   <div className="mt-2 space-y-1">
-                    <p className="text-xs font-medium text-gray-600 mb-1">Password Requirements:</p>
+                    <p className="text-xs font-medium text-gray-400 mb-1">Password Requirements:</p>
                     {['At least 8 characters long', 'One uppercase letter', 'One lowercase letter', 'One number', 'One special character (!@#$%^&*)'].map((requirement, index) => {
                       const isMet = !passwordErrors.includes(requirement);
                       return (
                         <div key={index} className="flex items-center space-x-2">
                           {isMet ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <CheckCircle className="h-4 w-4 text-green-400" />
                           ) : (
-                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                            <AlertTriangle className="h-4 w-4 text-red-400" />
                           )}
-                          <span className={`text-xs ${isMet ? 'text-green-600' : 'text-red-600'}`}>
+                          <span className={`text-xs ${isMet ? 'text-green-400' : 'text-red-400'}`}>
                             {requirement}
                           </span>
                         </div>
@@ -681,7 +666,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
               {/* Confirm Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-300">
                   Confirm Password
                 </Label>
                 <div className="relative">
@@ -692,13 +677,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 pr-10 h-12 bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-300"
                   >
                     {showConfirmPassword ? <EyeOff /> : <Eye />}
                   </button>
@@ -709,13 +694,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   <div className="flex items-center space-x-2 mt-1">
                     {userPassword === confirmPassword ? (
                       <>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-green-600">Passwords match</span>
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                        <span className="text-xs text-green-400">Passwords match</span>
                       </>
                     ) : (
                       <>
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-red-600">Passwords do not match</span>
+                        <AlertTriangle className="h-4 w-4 text-red-400" />
+                        <span className="text-xs text-red-400">Passwords do not match</span>
                       </>
                     )}
                   </div>
@@ -723,14 +708,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               </div>
 
               {/* Trial Info */}
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-gradient-to-r from-blue-900/40 to-green-900/40 rounded-lg border border-blue-700/30">
                 <div className="flex items-center space-x-3">
-                  <Shield className="h-5 w-5 text-blue-600" />
+                  <Shield className="h-5 w-5 text-blue-400" />
                   <div>
-                    <p className="text-sm font-medium text-blue-800">
+                    <p className="text-sm font-medium text-blue-300">
                       Free {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-Day Trial Included
                     </p>
-                    <p className="text-xs text-blue-600">
+                    <p className="text-xs text-gray-400">
                       No credit card required • Cancel anytime
                     </p>
                   </div>
@@ -744,14 +729,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             <Button 
               variant="outline" 
               onClick={() => setStep(3)}
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              className="bg-slate-700/50 border-slate-600 text-gray-300 hover:bg-slate-600/50 hover:text-white"
             >
               Back to Ports
             </Button>
             <Button 
               onClick={() => setStep(5)}
               disabled={!isFormValid}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8"
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Continue to Review
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -1068,13 +1053,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     );
   };
 
-  // Special full-screen handling for Step 4 (Account Creation)
-  if (step === 4) {
-    return <AccountCreationStep />;
-  }
-
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full relative">
       <div className="w-full">
         {/* Progress Indicator */}
         <div className="w-full bg-white border-b border-gray-200 py-8">
@@ -1103,6 +1083,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {step === 1 && "Choose Your Plan"}
                 {step === 2 && "Select Regions"}
                 {step === 3 && "Choose Ports"}
+                {step === 4 && "Create Account"}
                 {step === 5 && "Complete Registration"}
               </h1>
             </div>
@@ -1115,6 +1096,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {step === 1 && <PlanStep />}
             {step === 2 && <RegionStep />}
             {step === 3 && <PortStep />}
+            {step === 4 && <AccountCreationStep />}
             {step === 5 && <CompleteRegistrationStep />}
           </div>
         </div>
