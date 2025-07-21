@@ -292,7 +292,7 @@ export default function VesselManagement() {
       console.log("Form data being submitted:", vesselData);
       
       // Validate required fields on client side
-      const requiredFields = ['name', 'imo', 'mmsi', 'vesselType', 'flag'];
+      const requiredFields: (keyof VesselFormData)[] = ['name', 'imo', 'mmsi', 'vesselType', 'flag'];
       const missingFields = requiredFields.filter(field => !vesselData[field] || vesselData[field].trim() === '');
       
       if (missingFields.length > 0) {
@@ -1228,7 +1228,7 @@ export default function VesselManagement() {
                             <SelectValue placeholder="Select departure port" />
                           </SelectTrigger>
                           <SelectContent>
-                            {ports?.map((port) => (
+                            {ports?.map((port: Port) => (
                               <SelectItem key={port.id} value={port.id.toString()}>
                                 <div className="flex items-center justify-between w-full">
                                   <span>{port.name}</span>
@@ -1248,7 +1248,7 @@ export default function VesselManagement() {
                             <SelectValue placeholder="Select destination port" />
                           </SelectTrigger>
                           <SelectContent>
-                            {ports?.map((port) => (
+                            {ports?.map((port: Port) => (
                               <SelectItem key={port.id} value={port.id.toString()}>
                                 <div className="flex items-center justify-between w-full">
                                   <span>{port.name}</span>
@@ -1308,7 +1308,7 @@ export default function VesselManagement() {
                               <SelectValue placeholder="Select departure port" />
                             </SelectTrigger>
                             <SelectContent>
-                              {ports?.map(port => (
+                              {ports?.map((port: Port) => (
                                 <SelectItem key={port.id} value={port.id.toString()}>
                                   {port.name} - {port.country}
                                 </SelectItem>
@@ -1323,7 +1323,7 @@ export default function VesselManagement() {
                               <SelectValue placeholder="Select destination port" />
                             </SelectTrigger>
                             <SelectContent>
-                              {ports?.map(port => (
+                              {ports?.map((port: Port) => (
                                 <SelectItem key={port.id} value={port.id.toString()}>
                                   {port.name} - {port.country}
                                 </SelectItem>
@@ -1354,7 +1354,7 @@ export default function VesselManagement() {
                               <SelectValue placeholder="Select loading port" />
                             </SelectTrigger>
                             <SelectContent>
-                              {ports?.map(port => (
+                              {ports?.map((port: Port) => (
                                 <SelectItem key={port.id} value={port.id.toString()}>
                                   {port.name} - {port.country}
                                 </SelectItem>
