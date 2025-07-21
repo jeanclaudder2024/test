@@ -85,14 +85,14 @@ const BrokerMembershipForm = () => {
         });
 
         // Refresh user data to update hasBrokerMembership status
-        await refetch();
+        refetch();
 
-        // Navigate directly to broker dashboard
+        // Navigate directly to broker dashboard after a short delay
         setTimeout(() => {
           startTransition(() => {
             setLocation('/broker-dashboard');
           });
-        }, 1500);
+        }, 2000);
       }
     } catch (error: any) {
       toast({

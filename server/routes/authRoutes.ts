@@ -202,7 +202,9 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
           email: req.user.email,
           firstName: req.user.firstName,
           lastName: req.user.lastName,
-          role: req.user.role
+          role: req.user.role,
+          hasBrokerMembership: req.user.hasBrokerMembership || false,
+          brokerMembershipDate: req.user.brokerMembershipDate || null
         },
         subscription: userSubscription ? {
           ...userSubscription,
@@ -229,7 +231,9 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
         email: req.user.email,
         firstName: req.user.firstName,
         lastName: req.user.lastName,
-        role: req.user.role
+        role: req.user.role,
+        hasBrokerMembership: req.user.hasBrokerMembership || false,
+        brokerMembershipDate: req.user.brokerMembershipDate || null
       },
       subscription: userSubscription,
       trialExpired
