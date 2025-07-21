@@ -15,7 +15,7 @@ const BrokerMembershipForm = () => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refetch } = useAuth();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
@@ -84,12 +84,15 @@ const BrokerMembershipForm = () => {
           variant: "default",
         });
 
-        // Navigate directly to broker dashboard after 2 seconds
+        // Refresh user data to update hasBrokerMembership status
+        await refetch();
+
+        // Navigate directly to broker dashboard
         setTimeout(() => {
           startTransition(() => {
             setLocation('/broker-dashboard');
           });
-        }, 2000);
+        }, 1500);
       }
     } catch (error: any) {
       toast({
@@ -102,15 +105,17 @@ const BrokerMembershipForm = () => {
     }
   };
 
-  // If user already has broker membership, show message instead of redirect
+  // If user already has broker membership, redirect to dashboard immediately
   if (user?.hasBrokerMembership) {
+    // Auto-redirect to broker dashboard
+    startTransition(() => {
+      setLocation('/broker-dashboard');
+    });
+    
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-8 text-center">
-        <h1 className="text-4xl font-bold text-green-600">Already a Broker Member!</h1>
-        <p className="text-lg text-muted-foreground">You already have broker membership.</p>
-        <Button onClick={() => setLocation('/broker-dashboard')} className="bg-blue-600 hover:bg-blue-700">
-          Go to Broker Dashboard
-        </Button>
+        <h1 className="text-4xl font-bold text-green-600">Redirecting to Broker Dashboard...</h1>
+        <p className="text-lg text-muted-foreground">You already have permanent broker membership.</p>
       </div>
     );
   }
