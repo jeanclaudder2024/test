@@ -17,6 +17,12 @@ export default function BrokerRoute({ children }: BrokerRouteProps) {
     return <>{children}</>;
   }
 
+  // If user has just completed broker membership, allow access immediately
+  const brokerMembershipCompleted = localStorage.getItem('brokerMembershipCompleted');
+  if (brokerMembershipCompleted === 'true') {
+    return <>{children}</>;
+  }
+
   // If user has broker membership, allow access
   if (canAccessBrokerFeatures || user?.hasBrokerMembership) {
     return <>{children}</>;

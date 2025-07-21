@@ -228,10 +228,11 @@ export default function BrokerMembershipInfo() {
           variant: "default",
         });
 
-        // Navigate to broker dashboard
-        setTimeout(() => {
-          setLocation('/broker-dashboard');
-        }, 2000);
+        // Set a flag to indicate broker membership is complete
+        localStorage.setItem('brokerMembershipCompleted', 'true');
+        
+        // Navigate to broker dashboard immediately
+        setLocation('/broker-dashboard');
       } else {
         throw new Error(data.message || 'Failed to submit membership information');
       }
