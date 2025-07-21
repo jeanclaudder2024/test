@@ -600,6 +600,13 @@ Changelog:
   * **Removed Hardcoded Data**: Eliminated all hardcoded subscription plan data from server routes
   * **Consistent Data Flow**: All pricing displays now use authentic database subscription plans
   * **Revenue System Complete**: Platform now fully operational with dynamic subscription management and database-driven pricing
+- July 21, 2025. **CRITICAL PRICING DISPLAY FIX: NaN Values Resolved and Accessibility Issues Fixed**:
+  * **Fixed NaN Pricing Display**: Resolved critical issue where subscription plans showed "NaN" instead of actual prices by updating storage layer to transform price strings to numbers
+  * **Added Pricing Structure**: Updated SubscriptionPlan type to include monthlyPrice and yearlyPrice fields with 20% yearly discount calculation
+  * **Enhanced getSubscriptionPlans()**: Modified storage method to properly convert string prices to numeric values for frontend consumption
+  * **Fixed Dialog Accessibility**: Added missing DialogDescription to command.tsx component and fixed missing key prop in PortCard vessel mapping
+  * **Improved User Experience**: Registration page and pricing displays now show correct pricing structure (e.g., $399 monthly, $3830.40 yearly for Enterprise)
+  * **Console Error Resolution**: Fixed React warnings about missing DialogTitle/DialogDescription and missing key props in component iterations
 - July 10, 2025. **CRITICAL STRIPE CHECKOUT LOADING LOOP FIX**:
   * **Root Cause Identified**: Stripe checkout pages showed loading loops because trial periods displayed $0 immediate charges
   * **Trial Period Removed**: Eliminated `trial_period_days` from Stripe checkout sessions to prevent loading loops

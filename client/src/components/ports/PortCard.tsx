@@ -92,9 +92,9 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                 <>
                   {(port as any).connectedVessels
                     .slice(0, isExpanded ? (port as any).connectedVessels.length : 3)
-                    .map((vessel: any) => (
+                    .map((vessel: any, index: number) => (
                     <div 
-                      key={vessel.id} 
+                      key={vessel.id || `vessel-${index}`} 
                       className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted/40 text-sm group"
                     >
                       <div className="flex items-center flex-1">
