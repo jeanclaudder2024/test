@@ -294,6 +294,19 @@ CREATE TABLE IF NOT EXISTS broker_profiles (
 );
 
 -- ========================================
+-- CRITICAL COLUMN FIXES (deal_status and receiver_id errors)
+-- ========================================
+
+-- Fix broker_deals table - ensure deal_status column exists
+ALTER TABLE broker_deals 
+ADD COLUMN IF NOT EXISTS deal_status VARCHAR(50) DEFAULT 'draft',
+ADD COLUMN IF NOT EXISTS transaction_type VARCHAR(50) DEFAULT 'CIF-ASWP';
+
+-- Fix deal_messages table - ensure receiver_id column exists  
+ALTER TABLE deal_messages 
+ADD COLUMN IF NOT EXISTS receiver_id INTEGER REFERENCES users(id);
+
+-- ========================================
 -- SYNC STATUS COLUMNS (Critical Fix)
 -- ========================================
 UPDATE broker_deals SET deal_status = status WHERE deal_status IS NULL AND status IS NOT NULL;

@@ -463,6 +463,18 @@ export async function initializeCustomAuthTables() {
     } catch (error) {
       console.log('Broker deals enhancement skipped:', error.message);
     }
+
+    // Fix deal_messages table to add missing receiver_id column
+    try {
+      await db.execute(sql`
+        ALTER TABLE deal_messages 
+        ADD COLUMN IF NOT EXISTS receiver_id INTEGER REFERENCES users(id);
+      `);
+      
+      console.log('Deal messages table enhanced with receiver_id column');
+    } catch (error) {
+      console.log('Deal messages enhancement skipped:', error.message);
+    }
     
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);
