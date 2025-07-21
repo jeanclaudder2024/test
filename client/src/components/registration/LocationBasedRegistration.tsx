@@ -287,7 +287,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   };
 
   // Step 2: Select Maritime Regions
-  const RegionStep = (): React.JSX.Element => (
+  const RegionStep = () => (
     <div className="space-y-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
@@ -297,7 +297,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           Choose the maritime regions you want to focus on based on your selected plan.
         </p>
         
-        {selectedPlan && plans && plans.length > 0 && (
+        {selectedPlan && plans && Array.isArray(plans) && plans.length > 0 ? (
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-blue-800 font-semibold">
@@ -319,7 +319,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -631,8 +631,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           </Button>
           <Button 
             onClick={() => {
-              // Generate preview data when moving to final step
-              generatePreviewData();
+              // Move to final step (preview data is auto-generated via useEffect)
               setStep(5);
             }}
             disabled={!isPaymentValid}
@@ -660,135 +659,138 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         </div>
 
         {previewData && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Selected Plan */}
-          <Card className="border-2 border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-xl text-blue-800 flex items-center">
-                <Star className="w-6 h-6 mr-2" />
-                Selected Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="text-center p-6 bg-white rounded-lg">
-                  <h3 className="text-2xl font-bold text-blue-800 mb-2">
-                    {previewData.selectedPlan.name}
-                  </h3>
-                  <p className="text-3xl font-bold text-blue-600 mb-2">
-                    {formatCurrency(billingInterval === 'month' ? previewData.selectedPlan.monthlyPrice : previewData.selectedPlan.yearlyPrice)}/{billingInterval}
-                  </p>
-                  <p className="text-slate-600">
-                    {previewData.selectedPlan.description}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Selected Regions and Ports */}
-          <Card className="border-2 border-green-200 bg-green-50">
-            <CardHeader>
-              <CardTitle className="text-xl text-green-800 flex items-center">
-                <Globe className="w-6 h-6 mr-2" />
-                Selected Coverage
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-white p-4 rounded-lg">
-                  <h4 className="font-bold text-green-800 mb-2">Maritime Regions ({previewData.totalRegionsSelected})</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {previewData.selectedRegions.map((region: string) => (
-                      <Badge key={region} variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                        {region}
-                      </Badge>
-                    ))}
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Selected Plan */}
+              <Card className="border-2 border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-blue-800 flex items-center">
+                    <Star className="w-6 h-6 mr-2" />
+                    Selected Plan
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-center p-6 bg-white rounded-lg">
+                      <h3 className="text-2xl font-bold text-blue-800 mb-2">
+                        {previewData.selectedPlan.name}
+                      </h3>
+                      <p className="text-3xl font-bold text-blue-600 mb-2">
+                        {formatCurrency(billingInterval === 'month' ? previewData.selectedPlan.monthlyPrice : previewData.selectedPlan.yearlyPrice)}/{billingInterval}
+                      </p>
+                      <p className="text-slate-600">
+                        {previewData.selectedPlan.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg">
-                  <h4 className="font-bold text-green-800 mb-2">Strategic Ports ({previewData.totalPortsSelected})</h4>
-                  <div className="max-h-40 overflow-y-auto space-y-2">
-                    {previewData.selectedPorts.map((port: Port) => (
-                      <div key={port.id} className="flex items-center justify-between text-sm border-b border-green-100 pb-1">
-                        <span className="font-medium">{port.name}</span>
-                        <span className="text-green-600">{port.country}</span>
+                </CardContent>
+              </Card>
+
+              {/* Selected Regions and Ports */}
+              <Card className="border-2 border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-green-800 flex items-center">
+                    <Globe className="w-6 h-6 mr-2" />
+                    Selected Coverage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="bg-white p-4 rounded-lg">
+                      <h4 className="font-bold text-green-800 mb-2">Maritime Regions ({previewData.totalRegionsSelected})</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {previewData.selectedRegions.map((region: string) => (
+                          <Badge key={region} variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                            {region}
+                          </Badge>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-lg">
+                      <h4 className="font-bold text-green-800 mb-2">Strategic Ports ({previewData.totalPortsSelected})</h4>
+                      <div className="max-h-40 overflow-y-auto space-y-2">
+                        {previewData.selectedPorts.map((port: Port) => (
+                          <div key={port.id} className="flex items-center justify-between text-sm border-b border-green-100 pb-1">
+                            <span className="font-medium">{port.name}</span>
+                            <span className="text-green-600">{port.country}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Payment Information */}
+            <Card className="border-2 border-purple-200 bg-purple-50 mt-8">
+              <CardHeader>
+                <CardTitle className="text-xl text-purple-800 flex items-center">
+                  <CreditCard className="w-6 h-6 mr-2" />
+                  Payment Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white p-6 rounded-lg space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Cardholder Name</Label>
+                      <p className="text-lg font-semibold text-gray-900">{paymentData.cardholderName}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Card Number</Label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {paymentData.cardNumber ? `****${paymentData.cardNumber.slice(-4)}` : '****'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Expiry</Label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {paymentData.expiryMonth}/{paymentData.expiryYear}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Trial Period</Label>
+                      <p className="text-lg font-semibold text-green-600">
+                        5 days free, then {formatCurrency(previewData?.selectedPlan.monthlyPrice || 0)} monthly
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-purple-100 rounded-lg">
+                    <p className="text-sm text-purple-800">
+                      <Shield className="w-4 h-4 inline mr-1" />
+                      Payment will be automatically processed after your 5-day trial period. You can cancel anytime.
+                    </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Payment Information */}
-          <Card className="border-2 border-purple-200 bg-purple-50 mt-8">
-            <CardHeader>
-              <CardTitle className="text-xl text-purple-800 flex items-center">
-              <CreditCard className="w-6 h-6 mr-2" />
-              Payment Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-white p-6 rounded-lg space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Cardholder Name</Label>
-                  <p className="text-lg font-semibold text-gray-900">{paymentData.cardholderName}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Card Number</Label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {paymentData.cardNumber ? `****${paymentData.cardNumber.slice(-4)}` : '****'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Expiry</Label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {paymentData.expiryMonth}/{paymentData.expiryYear}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Trial Period</Label>
-                  <p className="text-lg font-semibold text-green-600">
-                    5 days free, then {formatCurrency(previewData?.selectedPlan.monthlyPrice || 0)} monthly
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 p-3 bg-purple-100 rounded-lg">
-                <p className="text-sm text-purple-800">
-                  <Shield className="w-4 h-4 inline mr-1" />
-                  Payment will be automatically processed after your 5-day trial period. You can cancel anytime.
-                </p>
-              </div>
+            <div className="flex justify-between mt-8">
+              <Button variant="outline" onClick={() => setStep(4)}>
+                Back to Payment
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (previewData && selectedPlan) {
+                    onComplete({
+                      selectedPlan,
+                      selectedPort: selectedPorts[0], // Pass first selected port
+                      previewData,
+                      paymentData
+                    });
+                  }
+                }}
+                disabled={!previewData}
+                className="bg-green-600 hover:bg-green-700 px-8"
+              >
+                Complete Registration
+                <CheckCircle2 className="w-5 h-5 ml-2" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-between mt-8">
-          <Button variant="outline" onClick={() => setStep(4)}>
-            Back to Payment
-          </Button>
-          <Button 
-            onClick={() => {
-              if (previewData && selectedPlan) {
-                onComplete({
-                  selectedPlan,
-                  selectedPort: selectedPorts[0], // Pass first selected port
-                  previewData,
-                  paymentData
-                });
-              }
-            }}
-            disabled={!previewData}
-            className="bg-green-600 hover:bg-green-700 px-8"
-          >
-            Complete Registration
-            <CheckCircle2 className="w-5 h-5 ml-2" />
-          </Button>
-        </div>
-      )}
+          </>
+        )}
       </div>
     );
   };
