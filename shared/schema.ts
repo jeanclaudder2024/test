@@ -67,6 +67,8 @@ export const users = pgTable("users", {
   hasBrokerMembership: boolean("has_broker_membership").default(false),
   brokerMembershipDate: timestamp("broker_membership_date"),
   brokerMembershipPaymentId: text("broker_membership_payment_id"),
+  // Payment method for subscription auto-renewal
+  stripePaymentMethodId: text("stripe_payment_method_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

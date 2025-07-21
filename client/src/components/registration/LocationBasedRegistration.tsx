@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { 
   MapPin, 
   Ship, 
@@ -41,6 +43,9 @@ import {
   CheckCircle,
   Gift
 } from 'lucide-react';
+
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
 interface Port {
   id: number;
@@ -82,7 +87,7 @@ interface SubscriptionPlan {
 }
 
 interface LocationBasedRegistrationProps {
-  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any }) => void;
+  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any; paymentMethodId?: string }) => void;
 }
 
 // Separate stable component for Step 4 - Account Creation
@@ -330,6 +335,168 @@ const AccountCreationStep = React.memo(({
   );
 });
 
+// Payment Method Step Component
+const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved }: {
+  onNext: () => void;
+  onBack: () => void;
+  isProcessing: boolean;
+  onPaymentMethodSaved: (paymentMethodId: string) => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      toast({
+        title: "Error",
+        description: "Card element not found",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create payment method
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+      });
+
+      if (error) {
+        toast({
+          title: "Payment Method Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Payment method saved successfully!",
+          variant: "default"
+        });
+        onPaymentMethodSaved(paymentMethod.id);
+        onNext();
+      }
+    } catch (error) {
+      console.error('Payment method error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save payment method",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+          Add Payment Method
+        </h2>
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          Add your payment method for automatic billing after your 5-day trial ends.
+        </p>
+      </div>
+
+      <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Card Information
+              </label>
+              <div className="p-4 border border-gray-300 rounded-lg">
+                <CardElement
+                  options={{
+                    style: {
+                      base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                          color: '#aab7c4',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Trial Information */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-500 p-2 rounded-full">
+                  <Shield className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-blue-800 font-medium text-sm">Secure & Protected</p>
+                  <p className="text-blue-600 text-xs">Your card will be charged automatically after the 5-day trial period ends</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between mt-8">
+            <Button type="button" variant="outline" onClick={onBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Account
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={!stripe || loading || isProcessing}
+              className="bg-blue-600 hover:bg-blue-700 px-8"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Save Payment Method
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const PaymentMethodStep = ({ onNext, onBack, isProcessing, onPaymentMethodSaved }: {
+  onNext: () => void;
+  onBack: () => void;
+  isProcessing: boolean;
+  onPaymentMethodSaved: (paymentMethodId: string) => void;
+}) => {
+  return (
+    <Elements stripe={stripePromise}>
+      <PaymentMethodForm 
+        onNext={onNext} 
+        onBack={onBack}
+        isProcessing={isProcessing}
+        onPaymentMethodSaved={onPaymentMethodSaved}
+      />
+    </Elements>
+  );
+};
+
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
   const [step, setStep] = useState(1);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
@@ -346,6 +513,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
 
   // Password validation function
   const validatePassword = (password: string): string[] => {
@@ -1041,8 +1209,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             </Card>
 
             <div className="flex justify-between mt-8">
-              <Button variant="outline" onClick={() => setStep(4)}>
-                Back to Account Setup
+              <Button variant="outline" onClick={() => setStep(5)}>
+                Back to Payment Method
               </Button>
               <Button 
                 onClick={() => {
@@ -1050,7 +1218,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     onComplete({
                       selectedPlan,
                       selectedPort: selectedPorts[0], // Pass first selected port
-                      previewData
+                      previewData,
+                      paymentMethodId
                     });
                   }
                 }}
@@ -1076,7 +1245,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <div className="w-full bg-white border-b border-gray-200 py-8">
           <div className="max-w-4xl mx-auto px-6">
             <div className="flex items-center justify-center space-x-4 mb-6">
-              {[1, 2, 3, 4, 5].map((stepNumber) => (
+              {[1, 2, 3, 4, 5, 6].map((stepNumber) => (
                 <div key={stepNumber} className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
                     step >= stepNumber 
@@ -1085,7 +1254,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   }`}>
                     {stepNumber}
                   </div>
-                  {stepNumber < 5 && (
+                  {stepNumber < 6 && (
                     <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
                       step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
                     }`} />
@@ -1100,7 +1269,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {step === 2 && "Select Regions"}
                 {step === 3 && "Choose Ports"}
                 {step === 4 && "Create Your Account"}
-                {step === 5 && "Complete Registration"}
+                {step === 5 && "Add Payment Method"}
+                {step === 6 && "Complete Registration"}
               </h1>
             </div>
           </div>
@@ -1134,7 +1304,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 onBack={() => setStep(3)}
               />
             )}
-            {step === 5 && <CompleteRegistrationStep />}
+            {step === 5 && (
+              <PaymentMethodStep
+                onNext={() => setStep(6)}
+                onBack={() => setStep(4)}
+                isProcessing={isCreatingAccount}
+                onPaymentMethodSaved={(paymentId) => setPaymentMethodId(paymentId)}
+              />
+            )}
+            {step === 6 && <CompleteRegistrationStep />}
           </div>
         </div>
       </div>

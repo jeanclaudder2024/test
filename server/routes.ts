@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Complete registration endpoint with account creation
   app.post("/api/complete-registration", async (req: Request, res: Response) => {
     try {
-      const { email, password, firstName, lastName, selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
+      const { email, password, firstName, lastName, selectedPlan, selectedRegions, selectedPorts, billingInterval, paymentMethodId } = req.body;
       
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ 
@@ -205,7 +205,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: email,
         password: hashedPassword,
         firstName: firstName,
-        lastName: lastName
+        lastName: lastName,
+        stripePaymentMethodId: paymentMethodId || null
       }).returning();
       
       // Create subscription for the user
