@@ -606,19 +606,29 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         console.log('Creating account with data:', registrationData);
 
         // Call the actual registration API to create account
-        const response = await apiRequest('POST', '/api/complete-registration', registrationData);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Registration failed');
-        }
+        const response = await fetch('/api/complete-registration', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(registrationData),
+        });
         
         const result = await response.json();
         
+        if (!response.ok) {
+          throw new Error(result.message || 'Account creation failed');
+        }
+        
         toast({
-          title: "Registration Complete!",
-          description: "Your preferences have been saved. Redirecting to add payment method...",
+          title: "Account Created Successfully!",
+          description: "Your account has been created with a free trial. Redirecting to payment setup...",
         });
+
+        // Store user data for automatic login
+        if (result.user) {
+          localStorage.setItem('tempUserData', JSON.stringify(result.user));
+        }
 
         // Redirect to the pricing page where they can add payment
         setTimeout(() => {
@@ -853,7 +863,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
             <div className="flex justify-between mt-8">
               <Button variant="outline" onClick={() => setStep(4)}>
-                Back to Complete Registration
+                Back to Account Setup
               </Button>
               <Button 
                 onClick={() => {

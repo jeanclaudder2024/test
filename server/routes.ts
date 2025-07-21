@@ -42,6 +42,7 @@ import {
 import { WebSocketServer, WebSocket } from "ws";
 import { and, eq, isNotNull, sql, like, or } from "drizzle-orm";
 import { db } from "./db";
+import bcrypt from "bcrypt";
 import PDFDocument from 'pdfkit';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 // Removed old voyage progress service
@@ -76,7 +77,9 @@ import {
   oilTypes,
   regions,
   userSubscriptions,
-  brokerAdminFiles
+  brokerAdminFiles,
+  users,
+  subscriptions
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
