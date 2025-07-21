@@ -832,13 +832,25 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
   // Step 4: Account Creation - Login Page Style Design
   const AccountCreationStep = () => {
+    // Prevent unwanted scrolling when inputs are focused
+    useEffect(() => {
+      const preventScroll = () => {
+        window.scrollTo(0, 0);
+      };
+
+      // Small delay to prevent focus issues
+      const timeoutId = setTimeout(preventScroll, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }, []);
+
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
                        passwordErrors.length === 0 && 
                        userPassword === confirmPassword;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="registration-container bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center relative">
         {/* Background Pattern - Exactly like login */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
@@ -854,9 +866,9 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           <Waves className="h-12 w-12 text-cyan-300 animate-bounce" />
         </div>
 
-        <div className="relative z-10 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md mx-auto p-4">
           {/* Logo and Header - Exactly like login */}
-          <div className="text-center mb-8 space-y-6">
+          <div className="text-center mb-6 space-y-4">
             <div className="flex justify-center">
               <div className="relative">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-2xl">
@@ -874,7 +886,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           </div>
 
           {/* Account Creation Form - Login Style */}
-          <Card className="backdrop-blur-xl bg-white/10 border-white/20 shadow-2xl">
+          <Card className="backdrop-blur-xl bg-white/10 border-white/20 shadow-2xl stable-form">
             <CardHeader className="text-center pb-6">
               <CardTitle className="text-2xl text-white">Account Setup</CardTitle>
               <CardDescription className="text-slate-300">
