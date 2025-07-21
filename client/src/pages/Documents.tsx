@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle 
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,14 @@ interface Document {
   reference?: string;
   language?: string;
   createdAt: string;
+  documentName?: string;
+  issueDate?: string;
+  expiryDate?: string;
+  lastModified?: string;
+  issuer?: string;
+  recipientName?: string;
+  recipientOrg?: string;
+  vesselId?: string;
 }
 
 export default function Documents() {
@@ -673,6 +682,9 @@ export default function Documents() {
             <>
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl break-words">{selectedDocument.title}</DialogTitle>
+                <VisuallyHidden>
+                  <DialogDescription>View detailed document information and metadata</DialogDescription>
+                </VisuallyHidden>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <Badge variant="outline" className="font-medium">{selectedDocument.type}</Badge>
                   

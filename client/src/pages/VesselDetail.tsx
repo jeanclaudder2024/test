@@ -480,23 +480,25 @@ export default function VesselDetail() {
     const fetchPorts = async () => {
       try {
         const authToken = localStorage.getItem('authToken');
-        const response = await axios.get('/api/ports', {
+        const response = await axios.get('/api/admin/ports', {
           headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
         });
         if (response.status === 200) {
           // Handle both response formats: { ports: [...] } or direct array
           const portsData = response.data.ports || response.data;
           setPorts(Array.isArray(portsData) ? portsData : []);
+          console.log('Loaded ports for vessel detail:', portsData.length, 'ports');
         }
       } catch (error) {
         console.error('Failed to fetch ports for map:', error);
-        // Try fallback without auth
+        // Try fallback with public endpoint
         try {
           const response = await axios.get('/api/ports');
           if (response.status === 200) {
             // Handle both response formats: { ports: [...] } or direct array
             const portsData = response.data.ports || response.data;
             setPorts(Array.isArray(portsData) ? portsData : []);
+            console.log('Loaded ports from fallback endpoint:', portsData.length, 'ports');
           }
         } catch (fallbackError) {
           console.error('Fallback ports fetch also failed:', fallbackError);
