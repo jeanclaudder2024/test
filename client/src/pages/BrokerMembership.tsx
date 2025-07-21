@@ -1,4 +1,4 @@
-import { useState, useTransition, startTransition } from 'react';
+import { useState, useTransition, startTransition, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -84,15 +84,13 @@ const BrokerMembershipForm = () => {
           variant: "default",
         });
 
-        // Refresh user data to update hasBrokerMembership status
-        refetch();
-
-        // Navigate directly to broker dashboard after a short delay
-        setTimeout(() => {
+        // Force user data refresh and navigate
+        setTimeout(async () => {
+          await refetch();
           startTransition(() => {
             setLocation('/broker-dashboard');
           });
-        }, 2000);
+        }, 1500);
       }
     } catch (error: any) {
       toast({
@@ -105,13 +103,21 @@ const BrokerMembershipForm = () => {
     }
   };
 
-  // If user already has broker membership, redirect to dashboard immediately
+  // Use useEffect to handle redirect to avoid React warning
+  useEffect(() => {
+    if (user?.hasBrokerMembership) {
+      // Auto-redirect to broker dashboard
+      const timer = setTimeout(() => {
+        startTransition(() => {
+          setLocation('/broker-dashboard');
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [user?.hasBrokerMembership, setLocation]);
+
+  // If user already has broker membership, show loading message
   if (user?.hasBrokerMembership) {
-    // Auto-redirect to broker dashboard
-    startTransition(() => {
-      setLocation('/broker-dashboard');
-    });
-    
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-8 text-center">
         <h1 className="text-4xl font-bold text-green-600">Redirecting to Broker Dashboard...</h1>

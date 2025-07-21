@@ -180,8 +180,24 @@ router.post('/login', async (req, res) => {
 
 // Get current user endpoint
 router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  // Prevent caching
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  
   try {
     if (!req.user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // Get fresh user data from database (not from token cache)
+    const [freshUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, req.user.id))
+      .limit(1);
+
+    if (!freshUser) {
       return res.status(401).json({ message: 'User not found' });
     }
 
@@ -195,16 +211,16 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
     const userSubscription = subscription[0] || null;
     
     // Admin users have unlimited access - no trial expiration
-    if (req.user.role === 'admin') {
+    if (freshUser.role === 'admin') {
       res.json({
         user: {
-          id: req.user.id,
-          email: req.user.email,
-          firstName: req.user.firstName,
-          lastName: req.user.lastName,
-          role: req.user.role,
-          hasBrokerMembership: req.user.hasBrokerMembership || false,
-          brokerMembershipDate: req.user.brokerMembershipDate || null
+          id: freshUser.id,
+          email: freshUser.email,
+          firstName: freshUser.firstName,
+          lastName: freshUser.lastName,
+          role: freshUser.role,
+          hasBrokerMembership: freshUser.hasBrokerMembership || false,
+          brokerMembershipDate: freshUser.brokerMembershipDate || null
         },
         subscription: userSubscription ? {
           ...userSubscription,
@@ -227,13 +243,13 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
 
     res.json({
       user: {
-        id: req.user.id,
-        email: req.user.email,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        role: req.user.role,
-        hasBrokerMembership: req.user.hasBrokerMembership || false,
-        brokerMembershipDate: req.user.brokerMembershipDate || null
+        id: freshUser.id,
+        email: freshUser.email,
+        firstName: freshUser.firstName,
+        lastName: freshUser.lastName,
+        role: freshUser.role,
+        hasBrokerMembership: freshUser.hasBrokerMembership || false,
+        brokerMembershipDate: freshUser.brokerMembershipDate || null
       },
       subscription: userSubscription,
       trialExpired
