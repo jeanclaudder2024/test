@@ -614,14 +614,15 @@ Changelog:
   * **Improved User Experience**: Added selection counters, plan limit notifications, and visual indicators for disabled regions when at limit
   * **Smart Validation**: Prevents selecting more regions than allowed by chosen plan with clear feedback messaging
   * **All Regions Visible**: Registration now properly displays all 7 maritime regions with port counts for each region
-- July 21, 2025. **IMPROVED REGISTRATION FLOW: Separated User Registration from Payment Setup**:
-  * **Enhanced User Experience**: Users now complete registration first, then add payment method separately when ready
-  * **Email Input Field Added**: Added email capture in first step of registration flow with validation
-  * **Authentication Fix**: Resolved 401 error by creating `/api/create-registration-checkout` endpoint (no auth required)
-  * **Complete Registration Step**: Replaced payment step with registration completion that redirects to pricing page
-  * **Better Onboarding Flow**: Users can explore platform immediately after registration and upgrade when ready
-  * **Reduced Friction**: No longer requiring payment upfront during initial registration process
-  * **Professional Interface**: Updated step labels and UI to reflect new registration-first approach
+- July 21, 2025. **COMPLETE REGISTRATION SYSTEM REBUILD: Simple One-Page Registration**:
+  * **Completely New Registration**: Built brand new SimpleRegistration.tsx component replacing complex multi-step flow
+  * **Single-Page Form**: Clean, professional registration form with all fields on one page (name, email, company, plan, password)
+  * **Simplified User Experience**: Users fill out one form and immediately create account with 5-day trial
+  * **Account Creation**: Registration now creates real user accounts with authentication and trial subscriptions
+  * **Professional UI**: Beautiful card-based design with gradient background and proper form validation
+  * **Direct Account Creation**: No more complex step flow - users register and get redirected to payment setup
+  * **Enhanced Backend**: Updated `/api/complete-registration` endpoint to handle complete user account creation
+  * **Immediate Access**: Users get 5-day trial and can add payment method when ready
 - July 10, 2025. **CRITICAL STRIPE CHECKOUT LOADING LOOP FIX**:
   * **Root Cause Identified**: Stripe checkout pages showed loading loops because trial periods displayed $0 immediate charges
   * **Trial Period Removed**: Eliminated `trial_period_days` from Stripe checkout sessions to prevent loading loops

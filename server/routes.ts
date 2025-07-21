@@ -182,15 +182,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register authentication routes
   app.use("/api/auth", authRoutes);
   
-  // Complete registration endpoint with account creation
+  // Simple registration endpoint with account creation
   app.post("/api/complete-registration", async (req: Request, res: Response) => {
     try {
-      const { email, password, selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
+      const { 
+        email, 
+        password, 
+        firstName, 
+        lastName, 
+        companyName, 
+        selectedPlan, 
+        selectedRegions, 
+        selectedPorts, 
+        billingInterval 
+      } = req.body;
       
-      if (!email || !password) {
+      if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ 
           success: false,
-          message: "Email and password are required" 
+          message: "Email, password, first name, and last name are required" 
         });
       }
       
@@ -201,17 +211,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [user] = await db.insert(users).values({
         email: email,
         password: hashedPassword,
-        firstName: 'User',
-        lastName: 'Account'
+        firstName: firstName,
+        lastName: lastName
       }).returning();
       
-      // Create subscription for the user
+      // Create subscription for the user with 5-day trial
       const trialEnd = new Date();
       trialEnd.setDate(trialEnd.getDate() + 5); // 5-day trial
       
       await db.insert(subscriptions).values({
         userId: user.id,
-        planId: selectedPlan,
+        planId: parseInt(selectedPlan) || 1, // Default to Basic plan
         status: 'trial',
         currentPeriodStart: new Date(),
         currentPeriodEnd: trialEnd,
@@ -221,10 +231,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('User account created successfully:', {
         userId: user.id,
         email: user.email,
+        name: `${firstName} ${lastName}`,
+        companyName: companyName,
         selectedPlan,
-        selectedRegions,
-        selectedPorts,
-        billingInterval
+        trial: '5 days'
       });
       
       res.json({
@@ -244,13 +254,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error.code === '23505') { // Unique constraint violation
         return res.status(400).json({ 
           success: false,
-          message: "Email already exists" 
+          message: "Email already exists. Please try logging in instead." 
         });
       }
       
       res.status(500).json({ 
         success: false,
-        message: "Failed to complete registration",
+        message: "Failed to create account. Please try again.",
         error: error.message 
       });
     }
