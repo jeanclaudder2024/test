@@ -46,9 +46,9 @@ import { PortalHoverCard } from '@/components/ui/portal-hover-card';
 import { OilTypeInfoButton } from '@/components/ui/oil-type-info-button';
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight, Globe, Grid, List, RefreshCw } from 'lucide-react';
+import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight, Globe, Grid, List } from 'lucide-react';
 import { OIL_PRODUCT_TYPES, REGIONS } from '@shared/constants';
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { MobileVesselCard } from '@/components/mobile/MobileVesselCard';
 import axios from 'axios';
@@ -222,49 +222,8 @@ export default function Vessels() {
   // Maximum number of oil vessels to show (as requested by user)
   const MAX_OIL_VESSELS = 1540;
 
-  // Manual refresh function - comprehensive cache invalidation and data refetch
-  const handleManualRefresh = async () => {
-    try {
-      toast({
-        title: "🔄 Refreshing Vessels",
-        description: "Fetching latest vessel data...",
-      });
-
-      // Comprehensive cache invalidation for all vessel-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"], type: 'all' });
-      
-      // Remove cached data to force fresh fetch
-      queryClient.removeQueries({ queryKey: ["/api/vessels"] });
-      queryClient.removeQueries({ queryKey: ["/api/vessels/polling"] });
-      
-      // Use the existing refreshData function from useVesselClient
-      if (refreshData) {
-        await refreshData();
-      }
-      
-      // Force refetch all vessel data
-      await queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
-
-      toast({
-        title: "✅ Refresh Complete",
-        description: "Vessel data has been updated successfully",
-      });
-    } catch (error) {
-      console.error("Error during manual refresh:", error);
-      toast({
-        title: "❌ Refresh Failed",
-        description: "Failed to refresh vessel data. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
   // Helper function to get port name by ID
-  const getPortDisplayName = (portIdOrName: number | string | null | undefined): string => {
+  const getPortName = (portIdOrName: number | string | null | undefined): string => {
     if (!portIdOrName) return 'Unknown Port';
     
     // If it's already a port name (string that doesn't look like an ID)
@@ -743,14 +702,6 @@ export default function Vessels() {
             
             {/* Connection status and management actions */}
             <div className="mt-4 lg:mt-0 flex items-center gap-3">
-              <Button 
-                onClick={handleManualRefresh}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-              
               <Link href="/admin">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Plus className="h-4 w-4 mr-2" />
@@ -1292,7 +1243,7 @@ export default function Vessels() {
                             'text-gray-500'
                           }
                         `} />
-                        <OilTypeInfoButton oilCategory={vessel.oilCategory} />
+                        <OilTypeInfoButton oilType={vessel.oilCategory} />
                         <span className="ml-1">{vessel.oilCategory}</span>
                       </div>
                     </Badge>
@@ -1340,7 +1291,7 @@ export default function Vessels() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {getPortDisplayName(vessel.departurePort)}
+                    {vessel.departurePort}
                     {vessel.departureTime && (
                       <div className="text-xs text-muted-foreground">
                         {formatDate(vessel.departureTime, 'PP')}
@@ -1350,7 +1301,7 @@ export default function Vessels() {
                   <TableCell>
                     {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
                       ? vessel.destinationPort.split(':')[2]
-                      : getPortDisplayName(vessel.destinationPort)}
+                      : getPortName(vessel.destinationPort)}
                     {vessel.eta && (
                       <div className="text-xs text-muted-foreground">
                         ETA: {formatDate(vessel.eta, 'PP')}

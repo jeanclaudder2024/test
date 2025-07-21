@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle 
 } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -39,27 +38,8 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useVessels } from '@/hooks/useVessels';
+import type { Document } from '@/types';
 import { DOCUMENT_TYPES } from '@shared/constants';
-
-// Define Document type locally
-interface Document {
-  id: number;
-  title: string;
-  content: string;
-  type: string;
-  status?: string;
-  reference?: string;
-  language?: string;
-  createdAt: string;
-  documentName?: string;
-  issueDate?: string;
-  expiryDate?: string;
-  lastModified?: string;
-  issuer?: string;
-  recipientName?: string;
-  recipientOrg?: string;
-  vesselId?: string;
-}
 
 export default function Documents() {
   const { toast } = useToast();
@@ -82,7 +62,7 @@ export default function Documents() {
       const url = selectedVesselId 
         ? `/api/documents?vesselId=${selectedVesselId}` 
         : '/api/documents';
-      return apiRequest('GET', url);
+      return apiRequest(url, { method: 'GET' });
     }
   });
 
@@ -92,7 +72,10 @@ export default function Documents() {
   // Mutation to generate new document
   const generateDocumentMutation = useMutation({
     mutationFn: ({ vesselId, documentType }: { vesselId: number, documentType: string }) => {
-      return apiRequest('POST', '/api/ai/generate-document', { vesselId, documentType });
+      return apiRequest('/api/ai/generate-document', {
+        method: 'POST',
+        body: JSON.stringify({ vesselId, documentType }),
+      });
     },
     onSuccess: () => {
       toast({
@@ -682,9 +665,6 @@ export default function Documents() {
             <>
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl break-words">{selectedDocument.title}</DialogTitle>
-                <VisuallyHidden>
-                  <DialogDescription>View detailed document information and metadata</DialogDescription>
-                </VisuallyHidden>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <Badge variant="outline" className="font-medium">{selectedDocument.type}</Badge>
                   
@@ -823,7 +803,7 @@ export default function Documents() {
                   {/* Legal Document Content with professional styling */}
                   <div className="p-5 bg-white">
                     <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {selectedDocument.content.split('\n').map((paragraph: string, idx: number) => {
+                      {selectedDocument.content.split('\n').map((paragraph, idx) => {
                         // Format section headers
                         if (paragraph.toUpperCase() === paragraph && paragraph.trim().length > 0) {
                           return (

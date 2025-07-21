@@ -375,28 +375,17 @@ export default function VesselManagement() {
       return response.json();
     },
     onSuccess: () => {
-      // COMPREHENSIVE CACHE INVALIDATION FOR ALL VESSEL ENDPOINTS
+      // Force immediate refresh of ALL vessel-related data
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
       
-      // Invalidate all vessel-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels/polling"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels/static"], type: 'all' });
-      queryClient.invalidateQueries({ queryKey: ["/api/vessel-dashboard"], type: 'all' });
-      
-      // Invalidate map-specific queries that might cache vessel data
-      queryClient.invalidateQueries({ predicate: (query) => {
-        return query.queryKey.some(key => 
-          typeof key === 'string' && key.includes('vessel')
-        );
-      }});
-      
-      // Clear all React Query cache to ensure fresh data
-      queryClient.removeQueries({ queryKey: ["/api/admin/vessels"] });
-      queryClient.removeQueries({ queryKey: ["/api/vessels"] });
-      queryClient.removeQueries({ queryKey: ["/api/vessels/polling"] });
-      queryClient.removeQueries({ queryKey: ["/api/vessels/static"] });
-      queryClient.removeQueries({ queryKey: ["/api/vessel-dashboard"] });
+      // Force refetch of all vessel endpoints
+      queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
       
       // Reset form and close dialog
       setIsDialogOpen(false);
@@ -404,27 +393,17 @@ export default function VesselManagement() {
       setEditingVessel(null);
       
       toast({ 
-        title: "✅ Vessel Created Successfully", 
-        description: "New vessel added and all pages will refresh automatically"
+        title: "Success", 
+        description: "Vessel created successfully - refreshing all vessel data..." 
       });
       
-      // Multiple refresh waves to ensure all components get updated data
+      // Force a second refresh after a short delay to ensure data appears everywhere
       setTimeout(() => {
-        // First wave - invalidate everything again
-        queryClient.invalidateQueries({ type: 'all' });
-        
-        // Second wave - force refetch critical endpoints
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
-          queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
-          queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
-          
-          // Third wave - final cleanup
-          setTimeout(() => {
-            queryClient.invalidateQueries({ type: 'all' });
-          }, 2000);
-        }, 1000);
-      }, 500);
+        queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+        queryClient.refetchQueries({ queryKey: ["/api/vessels/polling"] });
+        queryClient.refetchQueries({ queryKey: ["/api/vessel-dashboard"] });
+        queryClient.refetchQueries({ queryKey: ["/api/vessels"] });
+      }, 1000);
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
