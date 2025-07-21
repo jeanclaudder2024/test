@@ -15190,5 +15190,157 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // BROKER CHAT SYSTEM API ROUTES
+  
+  // Get broker conversations
+  app.get('/api/broker/conversations', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Mock data for testing - shows real conversation examples
+      const conversations = [
+        {
+          id: 1,
+          title: "Deal Issue - Brent Crude Contract",
+          status: "active",
+          priority: "high",
+          createdAt: new Date().toISOString(),
+          lastMessageAt: new Date().toISOString(),
+          adminId: 33
+        },
+        {
+          id: 2,
+          title: "Document Verification Problem",
+          status: "active", 
+          priority: "normal",
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          lastMessageAt: new Date(Date.now() - 3600000).toISOString(),
+          adminId: 33
+        }
+      ];
+
+      res.json(conversations);
+    } catch (error: any) {
+      console.error('Error fetching conversations:', error);
+      res.status(500).json({ message: 'Error fetching conversations', error: error.message });
+    }
+  });
+
+  // Get conversation messages
+  app.get('/api/chat/conversations/:id/messages', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const conversationId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Mock conversation data showing real examples
+      const messages = [
+        {
+          id: 1,
+          conversationId,
+          senderId: userId,
+          messageText: "Hi, I'm having an issue with the Brent Crude contract documentation. The verification step keeps failing.",
+          messageType: "text",
+          isRead: true,
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+          senderName: "Broker User",
+          senderRole: "broker"
+        },
+        {
+          id: 2,
+          conversationId,
+          senderId: 33,
+          messageText: "Hello! I can help you with that. Can you please tell me which specific document is failing verification?",
+          messageType: "text",
+          isRead: true,
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          senderName: "Admin Support",
+          senderRole: "admin"
+        }
+      ];
+      
+      res.json(messages);
+    } catch (error: any) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ message: 'Error fetching messages', error: error.message });
+    }
+  });
+
+  // Send chat message
+  app.post('/api/chat/conversations/:id/messages', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const conversationId = parseInt(req.params.id);
+      const { messageText } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      if (!messageText || messageText.trim() === '') {
+        return res.status(400).json({ message: 'Message text is required' });
+      }
+
+      const message = {
+        id: Date.now(),
+        conversationId,
+        senderId: userId,
+        messageText: messageText.trim(),
+        messageType: "text",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        senderName: "Broker User",
+        senderRole: "broker"
+      };
+
+      console.log(`New message sent by user ${userId} in conversation ${conversationId}: ${messageText}`);
+      
+      res.json({ success: true, message });
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      res.status(500).json({ message: 'Error sending message', error: error.message });
+    }
+  });
+
+  // Create new conversation
+  app.post('/api/broker/conversations', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const { title, priority = 'normal' } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      if (!title || title.trim() === '') {
+        return res.status(400).json({ message: 'Conversation title is required' });
+      }
+
+      const conversation = {
+        id: Date.now(),
+        brokerId: userId,
+        adminId: 33,
+        title: title.trim(),
+        priority,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        lastMessageAt: new Date().toISOString()
+      };
+      
+      console.log(`New conversation created by user ${userId}: ${title}`);
+      
+      res.json({ success: true, conversation });
+    } catch (error: any) {
+      console.error('Error creating conversation:', error);
+      res.status(500).json({ message: 'Error creating conversation', error: error.message });
+    }
+  });
+
   return httpServer;
 }

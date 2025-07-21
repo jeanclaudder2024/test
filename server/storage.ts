@@ -4054,6 +4054,144 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // CHAT SYSTEM METHODS
+  
+  async createChatConversation(brokerId: number, adminId: number | null, title: string, priority: string = 'normal'): Promise<any> {
+    try {
+      const [conversation] = await db.insert(chatConversations)
+        .values({
+          brokerId,
+          adminId,
+          title,
+          priority,
+          status: 'active'
+        })
+        .returning();
+      
+      // Add participants
+      await db.insert(chatParticipants).values([
+        { conversationId: conversation.id, userId: brokerId, role: 'broker' },
+        ...(adminId ? [{ conversationId: conversation.id, userId: adminId, role: 'admin' }] : [])
+      ]);
+      
+      return conversation;
+    } catch (error) {
+      console.error('Error creating chat conversation:', error);
+      throw error;
+    }
+  }
+
+  async getBrokerConversations(brokerId: number): Promise<any[]> {
+    try {
+      const conversations = await db
+        .select({
+          id: chatConversations.id,
+          title: chatConversations.title,
+          status: chatConversations.status,
+          priority: chatConversations.priority,
+          createdAt: chatConversations.createdAt,
+          lastMessageAt: chatConversations.lastMessageAt,
+          adminId: chatConversations.adminId,
+        })
+        .from(chatConversations)
+        .where(eq(chatConversations.brokerId, brokerId))
+        .orderBy(desc(chatConversations.lastMessageAt));
+      
+      return conversations;
+    } catch (error) {
+      console.error('Error fetching broker conversations:', error);
+      return [];
+    }
+  }
+
+  async getConversationMessages(conversationId: number): Promise<any[]> {
+    try {
+      const messages = await db
+        .select({
+          id: chatMessages.id,
+          conversationId: chatMessages.conversationId,
+          senderId: chatMessages.senderId,
+          messageText: chatMessages.messageText,
+          messageType: chatMessages.messageType,
+          filePath: chatMessages.filePath,
+          fileName: chatMessages.fileName,
+          fileSize: chatMessages.fileSize,
+          isRead: chatMessages.isRead,
+          createdAt: chatMessages.createdAt,
+          senderName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          senderRole: users.role,
+        })
+        .from(chatMessages)
+        .leftJoin(users, eq(chatMessages.senderId, users.id))
+        .where(eq(chatMessages.conversationId, conversationId))
+        .orderBy(asc(chatMessages.createdAt));
+      
+      return messages;
+    } catch (error) {
+      console.error('Error fetching conversation messages:', error);
+      return [];
+    }
+  }
+
+  async sendChatMessage(conversationId: number, senderId: number, messageText: string, messageType: string = 'text'): Promise<any> {
+    try {
+      const [message] = await db.insert(chatMessages)
+        .values({
+          conversationId,
+          senderId,
+          messageText,
+          messageType,
+        })
+        .returning();
+      
+      // Update conversation last message time
+      await db.update(chatConversations)
+        .set({ lastMessageAt: new Date(), updatedAt: new Date() })
+        .where(eq(chatConversations.id, conversationId));
+      
+      return message;
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      throw error;
+    }
+  }
+
+  async markMessagesAsRead(conversationId: number, userId: number): Promise<void> {
+    try {
+      await db.update(chatMessages)
+        .set({ isRead: true })
+        .where(
+          and(
+            eq(chatMessages.conversationId, conversationId),
+            ne(chatMessages.senderId, userId)
+          )
+        );
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(chatMessages)
+        .leftJoin(chatConversations, eq(chatMessages.conversationId, chatConversations.id))
+        .where(
+          and(
+            eq(chatConversations.brokerId, userId),
+            eq(chatMessages.isRead, false),
+            ne(chatMessages.senderId, userId)
+          )
+        );
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting unread message count:', error);
+      return 0;
+    }
+  }
 }
 
 // Use database storage

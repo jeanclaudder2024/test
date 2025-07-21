@@ -1670,6 +1670,43 @@ export const transactionSteps = pgTable("transaction_steps", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Chat system tables
+export const chatConversations = pgTable("chat_conversations", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  adminId: integer("admin_id").references(() => users.id, { onDelete: "set null" }),
+  title: varchar("title", { length: 255 }).default("Support Chat"),
+  status: varchar("status", { length: 50 }).default("active"),
+  priority: varchar("priority", { length: 20 }).default("normal"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => chatConversations.id, { onDelete: "cascade" }),
+  senderId: integer("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  messageText: text("message_text").notNull(),
+  messageType: varchar("message_type", { length: 20 }).default("text"),
+  filePath: varchar("file_path", { length: 500 }),
+  fileName: varchar("file_name", { length: 255 }),
+  fileSize: integer("file_size"),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const chatParticipants = pgTable("chat_participants", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => chatConversations.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).default("participant"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastReadMessageId: integer("last_read_message_id"),
+  isActive: boolean("is_active").default(true),
+});
+
 export const transactionDocuments = pgTable("transaction_documents", {
   id: serial("id").primaryKey(),
   stepId: integer("step_id").notNull().references(() => transactionSteps.id, { onDelete: "cascade" }),

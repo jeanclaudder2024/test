@@ -17,6 +17,7 @@ import PaymentReminder from '@/components/PaymentReminder';
 import CreateDealDialog from '@/components/broker/CreateDealDialog';
 import SimpleOilTradingPrices from '@/pages/SimpleOilTradingPrices';
 import { StepManagement } from '@/components/broker/StepManagement';
+import BrokerAdminChat from '@/components/chat/BrokerAdminChat';
 import { 
   Handshake, 
   FileText, 
@@ -507,7 +508,7 @@ export default function BrokerDashboard() {
             setSelectedDeal(null);
           }
         }}>
-          <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
+          <TabsList className="grid w-full grid-cols-7 bg-gray-800 border-gray-700">
             <TabsTrigger value="deals" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <Handshake className="h-4 w-4 mr-2" />
               Deals
@@ -531,6 +532,14 @@ export default function BrokerDashboard() {
             <TabsTrigger value="analytics" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <BarChart3 className="h-4 w-4 mr-2" />
               Analytics
+            </TabsTrigger>
+            <TabsTrigger value="support-chat" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Support Chat
+            </TabsTrigger>
+            <TabsTrigger value="support-chat" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Support Chat
             </TabsTrigger>
           </TabsList>
 
@@ -843,6 +852,11 @@ export default function BrokerDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Support Chat Tab */}
+          <TabsContent value="support-chat" className="space-y-6">
+            <BrokerAdminChat />
           </TabsContent>
         </Tabs>
 
