@@ -17,6 +17,7 @@ import {
   Globe, 
   CheckCircle2, 
   ArrowRight,
+  ArrowLeft,
   Waves,
   Anchor,
   Building2,
@@ -614,7 +615,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               <div>
                 <label className="text-sm font-medium text-gray-700">Selected Plan</label>
                 <p className="text-lg font-semibold text-gray-900 mt-1">
-                  {plans?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
+                  {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
                 </p>
               </div>
             </div>
