@@ -832,16 +832,10 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
   // Step 4: Account Creation - Login Page Style Design
   const AccountCreationStep = () => {
-    // Prevent unwanted scrolling when inputs are focused
+    // Stable component mounting
     useEffect(() => {
-      const preventScroll = () => {
-        window.scrollTo(0, 0);
-      };
-
-      // Small delay to prevent focus issues
-      const timeoutId = setTimeout(preventScroll, 100);
-      
-      return () => clearTimeout(timeoutId);
+      // Simple component initialization without aggressive scroll prevention
+      return () => {};
     }, []);
 
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
@@ -906,10 +900,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       id="firstName"
                       type="text"
                       value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      onChange={(e) => {
+                        e.preventDefault();
+                        setFirstName(e.target.value);
+                      }}
+                      onFocus={(e) => e.target.focus()}
                       placeholder="John"
                       className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20 backdrop-blur-sm"
                       required
+                      autoComplete="given-name"
                     />
                   </div>
                 </div>
@@ -923,10 +922,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       id="lastName"
                       type="text"
                       value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      onChange={(e) => {
+                        e.preventDefault();
+                        setLastName(e.target.value);
+                      }}
+                      onFocus={(e) => e.target.focus()}
                       placeholder="Doe"
                       className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-400/20 backdrop-blur-sm"
                       required
+                      autoComplete="family-name"
                     />
                   </div>
                 </div>
@@ -943,10 +947,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     id="email"
                     type="email"
                     value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      setUserEmail(e.target.value);
+                    }}
+                    onFocus={(e) => e.target.focus()}
                     placeholder="your@company.com"
                     className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20 backdrop-blur-sm"
                     required
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -962,10 +971,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={userPassword}
-                    onChange={(e) => setUserPassword(e.target.value)}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      setUserPassword(e.target.value);
+                    }}
+                    onFocus={(e) => e.target.focus()}
                     placeholder="Create strong password"
                     className="pl-12 pr-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-green-400 focus:ring-green-400/20 backdrop-blur-sm"
                     required
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -1009,10 +1023,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      setConfirmPassword(e.target.value);
+                    }}
+                    onFocus={(e) => e.target.focus()}
                     placeholder="Confirm password"
                     className="pl-12 pr-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-400/20 backdrop-blur-sm"
                     required
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"

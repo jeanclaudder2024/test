@@ -78,42 +78,22 @@
     touch-action: manipulation;
   }
   
-  /* Prevent unwanted scrolling on mobile */
+  /* Stable registration container */
   .registration-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow-x: hidden;
   }
   
   /* Prevent zoom on input focus for mobile */
   input, textarea, select {
     font-size: 16px !important;
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
   }
   
-  /* Prevent scrolling when input is focused */
-  .registration-step-container {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
-  /* Stable form container */
+  /* Simple stable form */
   .stable-form {
     position: relative;
-    z-index: 10;
-    will-change: auto;
-    transform: translateZ(0);
   }
   
   /* Touch-optimized interactions */
