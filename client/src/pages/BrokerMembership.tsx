@@ -33,10 +33,15 @@ const BrokerMembershipForm = () => {
       const response = await apiRequest('POST', '/api/broker-membership-payment');
       const { clientSecret } = response;
 
-      // Confirm payment
+      // Confirm payment using the client secret
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        throw new Error('Card element not found');
+      }
+
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: elements.getElement(CardElement)!,
+          card: cardElement,
         }
       });
 

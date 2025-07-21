@@ -302,6 +302,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for broker payment (no auth needed for testing)
+  app.post("/api/test-broker-payment", async (req: Request, res: Response) => {
+    try {
+      console.log('Testing broker payment endpoint...');
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: 29900, // $299.00 in cents
+        currency: "usd",
+        description: "PetroDealHub Broker Membership - Test Payment",
+        metadata: {
+          userId: "test-user",
+          type: "broker_membership"
+        }
+      });
+
+      console.log('Test payment intent created:', paymentIntent.id);
+
+      res.json({ 
+        success: true,
+        clientSecret: paymentIntent.client_secret,
+        amount: 299,
+        description: "Test Broker Membership Payment",
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error: any) {
+      console.error('Test broker payment error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        message: "Test broker payment failed" 
+      });
+    }
+  });
   
   // ==========================================
   // PUBLIC REFINERIES API (no authentication)
