@@ -524,7 +524,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     </div>
   );
 
-  // Step 4: Account Creation with Email and Password (Full page design)
+  // Step 4: Account Creation with Email and Password (Advanced Professional Design)
   const AccountCreationStep = () => {
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
@@ -532,229 +532,345 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                        userPassword === confirmPassword;
 
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center relative overflow-hidden z-50">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
-          <div className="absolute -bottom-8 left-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center relative overflow-hidden z-50">
+        {/* Advanced Background Pattern */}
+        <div className="absolute inset-0">
+          {/* Animated Grid */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `
+                linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px',
+              animation: 'gridMove 20s linear infinite'
+            }}></div>
+          </div>
+          
+          {/* Dynamic Floating Orbs */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div className="absolute top-60 right-20 w-80 h-80 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute bottom-20 left-40 w-72 h-72 bg-gradient-to-r from-cyan-400 to-indigo-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-2000"></div>
+            <div className="absolute bottom-40 right-60 w-64 h-64 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-500"></div>
+          </div>
+
+          {/* Particle Effects */}
+          <div className="absolute inset-0 overflow-hidden opacity-40">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 bg-white rounded-full opacity-60"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
+                  animationDelay: `${Math.random() * 2}s`
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-1/4 opacity-20">
-          <Ship className="h-16 w-16 text-blue-300 animate-float" />
+        {/* Advanced Floating Maritime Elements */}
+        <div className="absolute top-16 left-16 opacity-30">
+          <div className="relative">
+            <Ship className="h-20 w-20 text-cyan-300 animate-pulse" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full animate-ping"></div>
+          </div>
         </div>
-        <div className="absolute bottom-32 right-1/4 opacity-20">
-          <Waves className="h-12 w-12 text-cyan-300 animate-bounce" />
+        <div className="absolute bottom-20 right-20 opacity-30">
+          <Waves className="h-16 w-16 text-blue-300 animate-bounce" />
+        </div>
+        <div className="absolute top-1/3 right-16 opacity-25">
+          <div className="w-12 h-12 border-2 border-cyan-300 rounded-full animate-spin"></div>
+        </div>
+        <div className="absolute bottom-1/3 left-16 opacity-25">
+          <div className="w-8 h-8 border-2 border-blue-300 rounded-full animate-ping"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-md px-6">
-          {/* Logo and Header */}
-          <div className="text-center mb-8 space-y-6">
+        <div className="relative z-10 w-full max-w-lg px-6">
+          {/* Advanced Logo and Header */}
+          <div className="text-center mb-10 space-y-8">
             <div className="flex justify-center">
-              <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-2xl">
-                  <Ship className="h-10 w-10 text-white" />
+              <div className="relative group">
+                {/* Main Logo Container */}
+                <div className="w-28 h-28 bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                  <Ship className="h-14 w-14 text-white drop-shadow-lg" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-white" />
+                
+                {/* Success Badge */}
+                <div className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl animate-pulse">
+                  <CheckCircle className="h-6 w-6 text-white" />
                 </div>
+                
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl blur-xl opacity-50 -z-10 animate-pulse"></div>
+                
+                {/* Orbital Rings */}
+                <div className="absolute inset-0 border-2 border-blue-300/30 rounded-full w-36 h-36 -translate-x-4 -translate-y-4 animate-spin"></div>
+                <div className="absolute inset-0 border-2 border-cyan-300/20 rounded-full w-40 h-40 -translate-x-6 -translate-y-6 animate-spin" style={{animationDirection: 'reverse', animationDuration: '8s'}}></div>
               </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-2">
-                Create Your Account
+            
+            <div className="space-y-4">
+              <h1 className="text-5xl font-black bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent mb-3 tracking-tight">
+                Create Account
               </h1>
-              <p className="text-blue-200 opacity-90">
-                Set up your PetroDealHub account to complete registration
-              </p>
+              <div className="max-w-md mx-auto">
+                <p className="text-blue-200 opacity-90 text-lg leading-relaxed">
+                  Join the premier maritime oil trading platform
+                </p>
+                <div className="flex items-center justify-center space-x-2 mt-3">
+                  <div className="w-12 h-0.5 bg-gradient-to-r from-transparent to-blue-400"></div>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                  <div className="w-12 h-0.5 bg-gradient-to-l from-transparent to-blue-400"></div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Form Card */}
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
-            <CardContent className="p-8 space-y-6">
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                    First Name
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="firstName"
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="John"
-                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
+          {/* Advanced Form Card */}
+          <Card className="bg-white/98 backdrop-blur-lg border-0 shadow-2xl ring-1 ring-white/20 overflow-hidden relative">
+            {/* Card Header Glow */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+            <CardContent className="p-10 space-y-8">
+              {/* Enhanced Name Fields */}
+              <div className="space-y-6">
+                <div className="text-center pb-4 border-b border-gray-100">
+                  <h3 className="text-xl font-bold text-gray-800 mb-1">Account Information</h3>
+                  <p className="text-sm text-gray-500">Secure your maritime trading account</p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                    Last Name
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="lastName"
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Doe"
-                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                      required
-                    />
+                
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3 group">
+                    <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700 flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                      First Name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" />
+                      <Input
+                        id="firstName"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="John"
+                        className="pl-12 h-14 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white rounded-xl text-base"
+                        required
+                      />
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-cyan-500/0 group-focus-within:from-blue-500/5 group-focus-within:to-cyan-500/5 transition-all duration-300 pointer-events-none"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 group">
+                    <Label htmlFor="lastName" className="text-sm font-semibold text-gray-700 flex items-center">
+                      <span className="w-2 h-2 bg-cyan-500 rounded-full mr-2"></span>
+                      Last Name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-cyan-500 transition-colors duration-200" />
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Doe"
+                        className="pl-12 h-14 border-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white rounded-xl text-base"
+                        required
+                      />
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 to-blue-500/0 group-focus-within:from-cyan-500/5 group-focus-within:to-blue-500/5 transition-all duration-300 pointer-events-none"></div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+              {/* Enhanced Email Field */}
+              <div className="space-y-3 group">
+                <Label htmlFor="email" className="text-sm font-semibold text-gray-700 flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
                   Email Address
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors duration-200" />
                   <Input
                     id="email"
                     type="email"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="your@company.com"
-                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-12 h-14 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white rounded-xl text-base"
                     required
                   />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 to-blue-500/0 group-focus-within:from-purple-500/5 group-focus-within:to-blue-500/5 transition-all duration-300 pointer-events-none"></div>
                 </div>
               </div>
 
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+              {/* Enhanced Password Field */}
+              <div className="space-y-3 group">
+                <Label htmlFor="password" className="text-sm font-semibold text-gray-700 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="Create a strong password"
-                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-12 pr-12 h-14 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white rounded-xl text-base"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-green-500 transition-colors duration-200 focus:outline-none"
                   >
                     {showPassword ? <EyeOff /> : <Eye />}
                   </button>
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/0 to-emerald-500/0 group-focus-within:from-green-500/5 group-focus-within:to-emerald-500/5 transition-all duration-300 pointer-events-none"></div>
                 </div>
                 
-                {/* Password Requirements */}
+                {/* Enhanced Password Requirements */}
                 {userPassword && (
-                  <div className="mt-2 space-y-1">
-                    <p className="text-xs font-medium text-gray-600 mb-1">Password Requirements:</p>
-                    {['At least 8 characters long', 'One uppercase letter', 'One lowercase letter', 'One number', 'One special character (!@#$%^&*)'].map((requirement, index) => {
-                      const isMet = !passwordErrors.includes(requirement);
-                      return (
-                        <div key={index} className="flex items-center space-x-2">
-                          {isMet ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <AlertTriangle className="h-4 w-4 text-red-500" />
-                          )}
-                          <span className={`text-xs ${isMet ? 'text-green-600' : 'text-red-600'}`}>
-                            {requirement}
-                          </span>
-                        </div>
-                      );
-                    })}
+                  <div className="mt-4 p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-gray-100">
+                    <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                      <Shield className="h-4 w-4 text-blue-500 mr-2" />
+                      Security Requirements
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {['At least 8 characters long', 'One uppercase letter', 'One lowercase letter', 'One number', 'One special character (!@#$%^&*)'].map((requirement, index) => {
+                        const isMet = !passwordErrors.includes(requirement);
+                        return (
+                          <div key={index} className={`flex items-center space-x-3 p-2 rounded-lg transition-all duration-300 ${isMet ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                            <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isMet ? 'bg-green-500' : 'bg-red-500'}`}>
+                              {isMet ? (
+                                <CheckCircle className="h-3 w-3 text-white" />
+                              ) : (
+                                <AlertTriangle className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                            <span className={`text-sm font-medium ${isMet ? 'text-green-700' : 'text-red-700'}`}>
+                              {requirement}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Confirm Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+              {/* Enhanced Confirm Password Field */}
+              <div className="space-y-3 group">
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-700 flex items-center">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
                   Confirm Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors duration-200" />
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-12 pr-12 h-14 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white rounded-xl text-base"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-orange-500 transition-colors duration-200 focus:outline-none"
                   >
                     {showConfirmPassword ? <EyeOff /> : <Eye />}
                   </button>
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/0 to-red-500/0 group-focus-within:from-orange-500/5 group-focus-within:to-red-500/5 transition-all duration-300 pointer-events-none"></div>
                 </div>
                 
-                {/* Password Match Indicator */}
+                {/* Enhanced Password Match Indicator */}
                 {confirmPassword && (
-                  <div className="flex items-center space-x-2 mt-1">
-                    {userPassword === confirmPassword ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-green-600">Passwords match</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-red-600">Passwords do not match</span>
-                      </>
-                    )}
+                  <div className={`mt-3 p-3 rounded-xl transition-all duration-300 ${
+                    userPassword === confirmPassword 
+                      ? 'bg-green-50 border border-green-200' 
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        userPassword === confirmPassword ? 'bg-green-500' : 'bg-red-500'
+                      }`}>
+                        {userPassword === confirmPassword ? (
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-white" />
+                        )}
+                      </div>
+                      <span className={`text-sm font-medium ${
+                        userPassword === confirmPassword ? 'text-green-700' : 'text-red-700'
+                      }`}>
+                        {userPassword === confirmPassword ? 'Passwords match perfectly' : 'Passwords do not match'}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Trial Info */}
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
-                <div className="flex items-center space-x-3">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-800">
-                      Free {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-Day Trial Included
+              {/* Enhanced Trial Info */}
+              <div className="relative overflow-hidden p-6 bg-gradient-to-br from-blue-50 via-cyan-50 to-green-50 rounded-2xl border border-blue-200 shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-green-500/5"></div>
+                <div className="relative flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <Shield className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-bold text-gray-800 mb-1">
+                      {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-Day Premium Trial
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Start trading immediately with full platform access
                     </p>
-                    <p className="text-xs text-blue-600">
-                      No credit card required • Cancel anytime
-                    </p>
+                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                      <span className="flex items-center">
+                        <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                        No credit card required
+                      </span>
+                      <span className="flex items-center">
+                        <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                        Cancel anytime
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
+          {/* Enhanced Navigation Buttons */}
+          <div className="flex justify-between items-center mt-10">
             <Button 
               variant="outline" 
               onClick={() => setStep(3)}
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 px-6 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm"
             >
+              <ArrowRight className="w-5 h-5 mr-2 rotate-180" />
               Back to Ports
             </Button>
+            
             <Button 
               onClick={() => setStep(5)}
               disabled={!isFormValid}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8"
+              className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform ${
+                isFormValid 
+                  ? 'bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 hover:from-blue-700 hover:via-cyan-700 hover:to-blue-800 text-white shadow-2xl hover:shadow-cyan-500/25 hover:scale-105 active:scale-95' 
+                  : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              }`}
             >
-              Continue to Review
-              <ArrowRight className="w-5 h-5 ml-2" />
+              Complete Registration
+              <ArrowRight className="w-6 h-6 ml-3" />
             </Button>
           </div>
         </div>
