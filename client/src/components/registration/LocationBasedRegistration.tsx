@@ -30,7 +30,9 @@ import {
   Calendar,
   Shield,
   ExternalLink,
-  UserCheck
+  UserCheck,
+  User,
+  Loader2
 } from 'lucide-react';
 
 interface Port {
@@ -83,6 +85,10 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [userEmail, setUserEmail] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   // Fetch ports from public endpoint for registration
   const { data: portsResponse, isLoading: portsLoading } = useQuery({
@@ -481,31 +487,123 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           disabled={selectedPorts.length === 0}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Continue to Payment
+          Create Account
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
       </div>
     </div>
   );
 
-  // Step 4: Complete Registration (Skip Payment for Now)
+  // Step 4: Account Creation with Email and Password
+  const AccountCreationStep = () => {
+    return (
+      <div className="space-y-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-slate-800 mb-4">Create Your Account</h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Set up your PetroDealHub account to complete the registration process.
+          </p>
+        </div>
+
+        <Card className="max-w-md mx-auto border-2 border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-2xl text-blue-800 flex items-center justify-center">
+              <User className="w-6 h-6 mr-2" />
+              Account Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                placeholder="your@company.com"
+                className="w-full"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={userPassword}
+                onChange={(e) => setUserPassword(e.target.value)}
+                placeholder="Create a strong password"
+                className="w-full"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirm Password
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                className="w-full"
+                required
+              />
+            </div>
+
+            <div className="p-4 bg-blue-100 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <Shield className="w-4 h-4 inline mr-1" />
+                Your account will be created with a {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-day free trial
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-between mt-8 max-w-md mx-auto">
+          <Button variant="outline" onClick={() => setStep(3)}>
+            Back to Ports
+          </Button>
+          <Button 
+            onClick={() => setStep(5)}
+            disabled={!userEmail || !userPassword || userPassword !== confirmPassword}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Continue to Review
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Step 5: Complete Registration
   const CompleteRegistrationStep = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
     const handleCompleteRegistration = async () => {
-      setIsLoading(true);
+      setIsCreatingAccount(true);
 
       try {
-        // Complete registration with selected preferences
+        // Complete registration with account creation
         const registrationData = {
+          email: userEmail,
+          password: userPassword,
           selectedPlan: selectedPlan,
           selectedRegions: selectedRegions,
           selectedPorts: selectedPorts,
           billingInterval: billingInterval
         };
 
-        console.log('Completing registration with data:', registrationData);
+        console.log('Creating account with data:', registrationData);
 
         // Call the actual registration API to create account
         const response = await apiRequest('POST', '/api/complete-registration', registrationData);
@@ -535,7 +633,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           variant: "destructive",
         });
       } finally {
-        setIsLoading(false);
+        setIsCreatingAccount(false);
       }
     };
 
@@ -810,8 +908,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {step === 1 && "Choose Your Plan"}
                 {step === 2 && "Select Regions"}
                 {step === 3 && "Choose Ports"}
-                {step === 4 && "Complete Registration"}
-                {step === 5 && "Review & Confirm"}
+                {step === 4 && "Create Account"}
+                {step === 5 && "Complete Registration"}
               </h1>
             </div>
           </div>
@@ -823,8 +921,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {step === 1 && <PlanStep />}
             {step === 2 && <RegionStep />}
             {step === 3 && <PortStep />}
-            {step === 4 && <CompleteRegistrationStep />}
-            {step === 5 && <PreviewStep />}
+            {step === 4 && <AccountCreationStep />}
+            {step === 5 && <CompleteRegistrationStep />}
           </div>
         </div>
       </div>

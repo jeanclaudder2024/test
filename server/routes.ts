@@ -182,18 +182,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register authentication routes
   app.use("/api/auth", authRoutes);
   
-  // Complete registration endpoint (no authentication required)
+  // Complete registration endpoint with account creation
   app.post("/api/complete-registration", async (req: Request, res: Response) => {
     try {
-      const { selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
+      const { email, password, selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
       
-      // Generate a temporary user account that will be converted to full account after payment
-      const tempUserId = Math.random().toString(36).substring(2, 15);
+      if (!email || !password) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Email and password are required" 
+        });
+      }
       
-      // For now, just store the preferences and return success
-      // In a real implementation, this would create a pending registration
-      console.log('Registration preferences saved:', {
-        tempUserId,
+      // Create the user account
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Create user with subscription plan
+      const [user] = await db.insert(users).values({
+        email: email,
+        password: hashedPassword,
+        firstName: 'User',
+        lastName: 'Account'
+      }).returning();
+      
+      // Create subscription for the user
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 5); // 5-day trial
+      
+      await db.insert(subscriptions).values({
+        userId: user.id,
+        planId: selectedPlan,
+        status: 'trial',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: trialEnd,
+        trialEnd: trialEnd
+      });
+      
+      console.log('User account created successfully:', {
+        userId: user.id,
+        email: user.email,
         selectedPlan,
         selectedRegions,
         selectedPorts,
@@ -202,12 +229,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         success: true,
-        message: "Registration preferences saved successfully",
-        tempUserId: tempUserId,
+        message: "Account created successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        },
         redirectUrl: '/pricing?setup_payment=true'
       });
     } catch (error: any) {
       console.error("Error completing registration:", error);
+      
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(400).json({ 
+          success: false,
+          message: "Email already exists" 
+        });
+      }
+      
       res.status(500).json({ 
         success: false,
         message: "Failed to complete registration",
