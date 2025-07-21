@@ -26,10 +26,19 @@ export default function MembershipCardRequest() {
     );
   }
 
-  // If no user, redirect to login
+  // If no user, show message instead of redirect
   if (!user) {
-    setLocation('/login');
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
+          <p className="mb-4">Please log in to access membership card request.</p>
+          <Button onClick={() => setLocation('/login')} className="bg-blue-600 hover:bg-blue-700">
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const handleRequestCard = async () => {
@@ -59,10 +68,10 @@ export default function MembershipCardRequest() {
 
       setCardRequested(true);
 
-      // Wait 2 seconds then redirect to broker dashboard
+      // Wait a moment then redirect to broker dashboard
       setTimeout(() => {
         setLocation('/broker-dashboard');
-      }, 2000);
+      }, 1500);
 
     } catch (error: any) {
       toast({

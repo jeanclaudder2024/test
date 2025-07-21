@@ -84,8 +84,10 @@ const BrokerMembershipForm = () => {
 
         // User data will be updated on next page load
         
-        // Redirect to membership card request page
-        setLocation('/membership-card-request');
+        // Wait a moment before redirect to avoid React suspend errors
+        setTimeout(() => {
+          setLocation('/membership-card-request');
+        }, 1000);
       }
     } catch (error: any) {
       toast({
