@@ -5558,7 +5558,7 @@ Only use authentic, real-world data for existing refineries.`;
       } = req.body;
 
       // Validate required fields
-      if (!firstName || !lastName || !dateOfBirth || !nationality || !passportNumber || !experience || !specialization || !currentLocation || !residenceAddress || !phoneNumber || !email) {
+      if (!firstName || !lastName || !dateOfBirth || !nationality || !experience || !specialization || !currentLocation || !residenceAddress || !phoneNumber) {
         return res.status(400).json({
           success: false,
           message: 'Missing required fields for membership card request'

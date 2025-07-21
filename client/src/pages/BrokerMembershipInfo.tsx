@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ export default function BrokerMembershipInfo() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [passportFile, setPassportFile] = useState<File | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<any>(null);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -31,6 +33,95 @@ export default function BrokerMembershipInfo() {
     phoneNumber: '',
     emergencyContact: ''
   });
+
+  // Initialize Google Maps
+  useEffect(() => {
+    const initMap = async () => {
+      if (typeof (window as any).google === 'undefined') return;
+      
+      if (mapRef.current && !map) {
+        const newMap = new (window as any).google.maps.Map(mapRef.current, {
+          center: { lat: 25.2048, lng: 55.2708 }, // Dubai coordinates as default
+          zoom: 10,
+        });
+
+        // Add click listener for location selection
+        newMap.addListener('click', (event: any) => {
+          const lat = event.latLng?.lat();
+          const lng = event.latLng?.lng();
+          
+          if (lat && lng) {
+            // Reverse geocode to get city name
+            const geocoder = new (window as any).google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
+              if (status === 'OK' && results && results[0]) {
+                const address = results[0].formatted_address;
+                handleInputChange('currentLocation', address);
+                
+                toast({
+                  title: "Location Selected",
+                  description: `Selected: ${address}`,
+                  variant: "default",
+                });
+              }
+            });
+          }
+        });
+
+        setMap(newMap);
+      }
+    };
+
+    // Load Google Maps script if not already loaded
+    if (typeof (window as any).google === 'undefined') {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBxY8Z9QS5HJ_kS7XQJ9r7VqW4ZgG9s7DQ&libraries=geometry`;
+      script.async = true;
+      script.onload = initMap;
+      document.head.appendChild(script);
+    } else {
+      initMap();
+    }
+  }, [map, toast]);
+
+  // Get user's current location
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          if (map) {
+            map.setCenter({ lat, lng });
+            map.setZoom(15);
+          }
+          
+          // Reverse geocode
+          const geocoder = new (window as any).google.maps.Geocoder();
+          geocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
+            if (status === 'OK' && results && results[0]) {
+              const address = results[0].formatted_address;
+              handleInputChange('currentLocation', address);
+              
+              toast({
+                title: "Current Location Found",
+                description: `Your location: ${address}`,
+                variant: "default",
+              });
+            }
+          });
+        },
+        (error) => {
+          toast({
+            title: "Location Error",
+            description: "Could not get your current location. Please select manually on the map.",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -133,9 +224,29 @@ export default function BrokerMembershipInfo() {
       // Create form data for file upload
       const submitFormData = new FormData();
       
-      // Add all form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        submitFormData.append(key, value);
+      // Map form fields to API expected field names
+      const fieldMapping = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
+        nationality: formData.nationality,
+        passportNumber: formData.passportNumber,
+        experience: formData.industryExperience, // Map industryExperience to experience
+        specialization: formData.specialization,
+        previousEmployer: formData.previousEmployer,
+        certifications: formData.certifications,
+        currentLocation: formData.currentLocation,
+        residenceAddress: formData.residenceAddress,
+        phoneNumber: formData.phoneNumber,
+        email: 'membership@petrodealhub.com', // Default email
+        emergencyContact: formData.emergencyContact
+      };
+      
+      // Add all mapped form fields
+      Object.entries(fieldMapping).forEach(([key, value]) => {
+        if (value) {
+          submitFormData.append(key, value);
+        }
       });
       
       // Add passport file
@@ -337,13 +448,35 @@ export default function BrokerMembershipInfo() {
       </h3>
       <div className="space-y-4">
         <div>
-          <Label htmlFor="currentLocation">Current Location *</Label>
-          <Input
-            id="currentLocation"
-            value={formData.currentLocation}
-            onChange={(e) => handleInputChange('currentLocation', e.target.value)}
-            placeholder="City, Country"
-          />
+          <Label htmlFor="currentLocation">Current Location * 
+            <span className="text-xs text-muted-foreground ml-2">(Click map to select)</span>
+          </Label>
+          <div className="space-y-3">
+            <Input
+              id="currentLocation"
+              value={formData.currentLocation}
+              onChange={(e) => handleInputChange('currentLocation', e.target.value)}
+              placeholder="City, Country (or click map below)"
+            />
+            <div className="border rounded-lg overflow-hidden">
+              <div ref={mapRef} className="w-full h-[250px]"></div>
+              <div className="p-3 bg-gray-50 flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                  📍 Click anywhere on the map to select your location
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={getCurrentLocation}
+                  className="text-xs"
+                >
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Use My Location
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <Label htmlFor="residenceAddress">Residence Address *</Label>
