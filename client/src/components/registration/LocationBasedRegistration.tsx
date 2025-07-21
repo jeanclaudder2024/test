@@ -171,64 +171,177 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     }
   }, [selectedPorts, selectedPlan, selectedRegions, ports]);
 
-  // Step 1: Select Subscription Plan
+  // Step 1: Select Subscription Plan (Beautiful Design Matching Pricing Page)
   const PlanStep = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Choose Your Subscription Plan
+    <div className="space-y-8">
+      {/* Professional Header */}
+      <div className="text-center mb-12">
+        <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+          <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
+          Free Trial Available
+        </Badge>
+        <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+          Choose Your Maritime Plan
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Select your plan first to see which maritime regions and locations you'll have access to.
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+          Start your petroleum trading journey with professional maritime tracking and analytics. All plans include 5-day free trial.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {subscriptionPlans.map((plan) => (
+      {/* Professional Plan Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        {subscriptionPlans.map((plan, index) => (
           <Card 
             key={plan.id}
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+            className={`relative cursor-pointer transition-all duration-500 hover:scale-105 transform ${
               selectedPlan === plan.id 
-                ? 'ring-2 ring-blue-500 bg-blue-50' 
-                : 'hover:bg-gray-50'
+                ? 'ring-4 ring-blue-500 shadow-2xl scale-105' 
+                : 'hover:shadow-xl'
+            } ${
+              index === 0 && 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
+            } ${
+              index === 1 && 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 relative'
+            } ${
+              index === 2 && 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
             }`}
             onClick={() => setSelectedPlan(plan.id)}
           >
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <CardDescription className="text-3xl font-bold text-blue-600">
-                {plan.price}<span className="text-base text-gray-500">/month</span>
-              </CardDescription>
+            {/* Popular Badge for Professional Plan */}
+            {index === 1 && (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1 text-sm font-semibold shadow-lg">
+                  Most Popular
+                </Badge>
+              </div>
+            )}
+
+            <CardHeader className="text-center pb-4 pt-8">
+              <div className="flex justify-center mb-4">
+                {index === 0 && <div className="text-4xl">🧪</div>}
+                {index === 1 && <div className="text-4xl">📈</div>}
+                {index === 2 && <div className="text-4xl">🏢</div>}
+              </div>
+              <CardTitle className="text-2xl font-bold text-slate-800 mb-2">
+                {plan.name.replace('🧪 ', '').replace('📈 ', '').replace('🏢 ', '')}
+              </CardTitle>
+              <div className="flex items-baseline justify-center">
+                <span className={`text-5xl font-bold ${
+                  index === 0 && 'bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent'
+                } ${
+                  index === 1 && 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
+                } ${
+                  index === 2 && 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
+                }`}>
+                  {plan.price}
+                </span>
+                <span className="text-xl text-slate-500 ml-2">/month</span>
+              </div>
+              <div className="text-sm text-slate-500 mt-2">
+                5-day free trial included
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600">{plan.description}</p>
+
+            <CardContent className="space-y-6 px-6 pb-8">
+              <p className="text-slate-600 text-center leading-relaxed">
+                {plan.description}
+              </p>
               
-              <div className="space-y-2">
-                <div className="flex items-center text-sm">
-                  <Globe className="w-4 h-4 mr-2 text-blue-500" />
-                  <span className="font-semibold">
+              {/* Enhanced Features List */}
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                    index === 0 && 'bg-orange-100'
+                  } ${
+                    index === 1 && 'bg-blue-100'
+                  } ${
+                    index === 2 && 'bg-purple-100'
+                  }`}>
+                    <Globe className={`w-4 h-4 ${
+                      index === 0 && 'text-orange-600'
+                    } ${
+                      index === 1 && 'text-blue-600'
+                    } ${
+                      index === 2 && 'text-purple-600'
+                    }`} />
+                  </div>
+                  <span className="font-semibold text-slate-700">
                     {plan.id === 1 ? '2 Maritime Regions' : 
                      plan.id === 2 ? '6 Maritime Regions' : 
                      '9+ Global Maritime Regions'}
                   </span>
                 </div>
-                <div className="flex items-center text-sm">
-                  <Anchor className="w-4 h-4 mr-2 text-green-500" />
-                  <span>{plan.maxPorts} Strategic Ports</span>
+                
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                    index === 0 && 'bg-orange-100'
+                  } ${
+                    index === 1 && 'bg-blue-100'
+                  } ${
+                    index === 2 && 'bg-purple-100'
+                  }`}>
+                    <Anchor className={`w-4 h-4 ${
+                      index === 0 && 'text-orange-600'
+                    } ${
+                      index === 1 && 'text-blue-600'
+                    } ${
+                      index === 2 && 'text-purple-600'
+                    }`} />
+                  </div>
+                  <span className="text-slate-700">
+                    {plan.maxPorts === 999 ? 'Unlimited' : plan.maxPorts} Strategic Ports
+                  </span>
                 </div>
-                <div className="flex items-center text-sm">
-                  <Ship className="w-4 h-4 mr-2 text-orange-500" />
-                  <span>{plan.maxVessels} Vessel Tracking</span>
+                
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                    index === 0 && 'bg-orange-100'
+                  } ${
+                    index === 1 && 'bg-blue-100'
+                  } ${
+                    index === 2 && 'bg-purple-100'
+                  }`}>
+                    <Ship className={`w-4 h-4 ${
+                      index === 0 && 'text-orange-600'
+                    } ${
+                      index === 1 && 'text-blue-600'
+                    } ${
+                      index === 2 && 'text-purple-600'
+                    }`} />
+                  </div>
+                  <span className="text-slate-700">
+                    {plan.maxVessels === 999 ? 'Unlimited' : plan.maxVessels} Vessel Tracking
+                  </span>
                 </div>
-                <div className="flex items-center text-sm">
-                  <Factory className="w-4 h-4 mr-2 text-purple-500" />
-                  <span>{plan.maxRefineries} Refineries</span>
+
+                {/* Professional Features */}
+                <div className="pt-3 space-y-2">
+                  {plan.features.slice(0, 3).map((feature, idx) => (
+                    <div key={idx} className="flex items-start">
+                      <CheckCircle2 className={`w-4 h-4 mr-2 mt-0.5 ${
+                        index === 0 && 'text-orange-500'
+                      } ${
+                        index === 1 && 'text-blue-500'
+                      } ${
+                        index === 2 && 'text-purple-500'
+                      }`} />
+                      <span className="text-sm text-slate-600">{feature}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
+              {/* Selection Indicator */}
               {selectedPlan === plan.id && (
-                <div className="pt-2">
-                  <CheckCircle2 className="w-6 h-6 text-blue-500 mx-auto" />
+                <div className="pt-4 flex justify-center">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    index === 0 && 'bg-gradient-to-r from-orange-500 to-red-500'
+                  } ${
+                    index === 1 && 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                  } ${
+                    index === 2 && 'bg-gradient-to-r from-purple-500 to-pink-500'
+                  } shadow-lg animate-pulse`}>
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -236,13 +349,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         ))}
       </div>
 
+      {/* Continue Button */}
       {selectedPlan && (
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-8">
           <Button 
             onClick={() => setStep(2)}
-            className="px-8 py-3 text-lg"
+            size="lg"
+            className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
           >
-            Choose Your Region
+            Continue to Region Selection
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
