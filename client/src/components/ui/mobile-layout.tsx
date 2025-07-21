@@ -65,7 +65,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
       { name: "PDF Test", href: "/pdf-test", icon: FileText },
       { 
         name: "Broker", 
-        href: user?.hasBrokerMembership ? "/broker-dashboard" : "/broker-membership", 
+        href: user?.hasBrokerMembership ? "/broker-dashboard" : "/broker-payment", 
         icon: user?.hasBrokerMembership ? Briefcase : Lock 
       },
       { name: "Profile", href: "/profile", icon: User },

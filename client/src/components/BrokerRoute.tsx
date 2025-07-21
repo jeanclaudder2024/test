@@ -24,7 +24,7 @@ export default function BrokerRoute({ children }: BrokerRouteProps) {
 
   // Redirect to broker membership purchase page
   useEffect(() => {
-    setLocation('/broker-membership');
+    setLocation('/broker-payment');
   }, [setLocation]);
 
   return null;

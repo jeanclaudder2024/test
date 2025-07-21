@@ -15,7 +15,7 @@ import BrokerUpgrade from "@/pages/BrokerUpgrade";
 import BrokerPayment from "@/pages/BrokerPayment";
 import BrokerPaymentSuccess from "@/pages/BrokerPaymentSuccess";
 import BrokerLocked from "@/pages/BrokerLocked";
-import BrokerMembership from "@/pages/BrokerMembership";
+import BrokerMembershipInfo from "@/pages/BrokerMembershipInfo";
 import BrokerCardApplication from "@/pages/BrokerCardApplication";
 import BrokerRoute from "@/components/BrokerRoute";
 import OilPrices from "@/pages/OilPrices";
@@ -77,11 +77,11 @@ function ProtectedRoutes() {
             </BrokerRoute>
           </Route>
           <Route path="/broker-locked" component={BrokerLocked} />
-          <Route path="/broker-membership" component={BrokerMembership} />
+          <Route path="/broker-payment" component={BrokerPayment} />
+          <Route path="/broker-membership-info" component={BrokerMembershipInfo} />
           <Route path="/membership-card-request" component={EnhancedMembershipCardRequest} />
           <Route path="/broker-card-application" component={BrokerCardApplication} />
           <Route path="/broker-upgrade" component={BrokerUpgrade} />
-          <Route path="/broker-payment" component={BrokerPayment} />
           <Route path="/broker-payment-success" component={BrokerPaymentSuccess} />
           <Route path="/oil-prices" component={OilPrices} />
           <Route path="/vessels" component={Vessels} />

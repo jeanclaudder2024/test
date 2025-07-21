@@ -1,40 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { 
-  CreditCard, 
-  Shield, 
-  CheckCircle, 
-  Star,
-  Globe,
-  Award,
-  Clock,
-  Banknote,
-  Users,
-  TrendingUp,
-  User,
-  Building2
-} from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
+import { CheckCircle, Ship, DollarSign, Users, Globe, Shield, CreditCard } from 'lucide-react';
 
-// Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
-interface PaymentFormProps {
-  brokerData: any;
-  onSuccess: () => void;
-}
-
-function PaymentForm({ brokerData, onSuccess }: PaymentFormProps) {
+const PaymentForm = () => {
   const stripe = useStripe();
   const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -46,12 +26,38 @@ function PaymentForm({ brokerData, onSuccess }: PaymentFormProps) {
     setIsProcessing(true);
 
     try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/broker-payment-success`,
-        },
-        redirect: 'if_required',
+      console.log('Creating payment intent...');
+      const response = await fetch('/api/broker-membership-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      
+      const responseData = await response.json();
+      console.log('Payment response:', responseData);
+      
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Failed to create payment intent');
+      }
+      
+      const { clientSecret } = responseData;
+      
+      if (!clientSecret) {
+        throw new Error('No client secret received from server');
+      }
+
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        throw new Error('Card element not found');
+      }
+
+      console.log('Confirming payment...');
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+        }
       });
 
       if (error) {
@@ -60,24 +66,44 @@ function PaymentForm({ brokerData, onSuccess }: PaymentFormProps) {
           description: error.message,
           variant: "destructive",
         });
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Update broker payment status
-        await apiRequest('POST', '/api/broker/payment-confirm', {
-          paymentIntentId: paymentIntent.id,
-          brokerData,
+      } else if (paymentIntent?.status === 'succeeded') {
+        console.log('Payment succeeded, confirming membership...');
+        
+        // Confirm broker membership activation
+        const confirmResponse = await fetch('/api/confirm-broker-membership', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({
+            paymentIntentId: paymentIntent.id
+          })
         });
         
-        toast({
-          title: "Payment Successful!",
-          description: "Your membership card is being generated. Welcome to GloboOil Elite!",
-        });
-        
-        onSuccess();
+        const confirmData = await confirmResponse.json();
+        console.log('Confirmation response:', confirmData);
+
+        if (confirmData.success) {
+          toast({
+            title: "Payment Successful! 🎉",
+            description: "Now complete your membership information to get broker access.",
+            variant: "default",
+          });
+
+          // Navigate to membership info page
+          setTimeout(() => {
+            setLocation('/broker-membership-info');
+          }, 2000);
+        } else {
+          throw new Error(confirmData.message || 'Payment confirmation failed');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Payment error:', error);
       toast({
         title: "Payment Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An error occurred during payment processing",
         variant: "destructive",
       });
     } finally {
@@ -86,305 +112,120 @@ function PaymentForm({ brokerData, onSuccess }: PaymentFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
-      
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-semibold py-3 px-6 text-lg"
-      >
-        {isProcessing ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-            Processing Payment...
-          </>
-        ) : (
-          <>
-            <CreditCard className="h-5 w-5 mr-2" />
-            Pay $299 - Activate Elite Membership
-          </>
-        )}
-      </Button>
-    </form>
-  );
-}
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
+          PetroDealHub Broker Membership
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Step 1: Complete Payment - $299 One-Time Membership Fee
+        </p>
+      </div>
 
-export default function BrokerPayment() {
-  const [, setLocation] = useLocation();
-  const [clientSecret, setClientSecret] = useState<string>('');
-  const [brokerData, setBrokerData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Get broker data from localStorage (stored during upgrade process)
-    const storedBrokerData = localStorage.getItem('brokerUpgradeData');
-    console.log('Stored broker data:', storedBrokerData);
-    
-    if (!storedBrokerData) {
-      console.log('No broker data found, redirecting to upgrade...');
-      setLocation('/broker-upgrade');
-      return;
-    }
-
-    const parsedData = JSON.parse(storedBrokerData);
-    console.log('Parsed broker data:', parsedData);
-    setBrokerData(parsedData);
-
-    // Create payment intent
-    const createPaymentIntent = async () => {
-      try {
-        console.log('Creating payment intent for data:', parsedData);
-        
-        // Direct fetch to avoid any caching issues
-        const fetchResponse = await fetch('/api/broker/create-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: 299,
-            brokerData: parsedData,
-          }),
-        });
-        
-        if (!fetchResponse.ok) {
-          throw new Error(`HTTP error! status: ${fetchResponse.status}`);
-        }
-        
-        const response = await fetchResponse.json();
-
-        console.log('Payment response data:', response);
-        
-        if (response && response.clientSecret) {
-          setClientSecret(response.clientSecret);
-          console.log('Client secret set successfully');
-        } else {
-          console.error('No client secret in response:', response);
-          throw new Error('No client secret received from server');
-        }
-      } catch (error) {
-        console.error('Payment setup error:', error);
-        toast({
-          title: "Payment Setup Failed",
-          description: error instanceof Error ? error.message : "Unable to initialize payment. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    createPaymentIntent();
-  }, [setLocation, toast]);
-
-  const handlePaymentSuccess = () => {
-    // Clear stored data and redirect to success page
-    localStorage.removeItem('brokerUpgradeData');
-    setLocation('/broker-payment-success');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600">Setting up your payment...</p>
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Membership Benefits */}
+        <Card className="border-2 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ship className="h-6 w-6 text-blue-600" />
+              What You Get
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span>Secure payment powered by Stripe</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-blue-500" />
+                <span>Join 1,000+ professional oil brokers</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Globe className="h-5 w-5 text-purple-500" />
+                <span>Global network access included</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-orange-500" />
+                <span>Professional broker certification</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-5 w-5 text-green-500" />
+                <span>Lifetime broker dashboard access</span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              By clicking "Process Payment", you agree to our terms of service and privacy policy. 
+              Your membership will be activated immediately after successful payment.
+            </p>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
 
-  if (!clientSecret) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <p className="text-red-600">Payment setup failed. Please try again.</p>
-            <Button onClick={() => setLocation('/broker-upgrade')} className="mt-4">
-              Return to Upgrade
-            </Button>
+        {/* Payment Form */}
+        <Card className="border-2 border-orange-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-6 w-6 text-orange-600" />
+              Payment Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="p-4 border rounded-lg bg-gray-50">
+                <CardElement
+                  options={{
+                    style: {
+                      base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                          color: '#aab7c4',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-2">Payment Summary</h4>
+                <div className="flex justify-between text-lg">
+                  <span>Broker Membership (Lifetime)</span>
+                  <span className="font-bold">$299.00</span>
+                </div>
+                <p className="text-sm text-blue-600 mt-2">One-time payment • No recurring charges</p>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white py-3 text-lg"
+                disabled={!stripe || isProcessing}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Processing Payment...
+                  </div>
+                ) : (
+                  `Process Payment - $299`
+                )}
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Test Card: 4242 4242 4242 4242 • Any future date • Any CVC
+              </p>
+            </form>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-yellow-100 py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-full mb-4 shadow-2xl">
-            <Award className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            GloboOil Elite Membership
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Complete your payment to unlock exclusive broker privileges
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Membership Benefits */}
-          <Card className="bg-gradient-to-br from-yellow-600 to-yellow-700 text-white border-0 shadow-2xl">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <Star className="h-6 w-6 mr-2" />
-                Elite Membership Benefits
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Membership Card Preview */}
-              <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 shadow-xl">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <Globe className="h-8 w-8 mr-2" />
-                    <div>
-                      <h3 className="text-xl font-bold">GloboOil</h3>
-                      <p className="text-sm opacity-90">ELITE BROKER MEMBERSHIP</p>
-                    </div>
-                  </div>
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                    <User className="h-8 w-8" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-2xl font-bold">{brokerData?.firstName} {brokerData?.lastName}</p>
-                  <p className="text-lg">Member ID: Will be generated</p>
-                  <p className="text-sm opacity-90">Valid: 1 Year from activation</p>
-                </div>
-              </div>
-
-              {/* Benefits List */}
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-3 text-yellow-200" />
-                  <span>Exclusive access to premium oil deals</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-3 text-yellow-200" />
-                  <span>Priority customer support</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-3 text-yellow-200" />
-                  <span>Advanced analytics and market insights</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-3 text-yellow-200" />
-                  <span>Direct company contact privileges</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-3 text-yellow-200" />
-                  <span>Unlimited document generation</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-3 text-yellow-200" />
-                  <span>Global broker network access</span>
-                </div>
-              </div>
-
-              {/* Statistics */}
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-yellow-500/30">
-                <div className="text-center">
-                  <div className="text-2xl font-bold">500+</div>
-                  <div className="text-sm opacity-90">Active Brokers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">$2.5B</div>
-                  <div className="text-sm opacity-90">Volume Traded</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">150+</div>
-                  <div className="text-sm opacity-90">Countries</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Form */}
-          <Card className="shadow-2xl border-0">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center justify-between">
-                <span className="flex items-center">
-                  <CreditCard className="h-6 w-6 mr-2" />
-                  Secure Payment
-                </span>
-                <Badge className="bg-green-100 text-green-800">
-                  <Shield className="h-4 w-4 mr-1" />
-                  SSL Secured
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Pricing Summary */}
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                <div className="flex justify-between">
-                  <span>Elite Membership (1 Year)</span>
-                  <span className="font-semibold">$299.00</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Processing Fee</span>
-                  <span>$0.00</span>
-                </div>
-                <div className="border-t pt-3 flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-yellow-600">$299.00 USD</span>
-                </div>
-              </div>
-
-              {/* Payment Form */}
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <PaymentForm brokerData={brokerData} onSuccess={handlePaymentSuccess} />
-              </Elements>
-
-              {/* Security Notice */}
-              <div className="flex items-start space-x-3 text-sm text-gray-600">
-                <Shield className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">Your payment is secure</p>
-                  <p>We use industry-standard encryption to protect your payment information. Your card details are never stored on our servers.</p>
-                </div>
-              </div>
-
-              {/* Money Back Guarantee */}
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <Clock className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                <p className="font-medium text-blue-900">30-Day Money Back Guarantee</p>
-                <p className="text-sm text-blue-700">Not satisfied? Get a full refund within 30 days.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Trust Indicators */}
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 mb-6">Trusted by leading oil companies worldwide</p>
-          <div className="flex justify-center items-center space-x-8 opacity-60">
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-6 w-6" />
-              <span className="font-medium">Shell</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-6 w-6" />
-              <span className="font-medium">ExxonMobil</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-6 w-6" />
-              <span className="font-medium">BP</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-6 w-6" />
-              <span className="font-medium">Chevron</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
-}
+};
 
+export default function BrokerPayment() {
+  return (
+    <Elements stripe={stripePromise}>
+      <PaymentForm />
+    </Elements>
+  );
+}
