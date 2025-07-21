@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { 
   MapPin, 
   Ship, 
@@ -20,7 +21,11 @@ import {
   Fuel,
   Zap,
   Star,
-  Crown
+  Crown,
+  CreditCard,
+  Lock,
+  Calendar,
+  Shield
 } from 'lucide-react';
 
 interface Port {
@@ -63,7 +68,7 @@ interface SubscriptionPlan {
 }
 
 interface LocationBasedRegistrationProps {
-  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any }) => void;
+  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any; paymentData: any }) => void;
 }
 
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
@@ -71,6 +76,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [paymentData, setPaymentData] = useState({
+    cardNumber: '',
+    expiryMonth: '',
+    expiryYear: '',
+    cvv: '',
+    cardholderName: ''
+  });
   const [previewData, setPreviewData] = useState<any>(null);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
@@ -471,27 +483,184 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           disabled={selectedPorts.length === 0}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Review Selection
+          Continue to Payment
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
       </div>
     </div>
   );
 
-  // Step 4: Preview and Confirm
-  const PreviewStep = () => (
-    <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
-          Review Your Selection
-        </h2>
-        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-          Confirm your choices before proceeding to registration.
-        </p>
-      </div>
+  // Step 4: Payment Method
+  const PaymentStep = () => {
+    const isPaymentValid = paymentData.cardNumber && paymentData.expiryMonth && paymentData.expiryYear && paymentData.cvv && paymentData.cardholderName;
 
-      {previewData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    const handlePaymentChange = (field: string, value: string) => {
+      setPaymentData(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div className="flex items-center mb-6">
+            <CreditCard className="w-8 h-8 text-blue-600 mr-3" />
+            <h2 className="text-2xl font-bold text-slate-800">Payment Information</h2>
+          </div>
+
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-start">
+              <Shield className="w-5 h-5 text-blue-600 mt-0.5 mr-2" />
+              <div>
+                <p className="text-sm font-medium text-blue-800 mb-1">
+                  Secure Payment Processing
+                </p>
+                <p className="text-sm text-blue-600">
+                  Your card will be charged automatically after your 5-day free trial ends. You can cancel anytime during the trial period.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-2">
+                Cardholder Name
+              </Label>
+              <input
+                type="text"
+                id="cardholderName"
+                value={paymentData.cardholderName}
+                onChange={(e) => handlePaymentChange('cardholderName', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter name as it appears on card"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                Card Number
+              </Label>
+              <input
+                type="text"
+                id="cardNumber"
+                value={paymentData.cardNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
+                  handlePaymentChange('cardNumber', value);
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="1234 5678 9012 3456"
+                maxLength={19}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="expiryMonth" className="block text-sm font-medium text-gray-700 mb-2">
+                  Month
+                </Label>
+                <Select onValueChange={(value) => handlePaymentChange('expiryMonth', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="MM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                      <SelectItem key={month} value={month.toString().padStart(2, '0')}>
+                        {month.toString().padStart(2, '0')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="expiryYear" className="block text-sm font-medium text-gray-700 mb-2">
+                  Year
+                </Label>
+                <Select onValueChange={(value) => handlePaymentChange('expiryYear', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="YY" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                      <SelectItem key={year} value={year.toString().slice(-2)}>
+                        {year.toString().slice(-2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-2">
+                  CVV
+                </Label>
+                <input
+                  type="text"
+                  id="cvv"
+                  value={paymentData.cvv}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    handlePaymentChange('cvv', value);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="123"
+                  maxLength={4}
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-start">
+                <Lock className="w-5 h-5 text-gray-600 mt-0.5 mr-2" />
+                <div>
+                  <p className="text-sm font-medium text-gray-800 mb-1">
+                    Your information is secure
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    We use industry-standard encryption to protect your payment information. Your data is never stored on our servers.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button variant="outline" onClick={() => setStep(3)}>
+            Back to Ports
+          </Button>
+          <Button 
+            onClick={() => {
+              // Generate preview data when moving to final step
+              generatePreviewData();
+              setStep(5);
+            }}
+            disabled={!isPaymentValid}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Continue to Review
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Step 5: Preview and Confirm
+  const PreviewStep = () => {
+    return (
+      <div className="space-y-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+            Review Your Selection
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            Confirm your choices before proceeding to registration.
+          </p>
+        </div>
+
+        {previewData && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Selected Plan */}
           <Card className="border-2 border-blue-200 bg-blue-50">
             <CardHeader>
@@ -552,32 +721,77 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               </div>
             </CardContent>
           </Card>
+
+          {/* Payment Information */}
+          <Card className="border-2 border-purple-200 bg-purple-50 mt-8">
+            <CardHeader>
+              <CardTitle className="text-xl text-purple-800 flex items-center">
+              <CreditCard className="w-6 h-6 mr-2" />
+              Payment Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-white p-6 rounded-lg space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Cardholder Name</Label>
+                  <p className="text-lg font-semibold text-gray-900">{paymentData.cardholderName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Card Number</Label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {paymentData.cardNumber ? `****${paymentData.cardNumber.slice(-4)}` : '****'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Expiry</Label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {paymentData.expiryMonth}/{paymentData.expiryYear}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Trial Period</Label>
+                  <p className="text-lg font-semibold text-green-600">
+                    5 days free, then {formatCurrency(previewData?.selectedPlan.monthlyPrice || 0)} monthly
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-purple-100 rounded-lg">
+                <p className="text-sm text-purple-800">
+                  <Shield className="w-4 h-4 inline mr-1" />
+                  Payment will be automatically processed after your 5-day trial period. You can cancel anytime.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-between mt-8">
+          <Button variant="outline" onClick={() => setStep(4)}>
+            Back to Payment
+          </Button>
+          <Button 
+            onClick={() => {
+              if (previewData && selectedPlan) {
+                onComplete({
+                  selectedPlan,
+                  selectedPort: selectedPorts[0], // Pass first selected port
+                  previewData,
+                  paymentData
+                });
+              }
+            }}
+            disabled={!previewData}
+            className="bg-green-600 hover:bg-green-700 px-8"
+          >
+            Complete Registration
+            <CheckCircle2 className="w-5 h-5 ml-2" />
+          </Button>
         </div>
       )}
-
-      <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={() => setStep(3)}>
-          Back to Ports
-        </Button>
-        <Button 
-          onClick={() => {
-            if (previewData && selectedPlan) {
-              onComplete({
-                selectedPlan,
-                selectedPort: selectedPorts[0], // Pass first selected port
-                previewData
-              });
-            }
-          }}
-          disabled={!previewData}
-          className="bg-green-600 hover:bg-green-700 px-8"
-        >
-          Complete Registration
-          <CheckCircle2 className="w-5 h-5 ml-2" />
-        </Button>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen w-full">
@@ -586,7 +800,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <div className="w-full bg-white border-b border-gray-200 py-8">
           <div className="max-w-4xl mx-auto px-6">
             <div className="flex items-center justify-center space-x-4 mb-6">
-              {[1, 2, 3, 4].map((stepNumber) => (
+              {[1, 2, 3, 4, 5].map((stepNumber) => (
                 <div key={stepNumber} className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
                     step >= stepNumber 
@@ -595,7 +809,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   }`}>
                     {stepNumber}
                   </div>
-                  {stepNumber < 4 && (
+                  {stepNumber < 5 && (
                     <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
                       step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
                     }`} />
@@ -609,7 +823,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {step === 1 && "Choose Your Plan"}
                 {step === 2 && "Select Regions"}
                 {step === 3 && "Choose Ports"}
-                {step === 4 && "Review & Confirm"}
+                {step === 4 && "Payment Method"}
+                {step === 5 && "Review & Confirm"}
               </h1>
             </div>
           </div>
@@ -621,7 +836,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {step === 1 && <PlanStep />}
             {step === 2 && <RegionStep />}
             {step === 3 && <PortStep />}
-            {step === 4 && <PreviewStep />}
+            {step === 4 && <PaymentStep />}
+            {step === 5 && <PreviewStep />}
           </div>
         </div>
       </div>
