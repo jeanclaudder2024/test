@@ -81,6 +81,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   // Fetch ports from public endpoint for registration
@@ -714,44 +715,38 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               </Card>
             </div>
 
-            {/* Payment Information */}
-            <Card className="border-2 border-purple-200 bg-purple-50 mt-8">
+            {/* Registration Summary */}
+            <Card className="border-2 border-green-200 bg-green-50 mt-8">
               <CardHeader>
-                <CardTitle className="text-xl text-purple-800 flex items-center">
-                  <CreditCard className="w-6 h-6 mr-2" />
-                  Payment Information
+                <CardTitle className="text-xl text-green-800 flex items-center">
+                  <CheckCircle2 className="w-6 h-6 mr-2" />
+                  Ready to Complete Registration
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-white p-6 rounded-lg space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">Cardholder Name</Label>
-                      <p className="text-lg font-semibold text-gray-900">{paymentData.cardholderName}</p>
+                      <Label className="text-sm font-medium text-gray-700">Selected Plan</Label>
+                      <p className="text-lg font-semibold text-gray-900">{previewData?.selectedPlan.name}</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">Card Number</Label>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {paymentData.cardNumber ? `****${paymentData.cardNumber.slice(-4)}` : '****'}
-                      </p>
+                      <Label className="text-sm font-medium text-gray-700">Billing Cycle</Label>
+                      <p className="text-lg font-semibold text-gray-900">{billingInterval}ly</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">Expiry</Label>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {paymentData.expiryMonth}/{paymentData.expiryYear}
-                      </p>
+                      <Label className="text-sm font-medium text-gray-700">Regions Selected</Label>
+                      <p className="text-lg font-semibold text-gray-900">{selectedRegions.length} regions</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">Trial Period</Label>
-                      <p className="text-lg font-semibold text-green-600">
-                        5 days free, then {formatCurrency(previewData?.selectedPlan.monthlyPrice || 0)} monthly
-                      </p>
+                      <Label className="text-sm font-medium text-gray-700">Ports Selected</Label>
+                      <p className="text-lg font-semibold text-gray-900">{selectedPorts.length} ports</p>
                     </div>
                   </div>
-                  <div className="mt-4 p-3 bg-purple-100 rounded-lg">
-                    <p className="text-sm text-purple-800">
-                      <Shield className="w-4 h-4 inline mr-1" />
-                      Payment will be automatically processed after your 5-day trial period. You can cancel anytime.
+                  <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      <CheckCircle2 className="w-4 h-4 inline mr-1" />
+                      Complete registration now and add your payment method when ready to upgrade.
                     </p>
                   </div>
                 </div>
