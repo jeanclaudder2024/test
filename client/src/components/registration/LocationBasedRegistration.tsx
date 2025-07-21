@@ -190,7 +190,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     if (plansLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
       );
     }
@@ -207,8 +207,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       <div className="space-y-8">
         {/* Professional Header */}
         <div className="text-center mb-12">
-          <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
-            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
+          <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 mb-6 inline-flex items-center">
+            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
             Free Trial Available
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
@@ -224,7 +224,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           <div className="flex items-center space-x-4 bg-gray-100 p-1 rounded-lg">
             <Label 
               htmlFor="billing-monthly" 
-              className={`cursor-pointer px-4 py-2 rounded-md transition-all ${
+              className={`cursor-pointer px-4 py-2 rounded-md ${
                 billingInterval === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
               }`}
             >
@@ -237,7 +237,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             />
             <Label 
               htmlFor="billing-yearly" 
-              className={`cursor-pointer px-4 py-2 rounded-md transition-all flex items-center space-x-2 ${
+              className={`cursor-pointer px-4 py-2 rounded-md flex items-center space-x-2 ${
                 billingInterval === 'year' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
               }`}
             >
@@ -261,9 +261,9 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 plan.isPopular ? "border-primary shadow-md" : ""
               } ${
                 selectedPlan === plan.id 
-                  ? 'ring-4 ring-blue-500 shadow-2xl scale-105' 
+                  ? 'ring-4 ring-blue-500 shadow-2xl' 
                   : 'hover:shadow-xl'
-              } cursor-pointer transition-all duration-500 hover:scale-105 transform`}
+              } cursor-pointer`}
               onClick={() => setSelectedPlan(plan.id)}>
                 <CardHeader>
                   {plan.isPopular && (
@@ -366,7 +366,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           return (
             <Card 
               key={region}
-              className={`transition-all duration-300 ${
+              className={` ${
                 isSelected
                   ? 'ring-4 ring-blue-500 bg-blue-50 border-blue-200' 
                   : isAtLimit
@@ -471,7 +471,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               .map((port: Port) => (
                 <Card 
                   key={port.id}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                  className={`cursor-pointer  hover:shadow-lg ${
                     selectedPorts.includes(port.id) 
                       ? 'ring-2 ring-blue-500 bg-blue-50' 
                       : 'hover:shadow-md'
@@ -659,7 +659,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           >
             {isLoading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full  mr-2" />
                 Creating Account...
               </>
             ) : (
@@ -828,17 +828,17 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       <div className="registration-container bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center relative">
         {/* Background Pattern - Exactly like login */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
-          <div className="absolute -bottom-8 left-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl"></div>
+          <div className="absolute top-40 right-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl"></div>
+          <div className="absolute -bottom-8 left-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl"></div>
         </div>
 
         {/* Floating Elements - Exactly like login */}
         <div className="absolute top-20 left-1/4 opacity-20">
-          <Ship className="h-16 w-16 text-blue-300 animate-float" />
+          <Ship className="h-16 w-16 text-blue-300" />
         </div>
         <div className="absolute bottom-32 right-1/4 opacity-20">
-          <Waves className="h-12 w-12 text-cyan-300 animate-bounce" />
+          <Waves className="h-12 w-12 text-cyan-300" />
         </div>
 
         <div className="relative z-10 w-full max-w-md mx-auto p-4">
@@ -883,7 +883,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="John"
-                      className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                      className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none "
                       required
                       autoComplete="given-name"
                     />
@@ -901,7 +901,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Doe"
-                      className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                      className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none "
                       required
                       autoComplete="family-name"
                     />
@@ -922,7 +922,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="your@company.com"
-                    className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                    className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none "
                     required
                     autoComplete="email"
                   />
@@ -942,14 +942,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="Create strong password"
-                    className="w-full pl-12 pr-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                    className="w-full pl-12 pr-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none "
                     required
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 hover:text-green-400 transition-colors focus:outline-none"
+                    className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 hover:text-green-400  focus:outline-none"
                   >
                     {showPassword ? <EyeOff /> : <Eye />}
                   </button>
@@ -990,14 +990,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"
-                    className="w-full pl-12 pr-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                    className="w-full pl-12 pr-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none "
                     required
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 hover:text-orange-400 transition-colors focus:outline-none"
+                    className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 hover:text-orange-400  focus:outline-none"
                   >
                     {showConfirmPassword ? <EyeOff /> : <Eye />}
                   </button>
@@ -1084,7 +1084,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             <div className="flex items-center justify-center space-x-4 mb-6">
               {[1, 2, 3, 4, 5].map((stepNumber) => (
                 <div key={stepNumber} className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold  ${
                     step >= stepNumber 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-200 text-gray-500'
@@ -1092,7 +1092,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     {stepNumber}
                   </div>
                   {stepNumber < 5 && (
-                    <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
+                    <div className={`w-16 h-1 mx-2  ${
                       step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
                     }`} />
                   )}
