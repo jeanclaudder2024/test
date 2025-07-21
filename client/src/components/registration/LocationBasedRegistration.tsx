@@ -17,6 +17,7 @@ import {
   Globe, 
   CheckCircle2, 
   ArrowRight,
+  ArrowLeft,
   Waves,
   Anchor,
   Building2,
@@ -37,7 +38,8 @@ import {
   EyeOff,
   Mail,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Gift
 } from 'lucide-react';
 
 interface Port {
@@ -614,7 +616,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               <div>
                 <label className="text-sm font-medium text-gray-700">Selected Plan</label>
                 <p className="text-lg font-semibold text-gray-900 mt-1">
-                  {plans?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
+                  {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
                 </p>
               </div>
             </div>
@@ -816,7 +818,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     );
   };
 
-  // Step 4: Account Creation - Login Page Style Design
+  // Step 4: Account Creation - Clean Simple Form
   const AccountCreationStep = () => {
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
@@ -824,246 +826,205 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                        userPassword === confirmPassword;
 
     return (
-      <div className="registration-container bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center relative">
-        {/* Background Pattern - Exactly like login */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
-          <div className="absolute -bottom-8 left-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+      <div className="space-y-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+            Create Your Account
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            Enter your details to create your maritime trading account.
+          </p>
         </div>
 
-        {/* Floating Elements - Exactly like login */}
-        <div className="absolute top-20 left-1/4 opacity-20">
-          <Ship className="h-16 w-16 text-blue-300 animate-float" />
-        </div>
-        <div className="absolute bottom-32 right-1/4 opacity-20">
-          <Waves className="h-12 w-12 text-cyan-300 animate-bounce" />
-        </div>
-
-        <div className="relative z-10 w-full max-w-md mx-auto p-4">
-          {/* Logo and Header - Exactly like login */}
-          <div className="text-center mb-6 space-y-4">
-            <div className="flex justify-center">
-              <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-2xl">
-                  <Ship className="h-10 w-10 text-white" />
+        {/* Account Creation Form */}
+        <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+          <div className="space-y-6">
+            {/* Name Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="John"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    required
+                    autoComplete="given-name"
+                  />
                 </div>
-                <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl blur opacity-30"></div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Doe"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    required
+                    autoComplete="family-name"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Email Field */}
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-                Create Account
-              </h1>
-              <p className="text-slate-300 text-lg">Join your maritime trading hub</p>
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="email"
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  placeholder="your@company.com"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={userPassword}
+                  onChange={(e) => setUserPassword(e.target.value)}
+                  placeholder="Create strong password"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
+              
+              {/* Password Requirements */}
+              {userPassword && passwordErrors.length > 0 && (
+                <div className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-xs text-red-700 mb-2 flex items-center">
+                    <Shield className="h-3 w-3 text-red-500 mr-1" />
+                    Missing requirements:
+                  </p>
+                  <div className="space-y-1">
+                    {passwordErrors.slice(0, 3).map((error, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <AlertTriangle className="h-3 w-3 text-red-500" />
+                        <span className="text-xs text-red-600">{error}</span>
+                      </div>
+                    ))}
+                    {passwordErrors.length > 3 && (
+                      <p className="text-xs text-red-500">+{passwordErrors.length - 3} more...</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Confirm Password Field */}
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                >
+                  {showConfirmPassword ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
+              
+              {/* Password Match Status */}
+              {confirmPassword && (
+                <div className={`mt-2 p-2 rounded-lg border ${
+                  userPassword === confirmPassword 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <div className="flex items-center space-x-2">
+                    {userPassword === confirmPassword ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className={`text-sm ${
+                      userPassword === confirmPassword ? 'text-green-700' : 'text-red-700'
+                    }`}>
+                      {userPassword === confirmPassword ? 'Passwords match' : 'Passwords do not match'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Trial Information */}
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="bg-green-500 p-2 rounded-full">
+                  <Gift className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-green-800 font-medium text-sm">5-Day Free Trial Included</p>
+                  <p className="text-green-600 text-xs">No credit card required • Cancel anytime</p>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Account Creation Form - Login Style */}
-          <Card className="backdrop-blur-xl bg-white/10 border-white/20 shadow-2xl stable-form">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl text-white">Account Setup</CardTitle>
-              <CardDescription className="text-slate-300">
-                Create your oil trading account
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-white font-medium">
-                    First Name
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                    <input
-                      id="firstName"
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="John"
-                      className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none backdrop-blur-sm transition-colors"
-                      required
-                      autoComplete="given-name"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-white font-medium">
-                    Last Name
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                    <input
-                      id="lastName"
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Doe"
-                      className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none backdrop-blur-sm transition-colors"
-                      required
-                      autoComplete="family-name"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white font-medium">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                  <input
-                    id="email"
-                    type="email"
-                    value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    placeholder="your@company.com"
-                    className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none backdrop-blur-sm transition-colors"
-                    required
-                    autoComplete="email"
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white font-medium">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={userPassword}
-                    onChange={(e) => setUserPassword(e.target.value)}
-                    placeholder="Create strong password"
-                    className="w-full pl-12 pr-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none backdrop-blur-sm transition-colors"
-                    required
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 hover:text-green-400 transition-colors focus:outline-none"
-                  >
-                    {showPassword ? <EyeOff /> : <Eye />}
-                  </button>
-                </div>
-                
-                {/* Compact Password Requirements */}
-                {userPassword && passwordErrors.length > 0 && (
-                  <div className="mt-2 p-3 bg-white/5 rounded-lg border border-white/10">
-                    <p className="text-xs text-slate-300 mb-2 flex items-center">
-                      <Shield className="h-3 w-3 text-blue-400 mr-1" />
-                      Missing requirements:
-                    </p>
-                    <div className="space-y-1">
-                      {passwordErrors.slice(0, 3).map((error, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <AlertTriangle className="h-3 w-3 text-red-400" />
-                          <span className="text-xs text-red-300">{error}</span>
-                        </div>
-                      ))}
-                      {passwordErrors.length > 3 && (
-                        <p className="text-xs text-slate-400">+{passwordErrors.length - 3} more...</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Confirm Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-white font-medium">
-                  Confirm Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm password"
-                    className="w-full pl-12 pr-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none backdrop-blur-sm transition-colors"
-                    required
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 hover:text-orange-400 transition-colors focus:outline-none"
-                  >
-                    {showConfirmPassword ? <EyeOff /> : <Eye />}
-                  </button>
-                </div>
-                
-                {/* Password Match Status */}
-                {confirmPassword && (
-                  <div className={`mt-2 p-2 rounded-lg border ${
-                    userPassword === confirmPassword 
-                      ? 'bg-green-500/10 border-green-400/20' 
-                      : 'bg-red-500/10 border-red-400/20'
-                  }`}>
-                    <div className="flex items-center space-x-2">
-                      {userPassword === confirmPassword ? (
-                        <CheckCircle className="h-4 w-4 text-green-400" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 text-red-400" />
-                      )}
-                      <span className={`text-sm ${
-                        userPassword === confirmPassword ? 'text-green-300' : 'text-red-300'
-                      }`}>
-                        {userPassword === confirmPassword ? 'Passwords match' : 'Passwords do not match'}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Trial Info */}
-              <div className="p-4 bg-gradient-to-r from-blue-500/10 to-green-500/10 rounded-lg border border-blue-400/20">
-                <div className="flex items-center space-x-3">
-                  <Shield className="h-5 w-5 text-blue-400" />
-                  <div>
-                    <p className="text-sm font-medium text-white">
-                      {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-Day Free Trial
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      No credit card required • Cancel anytime
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setStep(3)}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
-                >
-                  Back
-                </Button>
-                <Button 
-                  onClick={() => setStep(5)}
-                  disabled={!isFormValid}
-                  className={`px-6 ${
-                    isFormValid 
-                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white' 
-                      : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                  }`}
-                >
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Action Buttons */}
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={() => setStep(3)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Ports
+          </Button>
+          <Button 
+            onClick={() => setStep(5)}
+            disabled={!isFormValid}
+            className="bg-blue-600 hover:bg-blue-700 px-8"
+          >
+            Continue to Registration
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </div>
     );
