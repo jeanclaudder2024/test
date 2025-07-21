@@ -1,230 +1,195 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Check, X, Star, Crown, Zap, Users, ArrowRight, TestTube, ChevronDown } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Check, X, Ship, MapPin, Building2, BarChart3, FileText, Users, Globe, Shield, ChevronDown, Zap, Crown, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Link, useLocation } from 'wouter';
+import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useLocation } from 'wouter';
+import { cn } from '@/lib/utils';
 
-interface Plan {
-  id: number;
+interface PlanFeature {
   name: string;
-  emoji: string;
-  description: string;
-  monthlyPrice: number;
-  annualPrice: number;
-  annualSavings: string;
-  trial: string;
-  icon: React.ReactNode;
-  gradient: string;
-  isPopular: boolean;
-  features: {
-    marineZones: string;
-    vesselTracking: string;
-    refineryAccess: string;
-    portCoverage: string;
-    documentation: string;
-    dealParticipation: string;
-    users: string;
-    support: string;
-    brokerMembership: boolean;
-    directSellerAccess: boolean;
-    legalProtection: boolean;
-    realContractAccess: boolean;
-    dealAlerts: boolean;
-    marketExpansion: boolean;
-    preContractReview: boolean;
-  };
+  included: boolean;
 }
 
-const plans: Plan[] = [
-  {
-    id: 1,
-    name: "Basic",
-    emoji: "🧪",
-    description: "\"Basically\" - Essential tracking for small operators",
-    monthlyPrice: 69,
-    annualPrice: 662,
-    annualSavings: "save 20%",
-    trial: "✅ 5-Day Free Trial",
-    icon: <TestTube className="h-6 w-6" />,
-    gradient: "from-blue-500 to-blue-600",
-    isPopular: false,
-    features: {
-      marineZones: "Access to 2 zones",
-      vesselTracking: "Up to 250 tankers",
-      refineryAccess: "Up to 25 refineries",
-      portCoverage: "5 major ports",
-      documentation: "LOI, B/L only",
-      dealParticipation: "View-only access",
-      users: "1 user",
-      support: "Email support only",
-      brokerMembership: false,
-      directSellerAccess: false,
-      legalProtection: false,
-      realContractAccess: false,
-      dealAlerts: false,
-      marketExpansion: false,
-      preContractReview: false,
-    }
-  },
-  {
-    id: 2,
-    name: "Professional",
-    emoji: "📈",
-    description: "Advanced features for growing petroleum trading operations",
-    monthlyPrice: 150,
-    annualPrice: 1350,
-    annualSavings: "save 25%",
-    trial: "✅ 5-Day Free Trial",
-    icon: <Zap className="h-6 w-6" />,
-    gradient: "from-purple-500 to-purple-600",
-    isPopular: true,
-    features: {
-      marineZones: "Access to 6 strategic zones",
-      vesselTracking: "Unlimited tracking with vessel status",
-      refineryAccess: "Expanded refinery data + operational info",
-      portCoverage: "Access to 20+ international ports",
-      documentation: "Includes SPA, ICPO, NCNDA",
-      dealParticipation: "Limited participation in active deals",
-      users: "Up to 3 users",
-      support: "Direct support + onboarding session",
-      brokerMembership: true,
-      directSellerAccess: true,
-      legalProtection: true,
-      realContractAccess: true,
-      dealAlerts: true,
-      marketExpansion: true,
-      preContractReview: true,
-    }
-  },
-  {
-    id: 3,
-    name: "Enterprise",
-    emoji: "🏢",
-    description: "Full-scale solution for large petroleum trading corporations",
-    monthlyPrice: 399,
-    annualPrice: 3591,
-    annualSavings: "save 25%",
-    trial: "✅ 5-Day Free Trial",
-    icon: <Crown className="h-6 w-6" />,
-    gradient: "from-orange-500 to-orange-600",
-    isPopular: false,
-    features: {
-      marineZones: "Access to 9 major global maritime zones",
-      vesselTracking: "Full live tracking with verified activity",
-      refineryAccess: "Full access including internal documentation (e.g., gate passes)",
-      portCoverage: "Access to 100+ strategic global ports",
-      documentation: "Full set: SGS, SDS, Q88, ATB, customs and compliance documentation",
-      dealParticipation: "Full participation + contract management",
-      users: "Full team access with user permission control",
-      support: "24/7 premium support + dedicated account manager",
-      brokerMembership: true,
-      directSellerAccess: true,
-      legalProtection: true,
-      realContractAccess: true,
-      dealAlerts: true,
-      marketExpansion: true,
-      preContractReview: true,
-    }
-  }
-];
-
-const exclusiveFeatures = [
-  {
-    name: "🪪 International Broker Membership",
-    basic: false,
-    professional: "Eligible for PetroDealHub International Broker ID",
-    enterprise: "Included with official registration"
-  },
-  {
-    name: "📞 Direct Seller Access",
-    basic: false,
-    professional: "Contact with oil sales teams at major companies",
-    enterprise: "Full direct access to official seller departments"
-  },
-  {
-    name: "🛡️ Legal Broker Protection",
-    basic: false,
-    professional: "Entry into verified contract environments",
-    enterprise: "Legal recognition and dispute protection"
-  },
-  {
-    name: "📝 Real Contract Access",
-    basic: false,
-    professional: "Join live deal rooms and bid on contracts",
-    enterprise: "Participate in real contract execution with sellers"
-  },
-  {
-    name: "🔔 Deal and Supply Alerts",
-    basic: false,
-    professional: "Alerts on refinery availability and vessel movements",
-    enterprise: "Priority alerts for new international supply opportunities"
-  },
-  {
-    name: "🌍 Market Expansion Insights",
-    basic: false,
-    professional: "Weekly opportunity recommendations based on region or product",
-    enterprise: "Country-based lead targeting + document review assistance"
-  },
-  {
-    name: "📑 Pre-Contract Review",
-    basic: false,
-    professional: "Contract terms review before commitment",
-    enterprise: "Dedicated advisors for deal compliance and risk reduction"
-  }
-];
+interface PricingPlan {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  monthlyPrice: string;
+  yearlyPrice: string;
+  monthlyPriceId: string;
+  yearlyPriceId: string;
+  currency: string;
+  features: PlanFeature[];
+  isPopular: boolean;
+  trialDays: number;
+}
 
 export default function ProfessionalPlansComparison() {
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [showComparison, setShowComparison] = useState(false);
+  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  const handleStartTrial = async (planId: number, planName: string) => {
-    try {
-      // Check if user is authenticated - if not, redirect to registration
-      if (!user) {
-        toast({
-          title: "Start Your 5-Day Free Trial",
-          description: "Register now to access all subscription features. No credit card required!",
-          variant: "default",
-        });
+  // Fetch subscription plans (no cache to always get latest)
+  const { data: plans, isLoading, error } = useQuery({
+    queryKey: ['/api/subscription-plans'],
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the results
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(
+          'GET',
+          '/api/subscription-plans'
+        );
         
-        // Store the selected plan and redirect to registration
-        localStorage.setItem('selectedTrialPlan', planId.toString());
-        navigate(`/register?trial=true&plan=${planId}`);
-        return;
+        if (!response.ok) {
+          throw new Error('Failed to fetch subscription plans');
+        }
+        
+        // Parse the response from the public API
+        const plansData = await response.json();
+        
+        return plansData.map((plan: any) => ({
+          id: plan.id,
+          name: plan.name,
+          slug: plan.name.toLowerCase().replace(/\s+/g, '-'),
+          description: plan.description,
+          monthlyPrice: parseFloat(plan.price).toString(),
+          yearlyPrice: (parseFloat(plan.price) * 12 * 0.8).toFixed(0), // 20% discount for yearly
+          monthlyPriceId: plan.stripePriceId || `price_${plan.id}_monthly`,
+          yearlyPriceId: plan.stripePriceId ? plan.stripePriceId.replace('monthly', 'yearly') : `price_${plan.id}_yearly`,
+          currency: 'usd',
+          features: Array.isArray(plan.features) ? plan.features.map((feature: string) => ({
+            name: feature,
+            included: true
+          })) : [],
+          isPopular: plan.id === 2, // Professional plan is popular
+          trialDays: plan.trialDays || 5
+        })).sort((a: PricingPlan, b: PricingPlan) => a.id - b.id);
+      } catch (err) {
+        console.error('Error fetching plans:', err);
+        
+        // Return fallback data for development purposes
+        console.warn('Using fallback plan data while API is being fixed');
+        return [
+          {
+            id: 1,
+            name: "Basic",
+            slug: "basic",
+            description: "Essential tracking features for small operators",
+            monthlyPrice: "49.99",
+            yearlyPrice: "499.90",
+            currency: "usd",
+            features: [
+              { name: "Track up to 50 vessels", included: true },
+              { name: "Real-time vessel positions", included: true },
+              { name: "Basic reporting", included: true },
+              { name: "Email support", included: true },
+              { name: "Data export (CSV)", included: true }
+            ],
+            isPopular: false,
+            trialDays: 14
+          },
+          {
+            id: 2,
+            name: "Professional",
+            slug: "pro",
+            description: "Advanced features for medium-sized fleets",
+            monthlyPrice: "99.99",
+            yearlyPrice: "999.90",
+            currency: "usd",
+            features: [
+              { name: "Track up to 200 vessels", included: true },
+              { name: "Real-time vessel positions", included: true },
+              { name: "Advanced analytics dashboard", included: true },
+              { name: "API access", included: true },
+              { name: "Priority email support", included: true },
+              { name: "Data export (CSV, JSON)", included: true },
+              { name: "Historical data (12 months)", included: true },
+              { name: "Custom alerts", included: true }
+            ],
+            isPopular: true,
+            trialDays: 14
+          },
+          {
+            id: 3,
+            name: "Enterprise",
+            slug: "enterprise",
+            description: "Comprehensive solution for large operations",
+            monthlyPrice: "249.99",
+            yearlyPrice: "2499.90",
+            currency: "usd",
+            features: [
+              { name: "Unlimited vessel tracking", included: true },
+              { name: "Real-time vessel positions", included: true },
+              { name: "Enterprise analytics", included: true },
+              { name: "Full API access", included: true },
+              { name: "24/7 dedicated support", included: true },
+              { name: "Data export (all formats)", included: true },
+              { name: "Historical data (unlimited)", included: true },
+              { name: "Custom alerts and notifications", included: true },
+              { name: "White-label options", included: true },
+              { name: "Custom integrations", included: true },
+              { name: "Dedicated account manager", included: true }
+            ],
+            isPopular: false,
+            trialDays: 30
+          }
+        ];
+      }
+    }
+  });
+
+  // Handle subscription checkout - exact same logic as Pricing page
+  const handleSubscribe = async (planId: number) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to subscribe to a plan.",
+        variant: "destructive",
+      });
+      navigate('/login?redirect=/pricing');
+      return;
+    }
+
+    try {
+      // Get the plan data to find the price ID
+      const plan = plans?.find(p => p.id === planId);
+      if (!plan) {
+        throw new Error('Plan not found');
       }
 
-      // User is authenticated - proceed with checkout
-      toast({
-        title: "Creating checkout...",
-        description: "Setting up your subscription payment...",
-      });
+      const priceId = billingInterval === 'month' ? plan.monthlyPriceId : plan.yearlyPriceId;
 
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-        body: JSON.stringify({
-          planId: planId,
-          priceId: `price_${planId}_monthly`,
-          billingInterval: 'month'
-        }),
-      });
+      console.log('Creating checkout session for:', { planId, priceId, billingInterval });
+
+      const response = await apiRequest(
+        'POST',
+        '/api/create-checkout-session',
+        { 
+          planId, 
+          interval: billingInterval 
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create checkout session');
       }
 
       const data = await response.json();
       
-      // Redirect to Stripe checkout with improved iframe handling
+      // Redirect to Stripe checkout with better error handling
       const checkoutUrl = data.url || data.redirectUrl;
       
       console.log('Checkout response data:', data);
@@ -265,353 +230,310 @@ export default function ProfessionalPlansComparison() {
             });
           }
         }
+      } else if (data.sessionId) {
+        // Fallback: construct URL manually if needed
+        const fallbackUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.location.href = fallbackUrl;
+          } else if (window.top && window.top !== window) {
+            window.top.location.href = fallbackUrl;
+          } else {
+            window.location.replace(fallbackUrl);
+          }
+        } catch (securityError) {
+          window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+          toast({
+            title: "Checkout Opened",
+            description: "Stripe checkout opened in a new tab.",
+          });
+        }
       } else {
         throw new Error('No checkout URL received');
       }
     } catch (error) {
-      console.error('Error starting trial:', error);
+      console.error('Error creating checkout session:', error);
       toast({
         title: "Payment Error",
-        description: "Failed to start checkout. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to start checkout process. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  // Fetch real subscription plans from database
-  const { data: plans, isLoading: plansLoading } = useQuery({
-    queryKey: ['/api/subscription-plans'],
-    staleTime: 0,
-  });
+  // Format currency display - exact same as Pricing page
+  const formatCurrency = (amount: string, currency: string) => {
+    const numAmount = parseFloat(amount);
+    
+    if (isNaN(numAmount)) {
+      return `$${amount}`;
+    }
 
-  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-  const [showComparison, setShowComparison] = useState(false);
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
 
-  if (plansLoading) {
+    return formatter.format(numAmount);
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+      <div className="container py-12 mx-auto">
+        <div className="flex flex-col items-center justify-center mb-12">
+          <Skeleton className="w-[120px] h-[30px] mb-2" />
+          <Skeleton className="w-[250px] h-[24px] mb-6" />
+          <Skeleton className="w-[100px] h-[30px]" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="flex flex-col">
+              <CardHeader>
+                <Skeleton className="w-[100px] h-[28px] mb-2" />
+                <Skeleton className="w-[180px] h-[20px]" />
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <Skeleton className="w-[150px] h-[36px] mb-4" />
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5].map((j) => (
+                    <Skeleton key={j} className="w-full h-[20px]" />
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="w-full h-[40px]" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-12 mx-auto">
+        <div className="flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Plans</h2>
+          <p className="text-gray-600 mb-6">
+            {error instanceof Error ? error.message : "An error occurred while loading subscription plans."}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-16">
-      <div className="container mx-auto px-4">
-        {/* Professional Header */}
-        <div className="text-center mb-16">
-          <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
-            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
-            Professional Maritime Plans
-          </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
-            Choose Your Maritime Trading Plan
-          </h1>
-          <p className="text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed">
-            Professional subscription plans designed for petroleum trading operations. All plans include 5-day free trial with full access.
-          </p>
-        </div>
-
-        {/* Billing Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white rounded-full p-1 shadow-lg border border-gray-200">
-            <Button
-              variant={billingInterval === 'month' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setBillingInterval('month')}
-              className="rounded-full px-6 py-2"
-            >
-              Monthly
-            </Button>
-            <Button
-              variant={billingInterval === 'year' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setBillingInterval('year')}
-              className="rounded-full px-6 py-2"
-            >
-              Annual
-              <Badge variant="secondary" className="ml-2 text-xs">Save 20%</Badge>
-            </Button>
+    <div className="container py-12 mx-auto">
+      <div className="flex flex-col items-center justify-center mb-12">
+        <Badge variant="outline" className="px-4 py-2 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+          <div className="w-2 h-2 rounded-full bg-blue-400 mr-2 animate-pulse"></div>
+          Choose the Plan That Fits Your Petroleum Trading Needs
+        </Badge>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">
+          Flexible Subscription Plans
+        </h1>
+        <p className="text-muted-foreground mb-6 text-center max-w-2xl">
+          Whether you're an individual broker or a global trading company, PetroDealHub provides 
+          flexible subscription plans tailored to your scale of operations, market access, and trading goals.
+        </p>
+        <div className="mb-6 text-center">
+          <div className="inline-flex items-center gap-4 text-sm text-slate-500">
+            <span>✅ 5-Day free trial for every plan</span>
+            <span>•</span>
+            <span>✅ No credit card required</span>
+            <span>•</span>
+            <span>✅ Cancel anytime</span>
           </div>
         </div>
-
-        {/* Beautiful Plan Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
-          {Array.isArray(plans) && plans.map((plan: any, index: number) => (
-            <Card 
-              key={plan.id}
-              className={`relative overflow-hidden transition-all duration-500 hover:scale-105 transform shadow-xl ${
-                index === 1 ? 'ring-4 ring-blue-500 scale-105' : ''
-              } ${
-                index === 0 && 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
-              } ${
-                index === 1 && 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
-              } ${
-                index === 2 && 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
-              }`}
-            >
-              {/* Popular Badge */}
-              {index === 1 && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1 text-sm font-semibold shadow-lg">
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-
-              <CardHeader className="text-center pb-4 pt-8">
-                <div className="flex justify-center mb-4">
-                  {index === 0 && <div className="text-4xl">🧪</div>}
-                  {index === 1 && <div className="text-4xl">📈</div>}
-                  {index === 2 && <div className="text-4xl">🏢</div>}
-                </div>
-                <CardTitle className="text-2xl font-bold text-slate-800 mb-2">
-                  {plan.name.replace(' Plan', '')}
-                </CardTitle>
-                <div className="flex items-baseline justify-center">
-                  <span className={`text-5xl font-bold ${
-                    index === 0 && 'bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent'
-                  } ${
-                    index === 1 && 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
-                  } ${
-                    index === 2 && 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
-                  }`}>
-                    ${billingInterval === 'month' ? plan.monthlyPrice : Math.round(plan.monthlyPrice * 0.8)}
-                  </span>
-                  <span className="text-xl text-slate-500 ml-2">/{billingInterval === 'month' ? 'month' : 'year'}</span>
-                </div>
-                <div className="text-sm text-slate-500 mt-2">
-                  5-day free trial included
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-6 px-6 pb-8">
-                <p className="text-slate-600 text-center leading-relaxed">
-                  {plan.description}
-                </p>
-                
-                {/* Key Features */}
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                      index === 0 && 'bg-orange-100'
-                    } ${
-                      index === 1 && 'bg-blue-100'
-                    } ${
-                      index === 2 && 'bg-purple-100'
-                    }`}>
-                      <Check className={`w-4 h-4 ${
-                        index === 0 && 'text-orange-600'
-                      } ${
-                        index === 1 && 'text-blue-600'
-                      } ${
-                        index === 2 && 'text-purple-600'
-                      }`} />
-                    </div>
-                    <span className="font-semibold text-slate-700">
-                      {index === 0 ? '2 Maritime Regions' : 
-                       index === 1 ? '6 Maritime Regions' : 
-                       '9+ Global Maritime Regions'}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                      index === 0 && 'bg-orange-100'
-                    } ${
-                      index === 1 && 'bg-blue-100'
-                    } ${
-                      index === 2 && 'bg-purple-100'
-                    }`}>
-                      <Check className={`w-4 h-4 ${
-                        index === 0 && 'text-orange-600'
-                      } ${
-                        index === 1 && 'text-blue-600'
-                      } ${
-                        index === 2 && 'text-purple-600'
-                      }`} />
-                    </div>
-                    <span className="text-slate-700">
-                      {index === 0 ? 'Basic vessel tracking' : 
-                       index === 1 ? 'Enhanced vessel tracking' : 
-                       'Full live vessel tracking'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                      index === 0 && 'bg-orange-100'
-                    } ${
-                      index === 1 && 'bg-blue-100'
-                    } ${
-                      index === 2 && 'bg-purple-100'
-                    }`}>
-                      <Check className={`w-4 h-4 ${
-                        index === 0 && 'text-orange-600'
-                      } ${
-                        index === 1 && 'text-blue-600'
-                      } ${
-                        index === 2 && 'text-purple-600'
-                      }`} />
-                    </div>
-                    <span className="text-slate-700">
-                      {index === 0 ? 'Basic documentation' : 
-                       index === 1 ? 'Professional documentation' : 
-                       'Complete documentation suite'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Enhanced CTA Button */}
-                <Button 
-                  className={cn(
-                    "w-full py-3 px-6 text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105",
-                    index === 0 && "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
-                    index === 1 && "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
-                    index === 2 && "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                  )}
-                  onClick={() => handleStartTrial(plan.id, plan.name)}
-                >
-                  Choose {plan.name.replace(' Plan', '')}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Feature Comparison Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-16">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-            <h2 className="text-2xl font-bold mb-2">📊 Feature Comparison Table</h2>
-            <p className="text-blue-100">Compare all features across our subscription plans</p>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Feature</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">🧪 Basic</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">📈 Professional</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">🏢 Enterprise</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {[
-                  { name: "🌍 Marine Zones", basic: "2 zones", professional: "6 strategic zones", enterprise: "9 major global maritime zones" },
-                  { name: "🚢 Vessel Tracking", basic: "Up to 250 tankers", professional: "Unlimited with status", enterprise: "Full live tracking with verified activity" },
-                  { name: "🏭 Refinery Access", basic: "Up to 25 refineries", professional: "Expanded data + operational info", enterprise: "Full access including internal documentation" },
-                  { name: "⚓ Port Coverage", basic: "5 major ports", professional: "20+ international ports", enterprise: "100+ strategic global ports" },
-                  { name: "📄 Documentation", basic: "LOI, B/L only", professional: "Includes SPA, ICPO, NCNDA", enterprise: "Full set: SGS, SDS, Q88, ATB, customs" },
-                  { name: "📈 Deal Participation", basic: "View-only access", professional: "Limited participation in active deals", enterprise: "Full participation + contract management" },
-                  { name: "👥 Users", basic: "1 user", professional: "Up to 3 users", enterprise: "Full team access with permissions" },
-                  { name: "📬 Support", basic: "Email support only", professional: "Direct support + onboarding", enterprise: "24/7 premium + dedicated manager" },
-                ].map((feature, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{feature.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{feature.basic}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{feature.professional}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{feature.enterprise}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Exclusive Features Section */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-16">
-          <div className="bg-gradient-to-r from-purple-600 to-orange-600 text-white p-6">
-            <h2 className="text-2xl font-bold mb-2">🏅 Exclusive Features (Professional & Enterprise)</h2>
-            <p className="text-purple-100">Advanced capabilities for serious petroleum traders</p>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Exclusive Feature</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">🧪 Basic</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">📈 Professional</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">🏢 Enterprise</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {exclusiveFeatures.map((feature, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{feature.name}</td>
-                    <td className="px-6 py-4 text-center">
-                      {feature.basic ? (
-                        <span className="text-sm text-gray-600">{feature.basic}</span>
-                      ) : (
-                        <X className="h-5 w-5 text-red-500 mx-auto" />
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-center">
-                      <Check className="h-5 w-5 text-green-500 mx-auto mb-1" />
-                      <div className="text-xs">{feature.professional}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-center">
-                      <Check className="h-5 w-5 text-green-500 mx-auto mb-1" />
-                      <div className="text-xs">{feature.enterprise}</div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* All Plans Include Section */}
-        <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-xl text-white p-8 mb-16">
-          <h2 className="text-2xl font-bold mb-6 text-center">✅ All Plans Include:</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              "Full access to your dashboard within minutes",
-              "Support in Arabic, English, French, Turkish, and more",
-              "Full transparency in all deal steps",
-              "Secure infrastructure",
-              "No long-term commitment — upgrade, downgrade, or cancel anytime",
-              "5-Day free trial for every plan — no credit card required"
-            ].map((item, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <Check className="h-5 w-5 text-green-200 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">🚀 Start Trading Smarter</h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Gain access to trusted documentation, refinery profiles, real-time vessel movement, 
-            and global petroleum contracts – all in one place.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white px-8 py-3"
-              onClick={() => handleStartTrial(2, "Professional")}
-            >
-              🔹 Start Free Trial
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
-            <Link href="/pricing">
-              <Button size="lg" variant="outline" className="px-8 py-3">
-                🔹 Compare All Plans
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="px-8 py-3">
-                🔹 Book a Demo
-              </Button>
-            </Link>
-          </div>
+        
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="billing-toggle" className={cn(
+            "text-sm font-medium",
+            billingInterval === 'month' ? "text-primary" : "text-muted-foreground"
+          )}>
+            Monthly Billing
+          </Label>
+          <Switch
+            id="billing-toggle"
+            checked={billingInterval === 'year'}
+            onCheckedChange={(checked) => setBillingInterval(checked ? 'year' : 'month')}
+          />
+          <Label htmlFor="billing-toggle" className={cn(
+            "text-sm font-medium flex items-center space-x-1.5",
+            billingInterval === 'year' ? "text-primary" : "text-muted-foreground"
+          )}>
+            <span>Annual Billing</span>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Save 20%
+            </Badge>
+          </Label>
         </div>
       </div>
+      
+      <div className="grid gap-6 md:grid-cols-3">
+        {plans?.map((plan) => {
+          const price = billingInterval === 'month' 
+            ? plan.monthlyPrice 
+            : plan.yearlyPrice;
+            
+          return (
+            <Card key={plan.id} className={cn(
+              "flex flex-col",
+              plan.isPopular && "border-primary shadow-md"
+            )}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <CardDescription className="mt-1.5">{plan.description}</CardDescription>
+                  </div>
+                  {plan.isPopular && (
+                    <Badge className="bg-primary hover:bg-primary">Popular</Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <div className="flex items-baseline mb-4">
+                  <span className="text-3xl font-bold">
+                    {formatCurrency(price, plan.currency)}
+                  </span>
+                  <span className="text-muted-foreground ml-1">
+                    /{billingInterval}
+                  </span>
+                </div>
+                
+                <div className="space-y-2">
+                  {plan.features.map((feature, i) => (
+                    <div key={i} className="flex items-start">
+                      <div className="mr-2 mt-1">
+                        {feature.included ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-sm",
+                        !feature.included && "text-muted-foreground line-through"
+                      )}>
+                        {feature.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                {plan.trialDays > 0 && (
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Includes {plan.trialDays} day free trial
+                  </p>
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => handleSubscribe(plan.id)}
+                  className={cn(
+                    "w-full",
+                    plan.isPopular ? "bg-primary hover:bg-primary/90" : ""
+                  )}
+                >
+                  Subscribe to {plan.name}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
+      </div>
+      
+      {/* Expandable Plan Comparison Button */}
+      <div className="mt-16 mx-auto max-w-4xl text-center">
+        <Button
+          onClick={() => setShowComparison(!showComparison)}
+          variant="outline"
+          size="lg"
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200 text-blue-800 font-semibold px-8 py-4 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <BarChart3 className="w-6 h-6 mr-3" />
+          {showComparison ? 'Hide' : 'View'} Detailed Plan Comparison
+          <ChevronDown className={cn(
+            "w-5 h-5 ml-3 transition-transform duration-300",
+            showComparison && "rotate-180"
+          )} />
+        </Button>
+        <p className="text-sm text-muted-foreground mt-3">
+          Compare all features side-by-side to find your perfect plan
+        </p>
+      </div>
+
+      {/* Expandable Plan Comparison Section */}
+      {showComparison && (
+        <div className="mt-12 mx-auto max-w-7xl animate-in slide-in-from-top-4 duration-500">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-blue-100 shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 text-center">
+              <h2 className="text-3xl font-bold mb-2">Professional Plan Comparison</h2>
+              <p className="text-blue-100 text-lg">
+                Choose the perfect maritime solution for your business needs
+              </p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-blue-200">
+                    <th className="text-left p-6 font-bold text-gray-900 text-lg">Features & Capabilities</th>
+                    {plans?.map((plan, index) => (
+                      <th key={plan.id} className="text-center p-6 min-w-[200px]">
+                        <div className="flex flex-col items-center space-y-3">
+                          <div className="flex items-center space-x-2">
+                            {index === 0 && <Zap className="w-6 h-6 text-orange-500" />}
+                            {index === 1 && <Star className="w-6 h-6 text-blue-500" />}
+                            {index === 2 && <Crown className="w-6 h-6 text-purple-500" />}
+                            <span className="text-xl font-bold text-gray-900">{plan.name}</span>
+                          </div>
+                          <div className="bg-white rounded-lg px-4 py-2 shadow-sm border">
+                            <span className="text-2xl font-bold text-blue-600">
+                              {formatCurrency(billingInterval === 'month' ? plan.monthlyPrice : plan.yearlyPrice, plan.currency)}
+                            </span>
+                            <span className="text-gray-600 text-sm">/{billingInterval}</span>
+                          </div>
+                          {plan.isPopular && (
+                            <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-lg">
+                              ⭐ Most Popular
+                            </Badge>
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {/* Sample feature rows - you can expand this */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-25 hover:to-indigo-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <Ship className="w-6 h-6 text-blue-600" />
+                      </div>
+                      Feature Comparison
+                    </td>
+                    {plans?.map((plan) => (
+                      <td key={plan.id} className="p-6 text-center">
+                        <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
+                          <span className="font-bold text-blue-700">{plan.features.length} features</span>
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
