@@ -1,5 +1,6 @@
 import { useLocation } from 'wouter';
 import LocationBasedRegistration from '@/components/registration/LocationBasedRegistration';
+import SimpleInputTest from '@/components/SimpleInputTest';
 
 export default function RegisterPage() {
   const [, setLocation] = useLocation();
@@ -10,5 +11,11 @@ export default function RegisterPage() {
     setLocation('/dashboard');
   };
 
-  return <LocationBasedRegistration onComplete={handleComplete} />;
+  return (
+    <div>
+      <SimpleInputTest />
+      <hr className="my-8" />
+      <LocationBasedRegistration onComplete={handleComplete} />
+    </div>
+  );
 }
