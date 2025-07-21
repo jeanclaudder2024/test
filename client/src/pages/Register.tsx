@@ -9,76 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, User, Ship, Waves, Eye, EyeOff, Anchor, Star, CheckCircle2, ArrowLeft } from 'lucide-react';
-import LocationBasedRegistration from '@/components/registration/LocationBasedRegistration';
-
-// Subscription plans data
-const subscriptionPlans = [
-  {
-    id: 1,
-    name: "🧪 Basic",
-    price: "$69",
-    originalPrice: "$87",
-    period: "/month",
-    savings: "20% OFF",
-    description: "Perfect for independent brokers starting in petroleum markets",
-    features: [
-      "Access to 2 major maritime zones",
-      "Basic vessel tracking with verified activity", 
-      "Access to 5 regional ports",
-      "Basic documentation: LOI, SPA",
-      "Email support"
-    ],
-    buttonText: "Start 5-Day Free Trial",
-    popular: false
-  },
-  {
-    id: 2,
-    name: "📈 Professional", 
-    price: "$150",
-    originalPrice: "$188",
-    period: "/month",
-    savings: "20% OFF",
-    description: "Professional brokers and medium-scale petroleum trading companies",
-    features: [
-      "Access to 6 major maritime zones",
-      "Enhanced tracking with real-time updates",
-      "Access to 20+ strategic ports", 
-      "Enhanced documentation: LOI, B/L, SPA, ICPO",
-      "Basic broker features + deal participation",
-      "Priority email support"
-    ],
-    buttonText: "Start 5-Day Free Trial",
-    popular: true
-  },
-  {
-    id: 3,
-    name: "🏢 Enterprise",
-    price: "$399", 
-    originalPrice: "$532",
-    period: "/month",
-    savings: "25% OFF",
-    description: "Full-scale solution for large petroleum trading corporations",
-    features: [
-      "Access to 9 major global maritime zones",
-      "Full live tracking with verified activity",
-      "Access to 100+ strategic global ports",
-      "Full set: SGS, SDS, Q88, ATB, customs",
-      "International Broker ID included",
-      "Legal recognition and dispute protection",
-      "24/7 premium support + account manager"
-    ],
-    buttonText: "Start 5-Day Free Trial",
-    popular: false
-  }
-];
+import { Loader2, Mail, Lock, User, Ship, Eye, EyeOff, Shield } from 'lucide-react';
 
 export default function RegisterPage() {
-  const [currentStep, setCurrentStep] = useState<'location' | 'registration'>('location');
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
-  const [selectedPort, setSelectedPort] = useState<number | null>(null);
-  const [previewData, setPreviewData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { register: registerUser } = useAuth();
@@ -94,33 +27,16 @@ export default function RegisterPage() {
     },
   });
 
-  const handleLocationBasedComplete = (data: { selectedPlan: number; selectedPort: number; previewData: any }) => {
-    setSelectedPlan(data.selectedPlan);
-    setSelectedPort(data.selectedPort);
-    setPreviewData(data.previewData);
-    setCurrentStep('registration');
-  };
-
   const onSubmit = async (data: RegisterInput) => {
-    if (!selectedPlan) {
-      toast({
-        title: "Plan Required",
-        description: "Please select a subscription plan first",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      // Add selected plan to registration data
-      const registrationData = { ...data, planId: selectedPlan };
+      // Add default Basic plan to registration data
+      const registrationData = { ...data, planId: 1 };
       await registerUser(registrationData);
       
-      const selectedPlanName = subscriptionPlans.find(p => p.id === selectedPlan)?.name || "plan";
       toast({
         title: "Welcome aboard!",
-        description: `Your account has been created with ${selectedPlanName}. Your 5-day free trial starts now!`,
+        description: "Your account has been created with a 5-day free trial!",
       });
     } catch (error: any) {
       toast({
@@ -133,26 +49,16 @@ export default function RegisterPage() {
     }
   };
 
-
-
-  // Registration form step component  
-  const RegistrationFormStep = () => {
-    const selectedPlanData = subscriptionPlans.find(p => p.id === selectedPlan);
-    
-    return (
-      <div className="w-full max-w-lg">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Button 
-            onClick={() => setCurrentStep('location')}
-            variant="ghost"
-            className="text-white hover:bg-white/10 hover:text-blue-300"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Change Location & Plan
-          </Button>
-        </div>
-
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-1/3 -right-20 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      <div className="relative z-10 w-full max-w-md mx-auto p-6">
         {/* Logo and Header */}
         <div className="text-center mb-8 space-y-6">
           <div className="flex justify-center">
@@ -170,52 +76,19 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-              Create Account
+              Create Your Account
             </h1>
-            <p className="text-slate-300 text-lg">Complete your registration</p>
+            <p className="text-slate-300 text-lg">Set up your PetroDealHub account to complete the registration process.</p>
           </div>
-          
-          {/* Selected Plan and Location Display */}
-          {selectedPlanData && previewData && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-left">
-                  <p className="text-white font-semibold">{selectedPlanData.name}</p>
-                  <p className="text-slate-300 text-sm">5-day trial, then {selectedPlanData.price}/month</p>
-                </div>
-                <div className="text-right">
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                    ✓ Selected
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="border-t border-white/20 pt-3">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="text-left">
-                    <p className="text-white font-medium">Selected Ports:</p>
-                    <p className="text-slate-300">{previewData.totalPortsSelected} ports in {previewData.totalRegionsSelected} regions</p>
-                  </div>
-                  <div className="text-right space-y-1">
-                    <div className="flex items-center text-xs text-slate-300">
-                      <Ship className="w-3 h-3 mr-1" />
-                      {previewData.vessels?.length || 0} vessels
-                    </div>
-                    <div className="flex items-center text-xs text-slate-300">
-                      <Anchor className="w-3 h-3 mr-1" />
-                      {previewData.refineries?.length || 0} refineries
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Registration Form */}
         <Card className="backdrop-blur-xl bg-white/10 border-white/20 shadow-2xl">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl text-white">Account Details</CardTitle>
+            <CardTitle className="text-2xl text-white flex items-center justify-center">
+              <User className="w-6 h-6 mr-2" />
+              Account Details
+            </CardTitle>
             <CardDescription className="text-slate-300">
               Enter your information to complete registration
             </CardDescription>
@@ -275,7 +148,7 @@ export default function RegisterPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="your@company.com"
                     className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20 backdrop-blur-sm"
                     {...form.register('email')}
                   />
@@ -317,6 +190,13 @@ export default function RegisterPage() {
                 )}
               </div>
 
+              <div className="p-4 bg-blue-100/10 rounded-lg border border-blue-400/20">
+                <p className="text-sm text-blue-300 flex items-center">
+                  <Shield className="w-4 h-4 inline mr-2" />
+                  Your account will be created with a 5-day free trial
+                </p>
+              </div>
+
               <Button
                 type="submit"
                 disabled={isLoading}
@@ -330,7 +210,7 @@ export default function RegisterPage() {
                 ) : (
                   <>
                     <Ship className="mr-2 h-5 w-5" />
-                    Start Your Journey
+                    Create Account & Continue
                   </>
                 )}
               </Button>
@@ -365,6 +245,15 @@ export default function RegisterPage() {
 
             <div className="text-center pt-4">
               <p className="text-sm text-slate-400">
+                Already have an account?{" "}
+                <Link href="/login" className="text-blue-400 hover:text-blue-300 underline font-medium">
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+
+            <div className="text-center pt-2">
+              <p className="text-xs text-slate-500">
                 By creating an account, you agree to our{" "}
                 <Link href="/terms" className="text-blue-400 hover:text-blue-300 underline">
                   Terms of Service
@@ -373,52 +262,12 @@ export default function RegisterPage() {
                 <Link href="/privacy" className="text-blue-400 hover:text-blue-300 underline">
                   Privacy Policy
                 </Link>
-              </p>
-            </div>
-
-            <div className="text-center pt-2">
-              <p className="text-slate-400">
-                Already have an account?{" "}
-                <Link href="/auth" className="text-orange-500 hover:text-orange-400 font-medium">
-                  Sign in here
-                </Link>
+                .
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
-    );
-  };
-
-  return (
-    <div className="min-h-screen w-full">
-      {currentStep === 'location' ? (
-        <LocationBasedRegistration onComplete={handleLocationBasedComplete} />
-      ) : (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 right-10 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-            <div className="absolute top-40 left-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
-            <div className="absolute -bottom-8 right-20 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
-          </div>
-
-          {/* Floating Elements */}
-          <div className="absolute top-20 right-1/4 opacity-20">
-            <Anchor className="h-14 w-14 text-blue-300 animate-float" />
-          </div>
-          <div className="absolute bottom-32 left-1/4 opacity-20">
-            <Waves className="h-10 w-10 text-cyan-300 animate-bounce" />
-          </div>
-          <div className="absolute top-1/2 left-10 opacity-15">
-            <Star className="h-8 w-8 text-blue-200 animate-pulse" />
-          </div>
-
-          <div className="relative z-10">
-            <RegistrationFormStep />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
