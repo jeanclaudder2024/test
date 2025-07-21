@@ -18,9 +18,11 @@ export const useAuth = () => {
     trialExpired: false,
   });
 
-  // Use ref to prevent multiple simultaneous calls
+  // Use refs to prevent multiple simultaneous calls and rate limiting
   const fetchingRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
+  const RATE_LIMIT_MS = 2000; // Minimum 2 seconds between auth checks
 
   // Check for existing token on mount
   useEffect(() => {
@@ -36,9 +38,13 @@ export const useAuth = () => {
   }, []);
 
   const fetchCurrentUser = async () => {
-    // Prevent multiple simultaneous calls
-    if (fetchingRef.current) return;
+    // Prevent multiple simultaneous calls and rate limiting
+    const now = Date.now();
+    if (fetchingRef.current || (now - lastFetchTimeRef.current) < RATE_LIMIT_MS) {
+      return;
+    }
     fetchingRef.current = true;
+    lastFetchTimeRef.current = now;
 
     try {
       const token = localStorage.getItem('authToken');
@@ -198,7 +204,9 @@ export const useAuth = () => {
     register,
     logout,
     refetch: () => {
-      if (!fetchingRef.current) {
+      // Rate-limited refetch to prevent loops
+      const now = Date.now();
+      if (!fetchingRef.current && (now - lastFetchTimeRef.current) >= RATE_LIMIT_MS) {
         fetchCurrentUser();
       }
     },

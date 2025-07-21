@@ -78,15 +78,16 @@ const BrokerMembershipForm = () => {
           paymentIntentId: paymentIntent.id
         });
 
+        setPaymentCompleted(true);
+        
         toast({
           title: "Broker Membership Activated! ✅",
           description: "Welcome to PetroDealHub Broker Network! You now have permanent broker access.",
           variant: "default",
         });
 
-        // Force user data refresh and navigate
-        setTimeout(async () => {
-          await refetch();
+        // Navigate immediately without refetch to avoid loops
+        setTimeout(() => {
           startTransition(() => {
             setLocation('/broker-dashboard');
           });
@@ -105,16 +106,16 @@ const BrokerMembershipForm = () => {
 
   // Use useEffect to handle redirect to avoid React warning
   useEffect(() => {
-    if (user?.hasBrokerMembership) {
-      // Auto-redirect to broker dashboard
+    if (user?.hasBrokerMembership && !paymentCompleted) {
+      // Auto-redirect to broker dashboard only if payment wasn't just completed
       const timer = setTimeout(() => {
         startTransition(() => {
           setLocation('/broker-dashboard');
         });
-      }, 100);
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [user?.hasBrokerMembership, setLocation]);
+  }, [user?.hasBrokerMembership, setLocation, paymentCompleted]);
 
   // If user already has broker membership, show loading message
   if (user?.hasBrokerMembership) {
