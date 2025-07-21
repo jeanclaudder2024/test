@@ -60,15 +60,14 @@ import { MobileLayout } from "@/components/ui/mobile-layout";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ThemeProvider } from "@/hooks/use-theme";
-import { motion, AnimatePresence } from "framer-motion";
+// Removed AnimatePresence to fix React suspension errors
 import { QueryClientProvider } from "@tanstack/react-query";
 
 // Protected routes that require authentication
 function ProtectedRoutes() {
   return (
     <MobileLayout>
-      <AnimatePresence mode="wait">
-        <Switch>
+      <Switch>
           <Route path="/" component={Companies} />
           <Route path="/dashboard" component={Companies} />
           <Route path="/broker-dashboard">
@@ -129,7 +128,6 @@ function ProtectedRoutes() {
           <Route path="/api-test" component={ApiTest} />
           <Route component={NotFound} />
         </Switch>
-      </AnimatePresence>
     </MobileLayout>
   );
 }
