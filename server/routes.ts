@@ -228,7 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedPlan,
         selectedRegions,
         selectedPorts,
-        billingInterval
+        billingInterval,
+        hasPaymentMethod: !!paymentMethodId
       });
       
       res.json({
@@ -286,6 +287,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error creating admin user:", error);
       res.status(500).json({ message: "Failed to create admin user", error: error.message });
+    }
+  });
+
+  // Test endpoint for subscription renewal
+  app.post("/api/test-renewal", async (req: Request, res: Response) => {
+    try {
+      const { SubscriptionRenewalService } = await import("./services/subscriptionRenewalService");
+      const result = await SubscriptionRenewalService.processExpiredTrials();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
   
