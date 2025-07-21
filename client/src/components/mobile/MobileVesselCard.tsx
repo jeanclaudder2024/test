@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { Ship, MapPin, Calendar, Anchor, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import axios from 'axios';
 
 interface MobileVesselCardProps {
   vessel: {
@@ -37,6 +38,50 @@ interface MobileVesselCardProps {
 }
 
 export function MobileVesselCard({ vessel, className }: MobileVesselCardProps) {
+  const [ports, setPorts] = useState<any[]>([]);
+
+  // Function to convert port ID to display name
+  const getPortDisplayName = (portIdOrName: number | string | null | undefined): string => {
+    if (!portIdOrName) return "N/A";
+    
+    // If it's a string that doesn't look like a number, return as is
+    if (typeof portIdOrName === 'string' && isNaN(Number(portIdOrName))) {
+      return portIdOrName;
+    }
+    
+    // If we have ports data, try to find the port by ID
+    if (ports.length > 0) {
+      const port = ports.find(p => p.id === Number(portIdOrName) || p.name === portIdOrName);
+      if (port) {
+        return `${port.name}, ${port.country}`;
+      }
+    }
+    
+    // If it's a number but we can't find the port, show it as is
+    return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
+  };
+
+  // Fetch ports data for name resolution
+  useEffect(() => {
+    const fetchPorts = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get('/api/ports', {
+          headers: {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          }
+        });
+        if (response.status === 200) {
+          setPorts(response.data.ports || response.data); // Handle both formats
+        }
+      } catch (error) {
+        console.error('Failed to fetch ports for name resolution:', error);
+      }
+    };
+    
+    fetchPorts();
+  }, []);
+
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'en route':
@@ -105,14 +150,14 @@ export function MobileVesselCard({ vessel, className }: MobileVesselCardProps) {
               <div className="flex items-center gap-2 text-sm">
                 <Anchor className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-muted-foreground">From:</span>
-                <span className="truncate">{vessel.departurePort}</span>
+                <span className="truncate">{getPortDisplayName(vessel.departurePort)}</span>
               </div>
             )}
             {vessel.destinationPort && (
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-muted-foreground">To:</span>
-                <span className="truncate">{vessel.destinationPort}</span>
+                <span className="truncate">{getPortDisplayName(vessel.destinationPort)}</span>
               </div>
             )}
             {vessel.eta && (

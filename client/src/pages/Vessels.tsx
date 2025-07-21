@@ -264,7 +264,7 @@ export default function Vessels() {
   };
 
   // Helper function to get port name by ID
-  const getPortName = (portIdOrName: number | string | null | undefined): string => {
+  const getPortDisplayName = (portIdOrName: number | string | null | undefined): string => {
     if (!portIdOrName) return 'Unknown Port';
     
     // If it's already a port name (string that doesn't look like an ID)
@@ -1292,7 +1292,7 @@ export default function Vessels() {
                             'text-gray-500'
                           }
                         `} />
-                        <OilTypeInfoButton oilType={vessel.oilCategory} />
+                        <OilTypeInfoButton oilCategory={vessel.oilCategory} />
                         <span className="ml-1">{vessel.oilCategory}</span>
                       </div>
                     </Badge>
@@ -1340,7 +1340,7 @@ export default function Vessels() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {vessel.departurePort}
+                    {getPortDisplayName(vessel.departurePort)}
                     {vessel.departureTime && (
                       <div className="text-xs text-muted-foreground">
                         {formatDate(vessel.departureTime, 'PP')}
@@ -1350,7 +1350,7 @@ export default function Vessels() {
                   <TableCell>
                     {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
                       ? vessel.destinationPort.split(':')[2]
-                      : getPortName(vessel.destinationPort)}
+                      : getPortDisplayName(vessel.destinationPort)}
                     {vessel.eta && (
                       <div className="text-xs text-muted-foreground">
                         ETA: {formatDate(vessel.eta, 'PP')}
