@@ -13567,6 +13567,76 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Create Stripe checkout session for registration (no authentication required)
+  app.post("/api/create-registration-checkout", async (req, res) => {
+    try {
+      const { planId, interval = 'month', userEmail, selectedRegions, selectedPorts } = req.body;
+
+      if (!planId || !userEmail) {
+        return res.status(400).json({ error: 'Plan ID and user email are required' });
+      }
+
+      console.log("Creating registration checkout session for email:", userEmail, "Plan:", planId, "Interval:", interval);
+
+      // Get plan details from database to determine price
+      const plan = await storage.getSubscriptionPlanById(planId);
+      if (!plan) {
+        return res.status(404).json({ error: 'Subscription plan not found' });
+      }
+
+      const priceInCents = Math.round(parseFloat(plan.price) * 100);
+      console.log("Plan details:", { name: plan.name, price: plan.price, priceInCents });
+
+      if (priceInCents <= 0) {
+        return res.status(400).json({ error: 'Invalid plan price: ' + plan.price });
+      }
+
+      // Create checkout session for registration (no customer created yet)
+      const session = await stripe.checkout.sessions.create({
+        customer_email: userEmail, // Use email instead of customer ID for registration
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${plan.name} - Maritime Platform Access`,
+              description: `${plan.description || plan.name} - Complete platform registration with ${plan.trialDays || 5}-day trial`,
+            },
+            unit_amount: priceInCents,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/registration/complete?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/register`,
+        metadata: {
+          planId: planId.toString(),
+          userEmail: userEmail,
+          paymentType: 'registration_subscription',
+          selectedRegions: JSON.stringify(selectedRegions || []),
+          selectedPorts: JSON.stringify(selectedPorts || []),
+          interval: interval
+        }
+      });
+
+      console.log("Registration checkout session created:", session.id);
+      console.log("Checkout URL:", session.url);
+      
+      res.json({ 
+        sessionId: session.id,
+        url: session.url,
+        redirectUrl: session.url
+      });
+
+    } catch (error) {
+      console.error("Error creating registration checkout session:", error);
+      res.status(500).json({ 
+        message: "Failed to create registration checkout session",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Stripe webhook endpoint for subscription events
   app.post("/api/stripe/webhook", express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];

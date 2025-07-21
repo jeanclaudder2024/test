@@ -80,14 +80,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    expiryMonth: '',
-    expiryYear: '',
-    cvv: '',
-    cardholderName: ''
-  });
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState('');
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   // Fetch ports from public endpoint for registration
@@ -188,6 +181,22 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           </p>
         </div>
 
+        {/* Email Input */}
+        <div className="max-w-md mx-auto mb-8">
+          <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address
+          </Label>
+          <input
+            type="email"
+            id="email"
+            value={userEmail}
+            onChange={(e) => setUserEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter your email address"
+            required
+          />
+        </div>
+
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4 bg-gray-100 p-1 rounded-lg">
@@ -278,8 +287,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <div className="flex justify-center mt-8">
           <Button 
             size="lg" 
-            onClick={() => selectedPlan && setStep(2)}
-            disabled={!selectedPlan}
+            onClick={() => selectedPlan && userEmail && setStep(2)}
+            disabled={!selectedPlan || !userEmail || !/\S+@\S+\.\S+/.test(userEmail)}
             className="px-8 py-3 text-lg"
           >
             Continue to Regional Selection
@@ -516,10 +525,11 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
         const response = await apiRequest(
           'POST',
-          '/api/create-checkout-session',
+          '/api/create-registration-checkout',
           { 
             planId: selectedPlan, 
             interval: billingInterval,
+            userEmail: userEmail || 'temp@registration.com', // Email from user input
             // Include selected data for the session
             selectedRegions: selectedRegions,
             selectedPorts: selectedPorts
