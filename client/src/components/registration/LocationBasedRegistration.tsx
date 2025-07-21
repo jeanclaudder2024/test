@@ -85,6 +85,251 @@ interface LocationBasedRegistrationProps {
   onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any }) => void;
 }
 
+// Separate stable component for Step 4 - Account Creation
+interface AccountCreationStepProps {
+  firstName: string;
+  lastName: string;
+  userEmail: string;
+  userPassword: string;
+  confirmPassword: string;
+  passwordErrors: string[];
+  showPassword: boolean;
+  showConfirmPassword: boolean;
+  isCreatingAccount: boolean;
+  setFirstName: (value: string) => void;
+  setLastName: (value: string) => void;
+  setUserEmail: (value: string) => void;
+  setUserPassword: (value: string) => void;
+  setConfirmPassword: (value: string) => void;
+  setShowPassword: (value: boolean) => void;
+  setShowConfirmPassword: (value: boolean) => void;
+  onNext: () => void;
+  onBack: () => void;
+}
+
+const AccountCreationStep = React.memo(({
+  firstName,
+  lastName,
+  userEmail,
+  userPassword,
+  confirmPassword,
+  passwordErrors,
+  showPassword,
+  showConfirmPassword,
+  isCreatingAccount,
+  setFirstName,
+  setLastName,
+  setUserEmail,
+  setUserPassword,
+  setConfirmPassword,
+  setShowPassword,
+  setShowConfirmPassword,
+  onNext,
+  onBack
+}: AccountCreationStepProps) => {
+  const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
+                     userPassword && confirmPassword && 
+                     passwordErrors.length === 0 && 
+                     userPassword === confirmPassword;
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+          Create Your Account
+        </h2>
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          Enter your details to create your maritime trading account.
+        </p>
+      </div>
+
+      {/* Account Creation Form */}
+      <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+        <div className="space-y-6">
+          {/* Name Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                First Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="John"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="given-name"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Doe"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="family-name"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Email Field */}
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <input
+                id="email"
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                placeholder="john@example.com"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                required
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          {/* Password Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={userPassword}
+                  onChange={(e) => setUserPassword(e.target.value)}
+                  placeholder="Enter password"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Password Requirements */}
+          {passwordErrors.length > 0 && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3" />
+                <div>
+                  <h4 className="text-sm font-medium text-amber-800">Password Requirements</h4>
+                  <ul className="mt-2 text-sm text-amber-700 space-y-1">
+                    {passwordErrors.map((error, index) => (
+                      <li key={index} className="flex items-center">
+                        <span className="w-1.5 h-1.5 bg-amber-600 rounded-full mr-2"></span>
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Password Match Check */}
+          {confirmPassword && userPassword !== confirmPassword && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center">
+                <AlertTriangle className="h-5 w-5 text-red-600 mr-3" />
+                <span className="text-sm text-red-700">Passwords do not match</span>
+              </div>
+            </div>
+          )}
+
+          {/* Password Match Success */}
+          {confirmPassword && userPassword === confirmPassword && passwordErrors.length === 0 && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
+                <span className="text-sm text-green-700">Password requirements met</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between">
+        <Button onClick={onBack} variant="outline" className="px-8">
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back
+        </Button>
+        <Button 
+          onClick={onNext}
+          disabled={!isFormValid || isCreatingAccount}
+          className="bg-blue-600 hover:bg-blue-700 px-8"
+        >
+          {isCreatingAccount ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            <>
+              Continue
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+});
+
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
   const [step, setStep] = useState(1);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
@@ -1098,7 +1343,28 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {step === 1 && <PlanStep />}
             {step === 2 && <RegionStep />}
             {step === 3 && <PortStep />}
-            {step === 4 && <AccountCreationStep />}
+            {step === 4 && (
+              <AccountCreationStep
+                firstName={firstName}
+                lastName={lastName}
+                userEmail={userEmail}
+                userPassword={userPassword}
+                confirmPassword={confirmPassword}
+                passwordErrors={passwordErrors}
+                showPassword={showPassword}
+                showConfirmPassword={showConfirmPassword}
+                isCreatingAccount={isCreatingAccount}
+                setFirstName={setFirstName}
+                setLastName={setLastName}
+                setUserEmail={setUserEmail}
+                setUserPassword={setUserPassword}
+                setConfirmPassword={setConfirmPassword}
+                setShowPassword={setShowPassword}
+                setShowConfirmPassword={setShowConfirmPassword}
+                onNext={() => setStep(5)}
+                onBack={() => setStep(3)}
+              />
+            )}
             {step === 5 && <CompleteRegistrationStep />}
           </div>
         </div>
