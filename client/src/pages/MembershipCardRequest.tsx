@@ -69,11 +69,11 @@ export default function MembershipCardRequest() {
 
       setCardRequested(true);
 
-      // Use startTransition to avoid React suspend errors
-      startTransition(() => {
-        setTimeout(() => {
-          setLocation('/broker-dashboard');
-        }, 1000);
+      // Show success message instead of automatic redirect
+      toast({
+        title: "Membership Card Requested! 🎉",
+        description: "Click the button below to access your broker dashboard.",
+        variant: "default",
       });
 
     } catch (error: any) {
@@ -191,23 +191,32 @@ export default function MembershipCardRequest() {
               </div>
             </div>
 
-            <Button
-              onClick={handleRequestCard}
-              disabled={isRequesting}
-              className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white font-semibold py-3 px-6 text-lg"
-            >
-              {isRequesting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                  Requesting Card...
-                </>
-              ) : (
-                <>
-                  <IdCard className="h-5 w-5 mr-2" />
-                  Request Membership Card
-                </>
-              )}
-            </Button>
+            {cardRequested ? (
+              <Button
+                onClick={() => setLocation('/broker-dashboard')}
+                className="w-full bg-gradient-to-r from-green-600 to-purple-600 hover:from-green-700 hover:to-purple-700 text-white font-semibold py-3 px-6 text-lg"
+              >
+                Access Broker Dashboard →
+              </Button>
+            ) : (
+              <Button
+                onClick={handleRequestCard}
+                disabled={isRequesting}
+                className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white font-semibold py-3 px-6 text-lg"
+              >
+                {isRequesting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    Requesting Card...
+                  </>
+                ) : (
+                  <>
+                    <IdCard className="h-5 w-5 mr-2" />
+                    Request Membership Card
+                  </>
+                )}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

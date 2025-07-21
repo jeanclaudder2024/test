@@ -18,6 +18,7 @@ const BrokerMembershipForm = () => {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [isPending, startTransitionLocal] = useTransition();
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -85,11 +86,12 @@ const BrokerMembershipForm = () => {
 
         // User data will be updated on next page load
         
-        // Use startTransition to avoid React suspend errors
-        startTransition(() => {
-          setTimeout(() => {
-            setLocation('/membership-card-request');
-          }, 500);
+        // Show success message and enable card request button
+        setPaymentCompleted(true);
+        toast({
+          title: "Payment Successful! ✅", 
+          description: "Click the button below to request your membership card.",
+          variant: "default",
         });
       }
     } catch (error: any) {
@@ -232,14 +234,24 @@ const BrokerMembershipForm = () => {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700"
-                disabled={!stripe || isProcessing}
-                size="lg"
-              >
-                {isProcessing ? 'Processing Payment...' : 'Activate Broker Membership - $299'}
-              </Button>
+              {paymentCompleted ? (
+                <Button 
+                  onClick={() => setLocation('/membership-card-request')}
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                  size="lg"
+                >
+                  Request Membership Card →
+                </Button>
+              ) : (
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700"
+                  disabled={!stripe || isProcessing}
+                  size="lg"
+                >
+                  {isProcessing ? 'Processing Payment...' : 'Activate Broker Membership - $299'}
+                </Button>
+              )}
 
               <p className="text-xs text-muted-foreground text-center">
                 By clicking "Activate Broker Membership", you agree to our terms of service and privacy policy.
