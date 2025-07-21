@@ -193,7 +193,11 @@ export default function MembershipCardRequest() {
 
             {cardRequested ? (
               <Button
-                onClick={() => setLocation('/broker-dashboard')}
+                onClick={() => {
+                  startTransition(() => {
+                    setLocation('/broker-dashboard');
+                  });
+                }}
                 className="w-full bg-gradient-to-r from-green-600 to-purple-600 hover:from-green-700 hover:to-purple-700 text-white font-semibold py-3 px-6 text-lg"
               >
                 Access Broker Dashboard →

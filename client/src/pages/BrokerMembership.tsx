@@ -236,7 +236,11 @@ const BrokerMembershipForm = () => {
 
               {paymentCompleted ? (
                 <Button 
-                  onClick={() => setLocation('/membership-card-request')}
+                  onClick={() => {
+                    startTransition(() => {
+                      setLocation('/membership-card-request');
+                    });
+                  }}
                   className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                   size="lg"
                 >
