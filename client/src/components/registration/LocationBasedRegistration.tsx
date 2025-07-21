@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { 
   MapPin, 
   Ship, 
@@ -15,7 +17,10 @@ import {
   Anchor,
   Building2,
   Users,
-  Fuel
+  Fuel,
+  Zap,
+  Star,
+  Crown
 } from 'lucide-react';
 
 interface Port {
@@ -47,12 +52,14 @@ interface Refinery {
 interface SubscriptionPlan {
   id: number;
   name: string;
-  price: string;
-  maxPorts: number;
-  maxVessels: number;
-  maxRefineries: number;
   description: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  currency: string;
+  interval: string;
   features: string[];
+  isPopular: boolean;
+  trialDays: number;
 }
 
 interface LocationBasedRegistrationProps {
@@ -65,6 +72,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   // Fetch ports from public endpoint for registration
   const { data: portsResponse, isLoading: portsLoading } = useQuery({
@@ -74,69 +82,26 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   
   const ports = portsResponse?.ports || [];
 
-  // No longer need vessel/refinery proximity queries for registration since we show selections instead
+  // Fetch subscription plans from API
+  const { data: plans, isLoading: plansLoading, error: plansError } = useQuery({
+    queryKey: ['/api/subscription-plans'],
+    staleTime: 0,
+  });
 
-  // Subscription plans with limits
-  const subscriptionPlans: SubscriptionPlan[] = [
-    {
-      id: 1,
-      name: "🧪 Basic",
-      price: "$69",
-      maxPorts: 5,
-      maxVessels: 50,
-      maxRefineries: 10,
-      description: "Perfect for independent brokers starting in petroleum markets",
-      features: [
-        "Access to 2 major maritime zones",
-        "Basic vessel tracking with verified activity",
-        "Access to 5 regional ports",
-        "Basic documentation: LOI, SPA",
-        "Email support"
-      ]
-    },
-    {
-      id: 2,
-      name: "📈 Professional",
-      price: "$150",
-      maxPorts: 20,
-      maxVessels: 100,
-      maxRefineries: 25,
-      description: "Professional brokers and medium-scale petroleum trading companies",
-      features: [
-        "Access to 6 major maritime zones",
-        "Enhanced tracking with real-time updates",
-        "Access to 20+ strategic ports",
-        "Enhanced documentation: LOI, B/L, SPA, ICPO",
-        "Basic broker features + deal participation",
-        "Priority email support"
-      ]
-    },
-    {
-      id: 3,
-      name: "🏢 Enterprise",
-      price: "$399",
-      maxPorts: 999,
-      maxVessels: 999,
-      maxRefineries: 999,
-      description: "Full-scale solution for large petroleum trading corporations",
-      features: [
-        "Access to 9 major global maritime zones",
-        "Full live tracking with verified activity",
-        "Access to 100+ strategic global ports",
-        "Full documentation set",
-        "International Broker ID eligibility",
-        "Legal protection coverage",
-        "24/7 priority support"
-      ]
-    }
-  ];
+  // Format currency helper
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(amount);
+  };
 
   // Get unique regions from ports
   const regions = [...new Set(ports.map((port: Port) => port.region))].filter(Boolean);
 
   // Get regions based on selected plan limits
   const getRegionsForPlan = (planId: number) => {
-    const plan = subscriptionPlans.find(p => p.id === planId);
+    const plan = plans?.find(p => p.id === planId);
     if (!plan) return [];
     
     if (plan.id === 1) { // Basic - 2 regions
@@ -155,8 +120,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
   // Generate preview data when ports and plan are selected
   useEffect(() => {
-    if (selectedPorts.length > 0 && selectedPlan) {
-      const plan = subscriptionPlans.find(p => p.id === selectedPlan);
+    if (selectedPorts.length > 0 && selectedPlan && plans) {
+      const plan = plans.find(p => p.id === selectedPlan);
       const selectedPortData = ports.filter((p: Port) => selectedPorts.includes(p.id));
       
       if (plan && selectedPortData.length > 0) {
@@ -169,557 +134,453 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         });
       }
     }
-  }, [selectedPorts, selectedPlan, selectedRegions, ports]);
+  }, [selectedPorts, selectedPlan, selectedRegions, ports, plans]);
 
   // Step 1: Select Subscription Plan (Beautiful Design Matching Pricing Page)
-  const PlanStep = () => (
+  const PlanStep = () => {
+    if (plansLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      );
+    }
+
+    if (plansError || !plans) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-red-600">Failed to load subscription plans</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8">
+        {/* Professional Header */}
+        <div className="text-center mb-12">
+          <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
+            Free Trial Available
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+            Choose Your Maritime Plan
+          </h2>
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            Start your petroleum trading journey with professional maritime tracking and analytics. All plans include {plans[0]?.trialDays || 5}-day free trial.
+          </p>
+        </div>
+
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center space-x-4 bg-gray-100 p-1 rounded-lg">
+            <Label 
+              htmlFor="billing-monthly" 
+              className={`cursor-pointer px-4 py-2 rounded-md transition-all ${
+                billingInterval === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              <span>Monthly Billing</span>
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={billingInterval === 'year'}
+              onCheckedChange={(checked) => setBillingInterval(checked ? 'year' : 'month')}
+            />
+            <Label 
+              htmlFor="billing-yearly" 
+              className={`cursor-pointer px-4 py-2 rounded-md transition-all flex items-center space-x-2 ${
+                billingInterval === 'year' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              <span>Annual Billing</span>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Save 20%
+              </Badge>
+            </Label>
+          </div>
+        </div>
+
+        {/* Professional Plan Cards */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {plans?.map((plan, index) => {
+            const price = billingInterval === 'month' 
+              ? plan.monthlyPrice 
+              : plan.yearlyPrice;
+              
+            return (
+              <Card key={plan.id} className={`flex flex-col ${
+                plan.isPopular ? "border-primary shadow-md" : ""
+              } ${
+                selectedPlan === plan.id 
+                  ? 'ring-4 ring-blue-500 shadow-2xl scale-105' 
+                  : 'hover:shadow-xl'
+              } cursor-pointer transition-all duration-500 hover:scale-105 transform`}
+              onClick={() => setSelectedPlan(plan.id)}>
+                <CardHeader>
+                  {plan.isPopular && (
+                    <Badge className="w-fit bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-lg mb-2">
+                      ⭐ Most Popular
+                    </Badge>
+                  )}
+                  <div className="flex items-center space-x-2">
+                    {index === 0 && <Zap className="w-6 h-6 text-orange-500" />}
+                    {index === 1 && <Star className="w-6 h-6 text-blue-500" />}
+                    {index === 2 && <Crown className="w-6 h-6 text-purple-500" />}
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  </div>
+                  <div className="mt-4">
+                    <span className="text-3xl font-bold text-primary">
+                      {formatCurrency(price, plan.currency)}
+                    </span>
+                    <span className="text-muted-foreground">/{billingInterval}</span>
+                  </div>
+                  <div className="text-sm text-slate-500 mt-1">
+                    {plan.trialDays}-day free trial included
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1">
+                  <CardDescription className="text-base mb-6">
+                    {plan.description}
+                  </CardDescription>
+                  <ul className="space-y-2">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Continue Button */}
+        <div className="flex justify-center mt-8">
+          <Button 
+            size="lg" 
+            onClick={() => selectedPlan && setStep(2)}
+            disabled={!selectedPlan}
+            className="px-8 py-3 text-lg"
+          >
+            Continue to Regional Selection
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Step 2: Select Maritime Regions
+  const RegionStep = () => (
     <div className="space-y-8">
-      {/* Professional Header */}
-      <div className="text-center mb-12">
-        <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
-          <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
-          Free Trial Available
-        </Badge>
-        <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
-          Choose Your Maritime Plan
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+          Select Your Maritime Regions
         </h2>
-        <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          Start your petroleum trading journey with professional maritime tracking and analytics. All plans include 5-day free trial.
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          Choose the maritime regions you want to focus on based on your selected plan.
         </p>
+        
+        {selectedPlan && plans && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-blue-800 font-semibold">
+              Your {plans.find(p => p.id === selectedPlan)?.name} plan allows access to{' '}
+              {selectedPlan === 1 ? '2' : selectedPlan === 2 ? '6' : 'all'} maritime regions.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Professional Plan Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-        {subscriptionPlans.map((plan, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {getRegionsForPlan(selectedPlan || 1).map((region) => (
           <Card 
-            key={plan.id}
-            className={`relative cursor-pointer transition-all duration-500 hover:scale-105 transform ${
-              selectedPlan === plan.id 
-                ? 'ring-4 ring-blue-500 shadow-2xl scale-105' 
-                : 'hover:shadow-xl'
-            } ${
-              index === 0 && 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
-            } ${
-              index === 1 && 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 relative'
-            } ${
-              index === 2 && 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+            key={region}
+            className={`cursor-pointer transition-all duration-300 hover:shadow-xl ${
+              selectedRegions.includes(region) 
+                ? 'ring-4 ring-blue-500 bg-blue-50 border-blue-200' 
+                : 'hover:shadow-lg'
             }`}
-            onClick={() => setSelectedPlan(plan.id)}
+            onClick={() => {
+              setSelectedRegions(prev => 
+                prev.includes(region) 
+                  ? prev.filter(r => r !== region)
+                  : [...prev, region]
+              );
+            }}
           >
-            {/* Popular Badge for Professional Plan */}
-            {index === 1 && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1 text-sm font-semibold shadow-lg">
-                  Most Popular
-                </Badge>
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-3">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Globe className="w-8 h-8 text-blue-600" />
+                </div>
               </div>
-            )}
-
-            <CardHeader className="text-center pb-4 pt-8">
-              <div className="flex justify-center mb-4">
-                {index === 0 && <div className="text-4xl">🧪</div>}
-                {index === 1 && <div className="text-4xl">📈</div>}
-                {index === 2 && <div className="text-4xl">🏢</div>}
-              </div>
-              <CardTitle className="text-2xl font-bold text-slate-800 mb-2">
-                {plan.name.replace('🧪 ', '').replace('📈 ', '').replace('🏢 ', '')}
-              </CardTitle>
-              <div className="flex items-baseline justify-center">
-                <span className={`text-5xl font-bold ${
-                  index === 0 && 'bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent'
-                } ${
-                  index === 1 && 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
-                } ${
-                  index === 2 && 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
-                }`}>
-                  {plan.price}
-                </span>
-                <span className="text-xl text-slate-500 ml-2">/month</span>
-              </div>
-              <div className="text-sm text-slate-500 mt-2">
-                5-day free trial included
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6 px-6 pb-8">
-              <p className="text-slate-600 text-center leading-relaxed">
-                {plan.description}
+              <CardTitle className="text-xl text-slate-800">{region}</CardTitle>
+              <p className="text-slate-600">
+                {ports.filter((p: Port) => p.region === region).length} ports available
               </p>
-              
-              {/* Enhanced Features List */}
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                    index === 0 && 'bg-orange-100'
-                  } ${
-                    index === 1 && 'bg-blue-100'
-                  } ${
-                    index === 2 && 'bg-purple-100'
-                  }`}>
-                    <Globe className={`w-4 h-4 ${
-                      index === 0 && 'text-orange-600'
-                    } ${
-                      index === 1 && 'text-blue-600'
-                    } ${
-                      index === 2 && 'text-purple-600'
-                    }`} />
-                  </div>
-                  <span className="font-semibold text-slate-700">
-                    {plan.id === 1 ? '2 Maritime Regions' : 
-                     plan.id === 2 ? '6 Maritime Regions' : 
-                     '9+ Global Maritime Regions'}
+            </CardHeader>
+            
+            <CardContent className="text-center">
+              <Button 
+                variant={selectedRegions.includes(region) ? "default" : "outline"}
+                className={`w-full ${
+                  selectedRegions.includes(region) 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'hover:bg-blue-50'
+                }`}
+              >
+                {selectedRegions.includes(region) ? (
+                  <span className="flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Selected
                   </span>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                    index === 0 && 'bg-orange-100'
-                  } ${
-                    index === 1 && 'bg-blue-100'
-                  } ${
-                    index === 2 && 'bg-purple-100'
-                  }`}>
-                    <Anchor className={`w-4 h-4 ${
-                      index === 0 && 'text-orange-600'
-                    } ${
-                      index === 1 && 'text-blue-600'
-                    } ${
-                      index === 2 && 'text-purple-600'
-                    }`} />
-                  </div>
-                  <span className="text-slate-700">
-                    {plan.maxPorts === 999 ? 'Unlimited' : plan.maxPorts} Strategic Ports
-                  </span>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                    index === 0 && 'bg-orange-100'
-                  } ${
-                    index === 1 && 'bg-blue-100'
-                  } ${
-                    index === 2 && 'bg-purple-100'
-                  }`}>
-                    <Ship className={`w-4 h-4 ${
-                      index === 0 && 'text-orange-600'
-                    } ${
-                      index === 1 && 'text-blue-600'
-                    } ${
-                      index === 2 && 'text-purple-600'
-                    }`} />
-                  </div>
-                  <span className="text-slate-700">
-                    {plan.maxVessels === 999 ? 'Unlimited' : plan.maxVessels} Vessel Tracking
-                  </span>
-                </div>
-
-                {/* Professional Features */}
-                <div className="pt-3 space-y-2">
-                  {plan.features.slice(0, 3).map((feature, idx) => (
-                    <div key={idx} className="flex items-start">
-                      <CheckCircle2 className={`w-4 h-4 mr-2 mt-0.5 ${
-                        index === 0 && 'text-orange-500'
-                      } ${
-                        index === 1 && 'text-blue-500'
-                      } ${
-                        index === 2 && 'text-purple-500'
-                      }`} />
-                      <span className="text-sm text-slate-600">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Selection Indicator */}
-              {selectedPlan === plan.id && (
-                <div className="pt-4 flex justify-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    index === 0 && 'bg-gradient-to-r from-orange-500 to-red-500'
-                  } ${
-                    index === 1 && 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                  } ${
-                    index === 2 && 'bg-gradient-to-r from-purple-500 to-pink-500'
-                  } shadow-lg animate-pulse`}>
-                    <CheckCircle2 className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              )}
+                ) : (
+                  "Select Region"
+                )}
+              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Continue Button */}
-      {selectedPlan && (
-        <div className="flex justify-center pt-8">
-          <Button 
-            onClick={() => setStep(2)}
-            size="lg"
-            className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-          >
-            Continue to Region Selection
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-between mt-8">
+        <Button variant="outline" onClick={() => setStep(1)}>
+          Back to Plans
+        </Button>
+        <Button 
+          onClick={() => setStep(3)}
+          disabled={selectedRegions.length === 0}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Continue to Port Selection
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </Button>
+      </div>
     </div>
   );
 
-  // Step 2: Select Multiple Regions and Ports (no restrictions)
-  const LocationStep = () => {
-    const toggleRegion = (region: string) => {
-      setSelectedRegions(prev => 
-        prev.includes(region) 
-          ? prev.filter(r => r !== region)
-          : [...prev, region]
-      );
-    };
+  // Step 3: Select Strategic Ports
+  const PortStep = () => (
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+          Select Strategic Ports
+        </h2>
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          Choose the ports that align with your trading focus and operational needs.
+        </p>
+      </div>
 
-    const togglePort = (portId: number) => {
-      const plan = subscriptionPlans.find(p => p.id === selectedPlan);
-      if (!plan) return;
-
-      setSelectedPorts(prev => {
-        if (prev.includes(portId)) {
-          // Remove port if already selected
-          return prev.filter(p => p !== portId);
-        } else {
-          // Add port only if under plan limit
-          if (prev.length < plan.maxPorts) {
-            return [...prev, portId];
-          } else {
-            // Show user they've reached the limit
-            alert(`You can only select up to ${plan.maxPorts} ports with your ${plan.name} plan`);
-            return prev;
-          }
-        }
-      });
-    };
-
-    return (
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Choose Your Maritime Regions & Ports
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Select as many regions and ports as you're interested in. Your subscription plan will determine how many you can actively access.
-          </p>
-        </div>
-
-        {/* Region Selection - No Limits */}
-        <div className="space-y-4">
-          <label className="text-lg font-semibold text-gray-900">
-            <Globe className="inline-block w-5 h-5 mr-2" />
-            Select Your Regions
-            <Badge className="ml-2" variant="outline">
-              {selectedRegions.length} selected
-            </Badge>
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {regions.map((region) => (
-              <Card 
-                key={region}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  selectedRegions.includes(region) 
-                    ? 'ring-2 ring-blue-500 bg-blue-50' 
-                    : 'hover:bg-gray-50'
-                }`}
-                onClick={() => toggleRegion(region)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className="flex items-center justify-center space-x-2">
-                    <span className="font-medium text-sm">{region}</span>
-                    {selectedRegions.includes(region) && (
-                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Port Selection */}
-        {selectedRegions.length > 0 && (
-          <div className="space-y-4">
-            <label className="text-lg font-semibold text-gray-900">
-              <MapPin className="inline-block w-5 h-5 mr-2" />
-              Select Your Ports
-              <Badge className="ml-2" variant="outline">
-                {selectedPorts.length} / {subscriptionPlans.find(p => p.id === selectedPlan)?.maxPorts} selected
-              </Badge>
-              {selectedPorts.length >= (subscriptionPlans.find(p => p.id === selectedPlan)?.maxPorts || 0) && (
-                <Badge className="ml-2 bg-orange-100 text-orange-800">
-                  Plan limit reached
-                </Badge>
-              )}
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {filteredPorts.map((port: Port) => {
-                const plan = subscriptionPlans.find(p => p.id === selectedPlan);
-                const isSelected = selectedPorts.includes(port.id);
-                const canSelect = isSelected || selectedPorts.length < (plan?.maxPorts || 0);
-                
-                return (
-                  <Card 
-                    key={port.id}
-                    className={`transition-all duration-200 ${
-                      canSelect ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed opacity-50'
-                    } ${
-                      isSelected 
-                        ? 'ring-2 ring-blue-500 bg-blue-50' 
-                        : canSelect ? 'hover:bg-gray-50' : 'bg-gray-100'
-                    }`}
-                    onClick={() => canSelect && togglePort(port.id)}
-                  >
-                  <CardContent className="p-4">
+      {selectedRegions.map((region) => (
+        <div key={region} className="mb-12">
+          <h3 className="text-2xl font-bold mb-6 text-slate-800 flex items-center">
+            <Waves className="w-6 h-6 mr-3 text-blue-600" />
+            {region}
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ports
+              .filter((port: Port) => port.region === region)
+              .map((port: Port) => (
+                <Card 
+                  key={port.id}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                    selectedPorts.includes(port.id) 
+                      ? 'ring-2 ring-blue-500 bg-blue-50' 
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => {
+                    setSelectedPorts(prev => 
+                      prev.includes(port.id) 
+                        ? prev.filter(id => id !== port.id)
+                        : [...prev, port.id]
+                    );
+                  }}
+                >
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{port.name}</h3>
-                        <p className="text-sm text-gray-600">{port.country}</p>
-                        <p className="text-xs text-purple-600 font-medium">{port.region}</p>
-                        <div className="flex items-center text-xs text-gray-500 mt-1">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {parseFloat(port.lat).toFixed(2)}, {parseFloat(port.lng).toFixed(2)}
-                        </div>
-                      </div>
+                      <CardTitle className="text-lg text-slate-800">{port.name}</CardTitle>
                       {selectedPorts.includes(port.id) && (
-                        <CheckCircle2 className="w-6 h-6 text-blue-500" />
+                        <CheckCircle2 className="w-5 h-5 text-blue-600" />
                       )}
+                    </div>
+                    <div className="flex items-center text-slate-600">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="text-sm">{port.country}</span>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-sm text-slate-500">
+                      <span>Lat: {port.lat}</span>
+                      <span>Lng: {port.lng}</span>
                     </div>
                   </CardContent>
                 </Card>
-                );
-              })}
-            </div>
+              ))}
           </div>
-        )}
+        </div>
+      ))}
 
-        {selectedPorts.length > 0 && (
-          <div className="flex justify-center space-x-4">
-            <Button 
-              variant="outline"
-              onClick={() => setStep(1)}
-              className="px-6 py-3"
-            >
-              Change Plan
-            </Button>
-            <Button 
-              onClick={() => setStep(3)}
-              className="px-8 py-3 text-lg"
-            >
-              Preview Your Access
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        )}
+      <div className="flex justify-between mt-8">
+        <Button variant="outline" onClick={() => setStep(2)}>
+          Back to Regions
+        </Button>
+        <Button 
+          onClick={() => setStep(4)}
+          disabled={selectedPorts.length === 0}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Review Selection
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </Button>
       </div>
-    );
-  };
+    </div>
+  );
 
-
-
-  // Step 3: Preview what user will get with their selections
+  // Step 4: Preview and Confirm
   const PreviewStep = () => (
     <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Your Access Preview
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+          Review Your Selection
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Based on your selections, here's what your subscription plan will give you access to.
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          Confirm your choices before proceeding to registration.
         </p>
       </div>
 
       {previewData && (
-        <div className="space-y-6">
-          {/* Selected Plan Summary */}
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-blue-900">
-                    {previewData.selectedPlan.name} Plan
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Selected Plan */}
+          <Card className="border-2 border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-xl text-blue-800 flex items-center">
+                <Star className="w-6 h-6 mr-2" />
+                Selected Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center p-6 bg-white rounded-lg">
+                  <h3 className="text-2xl font-bold text-blue-800 mb-2">
+                    {previewData.selectedPlan.name}
                   </h3>
-                  <div className="space-y-1 text-blue-700">
-                    <p>{previewData.totalRegionsSelected} regions selected • {previewData.totalPortsSelected} ports selected</p>
-                    <p className="text-sm">Your plan will give you access based on subscription limits</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-900">
-                    {previewData.selectedPlan.price}
-                  </div>
-                  <div className="text-blue-700">/month</div>
+                  <p className="text-3xl font-bold text-blue-600 mb-2">
+                    {formatCurrency(billingInterval === 'month' ? previewData.selectedPlan.monthlyPrice : previewData.selectedPlan.yearlyPrice)}/{billingInterval}
+                  </p>
+                  <p className="text-slate-600">
+                    {previewData.selectedPlan.description}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Your Selections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Selected Regions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Globe className="w-5 h-5 mr-2 text-purple-500" />
-                  Selected Regions
-                </CardTitle>
-                <CardDescription>
-                  {previewData.totalRegionsSelected} regions you're interested in
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {previewData.selectedRegions.map((region: string, idx: number) => (
-                    <div key={region} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 mr-3" />
-                      <span className="font-medium text-sm">{region}</span>
-                    </div>
-                  ))}
+          {/* Selected Regions and Ports */}
+          <Card className="border-2 border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-xl text-green-800 flex items-center">
+                <Globe className="w-6 h-6 mr-2" />
+                Selected Coverage
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-white p-4 rounded-lg">
+                  <h4 className="font-bold text-green-800 mb-2">Maritime Regions ({previewData.totalRegionsSelected})</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {previewData.selectedRegions.map((region: string) => (
+                      <Badge key={region} variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                        {region}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Selected Ports */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Anchor className="w-5 h-5 mr-2 text-blue-500" />
-                  Selected Ports
-                </CardTitle>
-                <CardDescription>
-                  {previewData.totalPortsSelected} ports you're interested in
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="max-h-64 overflow-y-auto">
-                <div className="space-y-2">
-                  {previewData.selectedPorts.slice(0, 8).map((port: Port) => (
-                    <div key={port.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-sm">{port.name}</div>
-                        <div className="text-xs text-gray-600">{port.country} • {port.region}</div>
+                
+                <div className="bg-white p-4 rounded-lg">
+                  <h4 className="font-bold text-green-800 mb-2">Strategic Ports ({previewData.totalPortsSelected})</h4>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    {previewData.selectedPorts.map((port: Port) => (
+                      <div key={port.id} className="flex items-center justify-between text-sm border-b border-green-100 pb-1">
+                        <span className="font-medium">{port.name}</span>
+                        <span className="text-green-600">{port.country}</span>
                       </div>
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    </div>
-                  ))}
-                  {previewData.selectedPorts.length > 8 && (
-                    <div className="text-center text-sm text-gray-500 pt-2">
-                      ...and {previewData.selectedPorts.length - 8} more ports
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Plan Limits Information */}
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardContent className="p-6">
-              <h4 className="font-semibold text-yellow-900 mb-3">
-                🔢 Your Plan Access Limits
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {previewData.selectedPlan.maxPorts}
+                    ))}
                   </div>
-                  <div className="text-yellow-700">Max Ports</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {previewData.selectedPlan.maxVessels}
-                  </div>
-                  <div className="text-yellow-700">Max Vessels</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {previewData.selectedPlan.maxRefineries}
-                  </div>
-                  <div className="text-yellow-700">Max Refineries</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {previewData.selectedPlan.id === 1 ? '2' : 
-                     previewData.selectedPlan.id === 2 ? '6' : '9+'}
-                  </div>
-                  <div className="text-yellow-700">Regions</div>
                 </div>
               </div>
-              <p className="text-xs text-yellow-700 mt-3 text-center">
-                While you selected {previewData.totalPortsSelected} ports, your plan gives you access to up to {previewData.selectedPlan.maxPorts} ports with full features.
-              </p>
             </CardContent>
           </Card>
-
-          {/* Complete Registration Button */}
-          <div className="flex justify-center pt-6">
-            <Button 
-              onClick={() => onComplete({
-                selectedPlan: selectedPlan!,
-                selectedPort: selectedPorts[0] || 1,
-                previewData
-              })}
-              className="px-12 py-4 text-lg bg-blue-600 hover:bg-blue-700"
-            >
-              Complete Registration with This Plan
-              <CheckCircle2 className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
         </div>
       )}
+
+      <div className="flex justify-between mt-8">
+        <Button variant="outline" onClick={() => setStep(3)}>
+          Back to Ports
+        </Button>
+        <Button 
+          onClick={() => {
+            if (previewData && selectedPlan) {
+              onComplete({
+                selectedPlan,
+                selectedPort: selectedPorts[0], // Pass first selected port
+                previewData
+              });
+            }
+          }}
+          disabled={!previewData}
+          className="bg-green-600 hover:bg-green-700 px-8"
+        >
+          Complete Registration
+          <CheckCircle2 className="w-5 h-5 ml-2" />
+        </Button>
+      </div>
     </div>
   );
 
-  if (portsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <Waves className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading port locations...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      {/* Progress Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center space-x-4">
-          {[1, 2, 3].map((stepNumber) => (
-            <div key={stepNumber} className="flex items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                step >= stepNumber 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-300 text-gray-600'
-              }`}>
-                {stepNumber}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Progress Indicator */}
+        <div className="mb-12">
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            {[1, 2, 3, 4].map((stepNumber) => (
+              <div key={stepNumber} className="flex items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
+                  step >= stepNumber 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {stepNumber}
+                </div>
+                {stepNumber < 4 && (
+                  <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
+                    step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
+                  }`} />
+                )}
               </div>
-              {stepNumber < 3 && (
-                <div className={`w-20 h-1 mx-2 ${
-                  step > stepNumber ? 'bg-blue-600' : 'bg-gray-300'
-                }`} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-slate-800">
+              {step === 1 && "Choose Your Plan"}
+              {step === 2 && "Select Regions"}
+              {step === 3 && "Choose Ports"}
+              {step === 4 && "Review & Confirm"}
+            </h1>
+          </div>
         </div>
-        <div className="text-center mt-4">
-          <p className="text-gray-600">
-            Step {step} of 3: {
-              step === 1 ? 'Choose Plan' : 
-              step === 2 ? 'Select Location' : 
-              'Preview Access'
-            }
-          </p>
-        </div>
-      </div>
 
-      {/* Step Content */}
-      {step === 1 && <PlanStep />}
-      {step === 2 && <LocationStep />}
-      {step === 3 && <PreviewStep />}
+        {/* Step Content */}
+        {step === 1 && <PlanStep />}
+        {step === 2 && <RegionStep />}
+        {step === 3 && <PortStep />}
+        {step === 4 && <PreviewStep />}
+      </div>
     </div>
   );
 }
