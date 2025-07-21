@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,7 @@ export default function BrokerMembershipInfo() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [passportFile, setPassportFile] = useState<File | null>(null);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<any>(null);
+
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -34,57 +33,19 @@ export default function BrokerMembershipInfo() {
     emergencyContact: ''
   });
 
-  // Initialize Google Maps
-  useEffect(() => {
-    const initMap = async () => {
-      if (typeof (window as any).google === 'undefined') return;
-      
-      if (mapRef.current && !map) {
-        const newMap = new (window as any).google.maps.Map(mapRef.current, {
-          center: { lat: 25.2048, lng: 55.2708 }, // Dubai coordinates as default
-          zoom: 10,
-        });
+  // Open external Google Maps for location selection
+  const openLocationSelector = () => {
+    const googleMapsUrl = 'https://www.google.com/maps/@25.2048,55.2708,10z';
+    window.open(googleMapsUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+    
+    toast({
+      title: "External Maps Opened",
+      description: "Find your location on Google Maps, then copy the address back here",
+      variant: "default",
+    });
+  };
 
-        // Add click listener for location selection
-        newMap.addListener('click', (event: any) => {
-          const lat = event.latLng?.lat();
-          const lng = event.latLng?.lng();
-          
-          if (lat && lng) {
-            // Reverse geocode to get city name
-            const geocoder = new (window as any).google.maps.Geocoder();
-            geocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
-              if (status === 'OK' && results && results[0]) {
-                const address = results[0].formatted_address;
-                handleInputChange('currentLocation', address);
-                
-                toast({
-                  title: "Location Selected",
-                  description: `Selected: ${address}`,
-                  variant: "default",
-                });
-              }
-            });
-          }
-        });
-
-        setMap(newMap);
-      }
-    };
-
-    // Load Google Maps script if not already loaded
-    if (typeof (window as any).google === 'undefined') {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBxY8Z9QS5HJ_kS7XQJ9r7VqW4ZgG9s7DQ&libraries=geometry`;
-      script.async = true;
-      script.onload = initMap;
-      document.head.appendChild(script);
-    } else {
-      initMap();
-    }
-  }, [map, toast]);
-
-  // Get user's current location
+  // Get user's current location using browser geolocation
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -92,34 +53,30 @@ export default function BrokerMembershipInfo() {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           
-          if (map) {
-            map.setCenter({ lat, lng });
-            map.setZoom(15);
-          }
+          // Use simple reverse geocoding via a public API or just use coordinates
+          const locationString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          handleInputChange('currentLocation', locationString);
           
-          // Reverse geocode
-          const geocoder = new (window as any).google.maps.Geocoder();
-          geocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
-            if (status === 'OK' && results && results[0]) {
-              const address = results[0].formatted_address;
-              handleInputChange('currentLocation', address);
-              
-              toast({
-                title: "Current Location Found",
-                description: `Your location: ${address}`,
-                variant: "default",
-              });
-            }
+          toast({
+            title: "Location Found",
+            description: `Your coordinates: ${locationString}`,
+            variant: "default",
           });
         },
         (error) => {
           toast({
-            title: "Location Error",
-            description: "Could not get your current location. Please select manually on the map.",
+            title: "Location Access Denied",
+            description: "Please enable location access or use the external map option",
             variant: "destructive",
           });
         }
       );
+    } else {
+      toast({
+        title: "Location Not Supported", 
+        description: "Your browser doesn't support location services",
+        variant: "destructive",
+      });
     }
   };
 
@@ -458,22 +415,35 @@ export default function BrokerMembershipInfo() {
               onChange={(e) => handleInputChange('currentLocation', e.target.value)}
               placeholder="City, Country (or click map below)"
             />
-            <div className="border rounded-lg overflow-hidden">
-              <div ref={mapRef} className="w-full h-[250px]"></div>
-              <div className="p-3 bg-gray-50 flex justify-between items-center">
-                <p className="text-xs text-muted-foreground">
-                  📍 Click anywhere on the map to select your location
+            <div className="border rounded-lg overflow-hidden bg-slate-50">
+              <div className="p-6 text-center">
+                <MapPin className="h-16 w-16 mx-auto text-blue-500 mb-4" />
+                <h3 className="font-semibold text-lg mb-2">Select Your Location</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Choose one of the options below to set your current location
                 </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={getCurrentLocation}
-                  className="text-xs"
-                >
-                  <MapPin className="h-3 w-3 mr-1" />
-                  Use My Location
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={getCurrentLocation}
+                    className="flex items-center gap-2"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Use My Current Location
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={openLocationSelector}
+                    className="flex items-center gap-2"
+                  >
+                    🗺️ Open Google Maps
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Click "Open Google Maps" → Find your location → Copy the address → Paste it in the field above
+                </p>
               </div>
             </div>
           </div>
