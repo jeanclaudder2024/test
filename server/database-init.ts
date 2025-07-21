@@ -437,6 +437,32 @@ export async function initializeCustomAuthTables() {
     } catch (error) {
       console.log('Broker card applications table setup failed:', error.message);
     }
+
+    // Fix broker_deals table to add missing deal_status column
+    try {
+      await db.execute(sql`
+        ALTER TABLE broker_deals 
+        ADD COLUMN IF NOT EXISTS deal_status VARCHAR(50) DEFAULT 'draft',
+        ADD COLUMN IF NOT EXISTS transaction_type VARCHAR(50) DEFAULT 'CIF-ASWP';
+      `);
+      
+      // Sync the status columns
+      await db.execute(sql`
+        UPDATE broker_deals 
+        SET deal_status = status 
+        WHERE deal_status IS NULL AND status IS NOT NULL;
+      `);
+      
+      await db.execute(sql`
+        UPDATE broker_deals 
+        SET status = deal_status 
+        WHERE status IS NULL AND deal_status IS NOT NULL;
+      `);
+      
+      console.log('Broker deals table enhanced with missing columns');
+    } catch (error) {
+      console.log('Broker deals enhancement skipped:', error.message);
+    }
     
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);
