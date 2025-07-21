@@ -524,16 +524,16 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     </div>
   );
 
-  // Step 5: Complete Registration
+  // Step 5: Complete Registration - Simple without account setup
   const CompleteRegistrationStep = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
     const handleCompleteRegistration = async () => {
-      setIsCreatingAccount(true);
+      setIsLoading(true);
 
       try {
-        // Complete registration with account creation
+        // Complete registration with all collected data
         const registrationData = {
           email: userEmail,
           password: userPassword,
@@ -547,7 +547,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
         console.log('Creating account with data:', registrationData);
 
-        // Call the actual registration API to create account
+        // Call the registration API to create account
         const response = await fetch('/api/complete-registration', {
           method: 'POST',
           headers: {
@@ -557,112 +557,98 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         });
         
         const result = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(result.message || 'Account creation failed');
+
+        if (response.ok) {
+          toast({
+            title: "Registration Successful!",
+            description: "Your account has been created successfully with a free trial.",
+          });
+
+          // Redirect to dashboard
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
+        } else {
+          throw new Error(result.message || 'Registration failed');
         }
-        
-        toast({
-          title: "Account Created Successfully!",
-          description: "Your account has been created with a free trial. Redirecting to payment setup...",
-        });
-
-        // Store user data for automatic login
-        if (result.user) {
-          localStorage.setItem('tempUserData', JSON.stringify(result.user));
-        }
-
-        // Redirect to the pricing page where they can add payment
-        setTimeout(() => {
-          window.location.href = '/pricing?setup_payment=true';
-        }, 2000);
-
       } catch (error) {
         console.error('Registration error:', error);
         toast({
           title: "Registration Failed",
-          description: error instanceof Error ? error.message : 'Failed to complete registration. Please try again.',
+          description: error instanceof Error ? error.message : "Please try again.",
           variant: "destructive",
         });
       } finally {
-        setIsCreatingAccount(false);
+        setIsLoading(false);
       }
     };
 
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-          <div className="flex items-center mb-6">
-            <CheckCircle2 className="w-8 h-8 text-green-600 mr-3" />
-            <h2 className="text-2xl font-bold text-slate-800">Complete Your Registration</h2>
-          </div>
+      <div className="space-y-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+            Complete Registration
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            Review your selections and create your maritime trading account.
+          </p>
+        </div>
 
-          <div className="mb-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-            <div className="flex items-start">
-              <UserCheck className="w-6 h-6 text-green-600 mt-1 mr-3" />
+        {/* Registration Summary */}
+        <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <CheckCircle2 className="w-6 h-6 text-green-600 mr-2" />
+            Registration Summary
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-green-800 mb-2">
-                  You're Almost Ready!
-                </h3>
-                <p className="text-green-700 mb-3">
-                  Complete your registration now and add your payment method when you're ready to upgrade.
+                <label className="text-sm font-medium text-gray-700">Account Details</label>
+                <div className="mt-1 space-y-1">
+                  <p className="text-gray-900">{firstName} {lastName}</p>
+                  <p className="text-gray-600">{userEmail}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700">Selected Plan</label>
+                <p className="text-lg font-semibold text-gray-900 mt-1">
+                  {plans?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
                 </p>
-                <ul className="text-sm text-green-600 space-y-1">
-                  <li>• Access basic features immediately</li>
-                  <li>• Upgrade to premium features anytime</li>
-                  <li>• Your preferences are saved</li>
-                  <li>• No payment required now</li>
-                </ul>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Maritime Coverage</label>
+                <div className="mt-1">
+                  <p className="text-gray-900">{selectedRegions.length} regions selected</p>
+                  <p className="text-gray-600">{selectedPorts.length} strategic ports</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700">Billing Cycle</label>
+                <p className="text-gray-900 mt-1 capitalize">{billingInterval}ly billing</p>
               </div>
             </div>
           </div>
-
-          {/* Registration Summary */}
-          {selectedPlan && plans ? (
-            <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-              <h4 className="font-semibold text-gray-800 mb-2">Registration Summary</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Preferred Plan:</span>
-                  <span className="ml-2 font-medium">
-                    {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Billing:</span>
-                  <span className="ml-2 font-medium">{billingInterval}ly</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Regions:</span>
-                  <span className="ml-2 font-medium">{selectedRegions.length} selected</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Ports:</span>
-                  <span className="ml-2 font-medium">{selectedPorts.length} selected</span>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {/* Benefits */}
-          <div className="mb-8 space-y-3">
-            <div className="flex items-center text-sm text-gray-600">
-              <Zap className="w-4 h-4 mr-2 text-blue-500" />
-              <span>Start exploring immediately</span>
-            </div>
-            <div className="flex items-center text-sm text-gray-600">
-              <Shield className="w-4 h-4 mr-2 text-green-500" />
-              <span>Secure account protection</span>
-            </div>
-            <div className="flex items-center text-sm text-gray-600">
-              <CreditCard className="w-4 h-4 mr-2 text-purple-500" />
-              <span>Add payment method later when ready</span>
+          
+          <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center">
+              <Shield className="w-5 h-5 text-green-600 mr-2" />
+              <span className="text-sm text-green-800 font-medium">
+                Your account will be created with a 5-day free trial. Add payment method when ready.
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between mt-8">
+        {/* Action Buttons */}
+        <div className="flex justify-between">
           <Button variant="outline" onClick={() => setStep(3)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Ports
           </Button>
           <Button 
@@ -673,12 +659,12 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Completing registration...
+                Creating Account...
               </>
             ) : (
               <>
-                Complete Registration
-                <ArrowRight className="w-5 h-5 ml-2" />
+                Create Account
+                <CheckCircle2 className="w-5 h-5 ml-2" />
               </>
             )}
           </Button>
