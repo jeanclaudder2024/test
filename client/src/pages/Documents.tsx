@@ -38,8 +38,19 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useVessels } from '@/hooks/useVessels';
-import type { Document } from '@/types';
 import { DOCUMENT_TYPES } from '@shared/constants';
+
+// Define Document type locally
+interface Document {
+  id: number;
+  title: string;
+  content: string;
+  type: string;
+  status?: string;
+  reference?: string;
+  language?: string;
+  createdAt: string;
+}
 
 export default function Documents() {
   const { toast } = useToast();
@@ -62,7 +73,7 @@ export default function Documents() {
       const url = selectedVesselId 
         ? `/api/documents?vesselId=${selectedVesselId}` 
         : '/api/documents';
-      return apiRequest(url, { method: 'GET' });
+      return apiRequest('GET', url);
     }
   });
 
@@ -72,10 +83,7 @@ export default function Documents() {
   // Mutation to generate new document
   const generateDocumentMutation = useMutation({
     mutationFn: ({ vesselId, documentType }: { vesselId: number, documentType: string }) => {
-      return apiRequest('/api/ai/generate-document', {
-        method: 'POST',
-        body: JSON.stringify({ vesselId, documentType }),
-      });
+      return apiRequest('POST', '/api/ai/generate-document', { vesselId, documentType });
     },
     onSuccess: () => {
       toast({
@@ -803,7 +811,7 @@ export default function Documents() {
                   {/* Legal Document Content with professional styling */}
                   <div className="p-5 bg-white">
                     <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {selectedDocument.content.split('\n').map((paragraph, idx) => {
+                      {selectedDocument.content.split('\n').map((paragraph: string, idx: number) => {
                         // Format section headers
                         if (paragraph.toUpperCase() === paragraph && paragraph.trim().length > 0) {
                           return (
