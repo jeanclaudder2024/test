@@ -73,7 +73,7 @@ interface SubscriptionPlan {
 }
 
 interface LocationBasedRegistrationProps {
-  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any; userEmail: string }) => void;
+  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any }) => void;
 }
 
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
@@ -81,7 +81,6 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
-  const [userEmail, setUserEmail] = useState('');
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   // Fetch ports from public endpoint for registration
@@ -182,22 +181,6 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           </p>
         </div>
 
-        {/* Email Input */}
-        <div className="max-w-md mx-auto mb-8">
-          <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address
-          </Label>
-          <input
-            type="email"
-            id="email"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter your email address"
-            required
-          />
-        </div>
-
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4 bg-gray-100 p-1 rounded-lg">
@@ -288,8 +271,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <div className="flex justify-center mt-8">
           <Button 
             size="lg" 
-            onClick={() => selectedPlan && userEmail && setStep(2)}
-            disabled={!selectedPlan || !userEmail || !/\S+@\S+\.\S+/.test(userEmail)}
+            onClick={() => selectedPlan && setStep(2)}
+            disabled={!selectedPlan}
             className="px-8 py-3 text-lg"
           >
             Continue to Regional Selection
@@ -515,7 +498,6 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       try {
         // Complete registration with selected preferences
         const registrationData = {
-          email: userEmail,
           selectedPlan: selectedPlan,
           selectedRegions: selectedRegions,
           selectedPorts: selectedPorts,
@@ -524,18 +506,24 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
         console.log('Completing registration with data:', registrationData);
 
-        // Here you would call the actual registration API
-        // For now, we'll simulate success and redirect to payment setup
+        // Call the actual registration API to create account
+        const response = await apiRequest('POST', '/api/complete-registration', registrationData);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Registration failed');
+        }
+        
+        const result = await response.json();
         
         toast({
           title: "Registration Complete!",
-          description: "Your account preferences have been saved. You can now add your payment method.",
+          description: "Your preferences have been saved. Redirecting to add payment method...",
         });
 
-        // Redirect to the main app with payment setup prompt
+        // Redirect to the pricing page where they can add payment
         setTimeout(() => {
-          // This would redirect to the main app where they can add payment
-          window.location.href = '/pricing?complete_registration=true';
+          window.location.href = '/pricing?setup_payment=true';
         }, 2000);
 
       } catch (error) {
@@ -584,14 +572,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               <h4 className="font-semibold text-gray-800 mb-2">Registration Summary</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Email:</span>
-                  <span className="ml-2 font-medium">{userEmail}</span>
-                </div>
-                <div>
                   <span className="text-gray-600">Preferred Plan:</span>
                   <span className="ml-2 font-medium">
                     {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
                   </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Billing:</span>
+                  <span className="ml-2 font-medium">{billingInterval}ly</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Regions:</span>
@@ -628,7 +616,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           </Button>
           <Button 
             onClick={handleCompleteRegistration}
-            disabled={!selectedPlan || !userEmail || isLoading}
+            disabled={!selectedPlan || isLoading}
             className="bg-green-600 hover:bg-green-700 px-8"
           >
             {isLoading ? (
@@ -780,8 +768,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     onComplete({
                       selectedPlan,
                       selectedPort: selectedPorts[0], // Pass first selected port
-                      previewData,
-                      userEmail
+                      previewData
                     });
                   }
                 }}

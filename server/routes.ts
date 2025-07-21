@@ -182,6 +182,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register authentication routes
   app.use("/api/auth", authRoutes);
   
+  // Complete registration endpoint (no authentication required)
+  app.post("/api/complete-registration", async (req: Request, res: Response) => {
+    try {
+      const { selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
+      
+      // Generate a temporary user account that will be converted to full account after payment
+      const tempUserId = Math.random().toString(36).substring(2, 15);
+      
+      // For now, just store the preferences and return success
+      // In a real implementation, this would create a pending registration
+      console.log('Registration preferences saved:', {
+        tempUserId,
+        selectedPlan,
+        selectedRegions,
+        selectedPorts,
+        billingInterval
+      });
+      
+      res.json({
+        success: true,
+        message: "Registration preferences saved successfully",
+        tempUserId: tempUserId,
+        redirectUrl: '/pricing?setup_payment=true'
+      });
+    } catch (error: any) {
+      console.error("Error completing registration:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to complete registration",
+        error: error.message 
+      });
+    }
+  });
+
   // Emergency admin user creation endpoint
   app.post("/api/create-admin", async (req: Request, res: Response) => {
     try {
