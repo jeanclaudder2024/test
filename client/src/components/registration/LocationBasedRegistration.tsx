@@ -818,8 +818,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     );
   };
 
-  // Step 4: Account Creation - Clean Simple Form
-  const AccountCreationStep = () => {
+  // Step 4: Account Creation - Stable Form Component
+  const AccountCreationStep = React.useCallback(() => {
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
                        passwordErrors.length === 0 && 
@@ -1028,12 +1028,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         </div>
       </div>
     );
-  };
-
-  // Special full-screen handling for Step 4 (Account Creation)
-  if (step === 4) {
-    return <AccountCreationStep />;
-  }
+  }, [firstName, lastName, userEmail, userPassword, confirmPassword, passwordErrors, showPassword, showConfirmPassword]);
 
   return (
     <div className="min-h-screen w-full">
@@ -1065,6 +1060,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {step === 1 && "Choose Your Plan"}
                 {step === 2 && "Select Regions"}
                 {step === 3 && "Choose Ports"}
+                {step === 4 && "Create Your Account"}
                 {step === 5 && "Complete Registration"}
               </h1>
             </div>
@@ -1077,6 +1073,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {step === 1 && <PlanStep />}
             {step === 2 && <RegionStep />}
             {step === 3 && <PortStep />}
+            {step === 4 && <AccountCreationStep />}
             {step === 5 && <CompleteRegistrationStep />}
           </div>
         </div>
