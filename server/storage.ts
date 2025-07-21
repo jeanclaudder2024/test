@@ -432,7 +432,15 @@ export class DatabaseStorage implements IStorage {
   
   // Subscription Plan Methods
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    return await db.select().from(subscriptionPlans);
+    const plans = await db.select().from(subscriptionPlans);
+    
+    // Transform plans to include monthlyPrice and yearlyPrice
+    return plans.map(plan => ({
+      ...plan,
+      monthlyPrice: parseFloat(plan.price),
+      yearlyPrice: parseFloat(plan.price) * 12 * 0.8, // 20% discount for yearly
+      isPopular: plan.id === 2 // Professional plan is popular
+    } as SubscriptionPlan));
   }
 
   // Initialize subscription plans with default data

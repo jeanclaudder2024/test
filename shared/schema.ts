@@ -192,6 +192,14 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   createdAt: true,
 });
 
+// SubscriptionPlan type with pricing fields for frontend
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect & {
+  monthlyPrice?: number;
+  yearlyPrice?: number;
+  isPopular?: boolean;
+};
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+
 // Register schema with validation
 export const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
