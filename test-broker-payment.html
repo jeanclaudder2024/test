@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Broker Payment System</title>
+    <script>
+        async function testLogin() {
+            console.log('Testing login...');
+            const loginResponse = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: 'www2@gmail.com',
+                    password: 'password123'
+                })
+            });
+            
+            const loginData = await loginResponse.json();
+            console.log('Login response:', loginData);
+            
+            if (loginData.token) {
+                localStorage.setItem('authToken', loginData.token);
+                console.log('✅ Login successful');
+                return loginData.token;
+            } else {
+                console.error('❌ Login failed');
+                return null;
+            }
+        }
+        
+        async function testBrokerPayment() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.log('No token found, trying login first...');
+                const newToken = await testLogin();
+                if (!newToken) return;
+            }
+            
+            console.log('Testing broker payment with token:', token?.substring(0, 20) + '...');
+            
+            const response = await fetch('/api/broker-membership-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            const data = await response.json();
+            console.log('Payment response:', data);
+            
+            if (data.clientSecret) {
+                console.log('✅ Payment intent created successfully');
+                console.log('Client Secret:', data.clientSecret.substring(0, 20) + '...');
+                console.log('Amount:', data.amount);
+            } else {
+                console.error('❌ Payment failed:', data);
+            }
+        }
+        
+        async function testAuthMe() {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/auth/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            const data = await response.json();
+            console.log('Auth Me response:', data);
+            
+            if (data.user) {
+                console.log('✅ User authenticated');
+                console.log('Has Broker Membership:', data.user.hasBrokerMembership);
+            }
+        }
+        
+        async function runAllTests() {
+            console.log('🧪 Starting Broker Payment System Tests...');
+            await testLogin();
+            await testAuthMe();
+            await testBrokerPayment();
+            console.log('🧪 Tests completed!');
+        }
+    </script>
+</head>
+<body>
+    <h1>Broker Payment System Test</h1>
+    <button onclick="testLogin()">1. Test Login</button>
+    <button onclick="testAuthMe()">2. Test Auth Me</button>
+    <button onclick="testBrokerPayment()">3. Test Broker Payment</button>
+    <button onclick="runAllTests()">🧪 Run All Tests</button>
+    
+    <div>
+        <p>Open browser console (F12) to see results</p>
+    </div>
+</body>
+</html>

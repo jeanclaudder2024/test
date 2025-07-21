@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete Broker Payment Flow Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        button { padding: 10px 15px; margin: 5px; }
+        #card-element { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .log { background: #f5f5f5; padding: 10px; margin: 5px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Complete Broker Payment Flow Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Login</h2>
+        <button onclick="testLogin()">🔐 Test Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Create Payment Intent</h2>
+        <button onclick="createPaymentIntent()">💳 Create $299 Payment Intent</button>
+        <div id="payment-intent-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Payment with Test Card</h2>
+        <div id="card-element"><!-- Stripe card element --></div>
+        <button onclick="confirmPayment()" id="pay-button" disabled>💰 Pay $299 with Test Card</button>
+        <div id="payment-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Confirm Broker Membership</h2>
+        <button onclick="confirmBrokerMembership()" id="confirm-button" disabled>✅ Confirm Broker Membership</button>
+        <div id="confirm-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 5: Check User Status</h2>
+        <button onclick="checkUserStatus()">👤 Check Broker Status</button>
+        <div id="status-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 Complete Automated Test</h2>
+        <button onclick="runCompleteTest()" class="success">🧪 Run Full End-to-End Test</button>
+    </div>
+    
+    <div id="test-logs"></div>
+
+    <script>
+        const stripe = Stripe('pk_test_51RXj4URuGebyXsrKhLXnMULSM7p09H4ZD8bM7ZrF2LNxUgL7sP6NjhX5tUdHbJnzpCDhqJ5VtfmLKHYZgR9tJ6VZ00K1j4VDSh'); // Test publishable key
+        let elements, cardElement, token, clientSecret, paymentIntent;
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('test-logs');
+            const logClass = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logs.innerHTML += `<div class="log ${logClass}">${new Date().toLocaleTimeString()}: ${message}</div>`;
+            console.log(message);
+        }
+        
+        async function testLogin() {
+            try {
+                log('🔐 Testing login...');
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@petrodealhub.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('authToken', token);
+                    log('✅ Login successful!', 'success');
+                    document.getElementById('login-result').innerHTML = '<span class="success">✅ Logged in successfully</span>';
+                } else {
+                    log('❌ Login failed: ' + data.message, 'error');
+                    document.getElementById('login-result').innerHTML = '<span class="error">❌ Login failed</span>';
+                }
+            } catch (error) {
+                log('❌ Login error: ' + error.message, 'error');
+                document.getElementById('login-result').innerHTML = '<span class="error">❌ Error occurred</span>';
+            }
+        }
+        
+        async function createPaymentIntent() {
+            if (!token) {
+                log('❌ Please login first', 'error');
+                return;
+            }
+            
+            try {
+                log('💳 Creating $299 payment intent...');
+                const response = await fetch('/api/broker-membership-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.clientSecret) {
+                    clientSecret = data.clientSecret;
+                    log(`✅ Payment intent created! Amount: $${data.amount}`, 'success');
+                    document.getElementById('payment-intent-result').innerHTML = 
+                        `<span class="success">✅ Payment intent created for $${data.amount}</span>`;
+                    
+                    // Set up Stripe card element
+                    setupCardElement();
+                    document.getElementById('pay-button').disabled = false;
+                } else {
+                    log('❌ Failed to create payment intent: ' + data.message, 'error');
+                    document.getElementById('payment-intent-result').innerHTML = '<span class="error">❌ Failed to create payment intent</span>';
+                }
+            } catch (error) {
+                log('❌ Payment intent error: ' + error.message, 'error');
+            }
+        }
+        
+        function setupCardElement() {
+            elements = stripe.elements();
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                },
+            });
+            cardElement.mount('#card-element');
+            log('💳 Card element mounted - use test card: 4242424242424242');
+        }
+        
+        async function confirmPayment() {
+            if (!clientSecret || !cardElement) {
+                log('❌ Please create payment intent first', 'error');
+                return;
+            }
+            
+            try {
+                log('💰 Processing payment with test card...');
+                const { error, paymentIntent: pi } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                    }
+                });
+                
+                if (error) {
+                    log('❌ Payment failed: ' + error.message, 'error');
+                    document.getElementById('payment-result').innerHTML = '<span class="error">❌ Payment failed</span>';
+                } else {
+                    paymentIntent = pi;
+                    log(`✅ Payment successful! Status: ${pi.status}`, 'success');
+                    document.getElementById('payment-result').innerHTML = 
+                        `<span class="success">✅ Payment ${pi.status}</span>`;
+                    document.getElementById('confirm-button').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Payment error: ' + error.message, 'error');
+            }
+        }
+        
+        async function confirmBrokerMembership() {
+            if (!paymentIntent) {
+                log('❌ Please complete payment first', 'error');
+                return;
+            }
+            
+            try {
+                log('✅ Confirming broker membership...');
+                const response = await fetch('/api/confirm-broker-membership', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentIntent.id
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('🎉 BROKER MEMBERSHIP ACTIVATED!', 'success');
+                    log(`Membership ID: ${data.membershipId}`, 'success');
+                    log(`Card Number: ${data.cardNumber}`, 'success');
+                    document.getElementById('confirm-result').innerHTML = 
+                        `<span class="success">🎉 BROKER MEMBERSHIP ACTIVATED!</span>`;
+                } else {
+                    log('❌ Confirmation failed: ' + data.message, 'error');
+                    document.getElementById('confirm-result').innerHTML = '<span class="error">❌ Confirmation failed</span>';
+                }
+            } catch (error) {
+                log('❌ Confirmation error: ' + error.message, 'error');
+            }
+        }
+        
+        async function checkUserStatus() {
+            if (!token) {
+                log('❌ Please login first', 'error');
+                return;
+            }
+            
+            try {
+                log('👤 Checking user broker status...');
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.user) {
+                    const hasBroker = data.user.hasBrokerMembership;
+                    log(`User: ${data.user.email}`, 'info');
+                    log(`Broker Membership: ${hasBroker ? '✅ ACTIVE' : '❌ INACTIVE'}`, hasBroker ? 'success' : 'error');
+                    log(`Role: ${data.user.role}`, 'info');
+                    
+                    document.getElementById('status-result').innerHTML = 
+                        `<span class="${hasBroker ? 'success' : 'error'}">
+                            Broker Status: ${hasBroker ? '✅ ACTIVE' : '❌ INACTIVE'}
+                        </span>`;
+                } else {
+                    log('❌ Failed to get user status', 'error');
+                }
+            } catch (error) {
+                log('❌ Status check error: ' + error.message, 'error');
+            }
+        }
+        
+        async function runCompleteTest() {
+            log('🚀 Starting complete end-to-end test...', 'success');
+            
+            await testLogin();
+            await new Promise(r => setTimeout(r, 1000));
+            
+            await createPaymentIntent();
+            await new Promise(r => setTimeout(r, 1000));
+            
+            if (clientSecret && cardElement) {
+                await confirmPayment();
+                await new Promise(r => setTimeout(r, 1000));
+                
+                if (paymentIntent) {
+                    await confirmBrokerMembership();
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            
+            await checkUserStatus();
+            
+            log('🧪 Complete test finished!', 'success');
+        }
+    </script>
+</body>
+</html>

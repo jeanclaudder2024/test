@@ -1833,7 +1833,7 @@ export const insertBrokerAdminFileSchema = createInsertSchema(brokerAdminFiles).
 export const insertBrokerStatsSchema = createInsertSchema(brokerStats).omit({
   id: true,
   createdAt: true,
-  lastUpdated: true,
+  updatedAt: true,
 });
 
 export const insertBrokerProfileSchema = createInsertSchema(brokerProfiles).omit({
