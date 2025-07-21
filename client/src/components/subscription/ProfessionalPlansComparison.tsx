@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Star, Crown, Zap, Users, ArrowRight, TestTube } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Check, X, Star, Crown, Zap, Users, ArrowRight, TestTube, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
@@ -276,123 +278,202 @@ export default function ProfessionalPlansComparison() {
     }
   };
 
+  // Fetch real subscription plans from database
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ['/api/subscription-plans'],
+    staleTime: 0,
+  });
+
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [showComparison, setShowComparison] = useState(false);
+
+  if (plansLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            💼 Choose the Plan That Fits Your Petroleum Trading Needs
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-16">
+      <div className="container mx-auto px-4">
+        {/* Professional Header */}
+        <div className="text-center mb-16">
+          <Badge variant="outline" className="px-4 py-1 bg-blue-500/20 text-blue-700 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
+            Professional Maritime Plans
+          </Badge>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
+            Choose Your Maritime Trading Plan
           </h1>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto mb-8">
-            Whether you're an individual broker or a global trading company, PetroDealHub provides 
-            flexible subscription plans tailored to your scale of operations, market access, and trading goals.
+          <p className="text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed">
+            Professional subscription plans designed for petroleum trading operations. All plans include 5-day free trial with full access.
           </p>
         </div>
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan) => (
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-white rounded-full p-1 shadow-lg border border-gray-200">
+            <Button
+              variant={billingInterval === 'month' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setBillingInterval('month')}
+              className="rounded-full px-6 py-2"
+            >
+              Monthly
+            </Button>
+            <Button
+              variant={billingInterval === 'year' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setBillingInterval('year')}
+              className="rounded-full px-6 py-2"
+            >
+              Annual
+              <Badge variant="secondary" className="ml-2 text-xs">Save 20%</Badge>
+            </Button>
+          </div>
+        </div>
+
+        {/* Beautiful Plan Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
+          {Array.isArray(plans) && plans.map((plan: any, index: number) => (
             <Card 
-              key={plan.id} 
-              className={`relative overflow-hidden transition-all duration-300 hover:scale-105 ${
-                plan.isPopular ? 'ring-2 ring-purple-500 shadow-2xl' : 'shadow-lg'
+              key={plan.id}
+              className={`relative overflow-hidden transition-all duration-500 hover:scale-105 transform shadow-xl ${
+                index === 1 ? 'ring-4 ring-blue-500 scale-105' : ''
+              } ${
+                index === 0 && 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
+              } ${
+                index === 1 && 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+              } ${
+                index === 2 && 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
               }`}
             >
-              {plan.isPopular && (
-                <div className="absolute top-0 left-0 right-0">
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-center py-2 px-4 text-sm font-semibold">
-                    ⭐ MOST POPULAR
-                  </div>
+              {/* Popular Badge */}
+              {index === 1 && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1 text-sm font-semibold shadow-lg">
+                    Most Popular
+                  </Badge>
                 </div>
               )}
-              
-              <CardHeader className={`bg-gradient-to-r ${plan.gradient} text-white ${plan.isPopular ? 'pt-12' : 'pt-6'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{plan.emoji}</span>
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      {plan.icon}
-                    </div>
-                  </div>
+
+              <CardHeader className="text-center pb-4 pt-8">
+                <div className="flex justify-center mb-4">
+                  {index === 0 && <div className="text-4xl">🧪</div>}
+                  {index === 1 && <div className="text-4xl">📈</div>}
+                  {index === 2 && <div className="text-4xl">🏢</div>}
                 </div>
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                <CardDescription className="text-white/90">
-                  {plan.description}
-                </CardDescription>
-                
-                <div className="mt-6">
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold">${plan.monthlyPrice}</span>
-                    <span className="text-white/80 ml-2">/ month</span>
-                  </div>
-                  <div className="text-white/80 text-sm mt-1">
-                    ${plan.annualPrice} / year ({plan.annualSavings})
-                  </div>
-                  <div className="text-white/90 text-sm mt-2 font-medium">
-                    {plan.trial}
-                  </div>
+                <CardTitle className="text-2xl font-bold text-slate-800 mb-2">
+                  {plan.name.replace(' Plan', '')}
+                </CardTitle>
+                <div className="flex items-baseline justify-center">
+                  <span className={`text-5xl font-bold ${
+                    index === 0 && 'bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent'
+                  } ${
+                    index === 1 && 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
+                  } ${
+                    index === 2 && 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
+                  }`}>
+                    ${billingInterval === 'month' ? plan.monthlyPrice : Math.round(plan.monthlyPrice * 0.8)}
+                  </span>
+                  <span className="text-xl text-slate-500 ml-2">/{billingInterval === 'month' ? 'month' : 'year'}</span>
+                </div>
+                <div className="text-sm text-slate-500 mt-2">
+                  5-day free trial included
                 </div>
               </CardHeader>
 
-              <CardContent className="p-6">
-                <div className="space-y-4 mb-6">
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-blue-100 p-1 rounded">
-                        <Check className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">🌍 Marine Zones</div>
-                        <div className="text-sm text-gray-600">{plan.features.marineZones}</div>
-                      </div>
+              <CardContent className="space-y-6 px-6 pb-8">
+                <p className="text-slate-600 text-center leading-relaxed">
+                  {plan.description}
+                </p>
+                
+                {/* Key Features */}
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                      index === 0 && 'bg-orange-100'
+                    } ${
+                      index === 1 && 'bg-blue-100'
+                    } ${
+                      index === 2 && 'bg-purple-100'
+                    }`}>
+                      <Check className={`w-4 h-4 ${
+                        index === 0 && 'text-orange-600'
+                      } ${
+                        index === 1 && 'text-blue-600'
+                      } ${
+                        index === 2 && 'text-purple-600'
+                      }`} />
                     </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-green-100 p-1 rounded">
-                        <Check className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">🚢 Vessel Tracking</div>
-                        <div className="text-sm text-gray-600">{plan.features.vesselTracking}</div>
-                      </div>
+                    <span className="font-semibold text-slate-700">
+                      {index === 0 ? '2 Maritime Regions' : 
+                       index === 1 ? '6 Maritime Regions' : 
+                       '9+ Global Maritime Regions'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                      index === 0 && 'bg-orange-100'
+                    } ${
+                      index === 1 && 'bg-blue-100'
+                    } ${
+                      index === 2 && 'bg-purple-100'
+                    }`}>
+                      <Check className={`w-4 h-4 ${
+                        index === 0 && 'text-orange-600'
+                      } ${
+                        index === 1 && 'text-blue-600'
+                      } ${
+                        index === 2 && 'text-purple-600'
+                      }`} />
                     </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-purple-100 p-1 rounded">
-                        <Check className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">📄 Documentation</div>
-                        <div className="text-sm text-gray-600">{plan.features.documentation}</div>
-                      </div>
+                    <span className="text-slate-700">
+                      {index === 0 ? 'Basic vessel tracking' : 
+                       index === 1 ? 'Enhanced vessel tracking' : 
+                       'Full live vessel tracking'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                      index === 0 && 'bg-orange-100'
+                    } ${
+                      index === 1 && 'bg-blue-100'
+                    } ${
+                      index === 2 && 'bg-purple-100'
+                    }`}>
+                      <Check className={`w-4 h-4 ${
+                        index === 0 && 'text-orange-600'
+                      } ${
+                        index === 1 && 'text-blue-600'
+                      } ${
+                        index === 2 && 'text-purple-600'
+                      }`} />
                     </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-orange-100 p-1 rounded">
-                        <Check className="h-4 w-4 text-orange-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">👥 Users</div>
-                        <div className="text-sm text-gray-600">{plan.features.users}</div>
-                      </div>
-                    </div>
+                    <span className="text-slate-700">
+                      {index === 0 ? 'Basic documentation' : 
+                       index === 1 ? 'Professional documentation' : 
+                       'Complete documentation suite'}
+                    </span>
                   </div>
                 </div>
 
+                {/* Enhanced CTA Button */}
                 <Button 
-                  className={`w-full bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold py-3 rounded-lg transition-all duration-200`}
+                  className={cn(
+                    "w-full py-3 px-6 text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105",
+                    index === 0 && "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
+                    index === 1 && "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
+                    index === 2 && "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  )}
                   onClick={() => handleStartTrial(plan.id, plan.name)}
                 >
-                  🔹 Start Free Trial
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  Choose {plan.name.replace(' Plan', '')}
                 </Button>
-                
-                <Link href="/pricing">
-                  <Button variant="outline" className="w-full mt-2">
-                    Compare All Plans
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
           ))}
