@@ -54,7 +54,7 @@ import PDFTestPage from "@/pages/PDFTestPage";
 import LandingPageManager from "@/pages/LandingPageManager";
 
 import { useEffect } from "react";
-import MembershipCardRequest from "@/pages/MembershipCardRequest";
+import EnhancedMembershipCardRequest from "@/pages/EnhancedMembershipCardRequest";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { MobileLayout } from "@/components/ui/mobile-layout";
 
@@ -78,7 +78,7 @@ function ProtectedRoutes() {
           </Route>
           <Route path="/broker-locked" component={BrokerLocked} />
           <Route path="/broker-membership" component={BrokerMembership} />
-          <Route path="/membership-card-request" component={MembershipCardRequest} />
+          <Route path="/membership-card-request" component={EnhancedMembershipCardRequest} />
           <Route path="/broker-card-application" component={BrokerCardApplication} />
           <Route path="/broker-upgrade" component={BrokerUpgrade} />
           <Route path="/broker-payment" component={BrokerPayment} />

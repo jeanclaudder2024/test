@@ -5479,6 +5479,99 @@ Only use authentic, real-world data for existing refineries.`;
       });
     }
   });
+
+  // Enhanced membership card request with complete information
+  app.post('/api/broker/request-membership-card-enhanced', authenticateToken, upload.single('passportPhoto'), async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const userId = req.user.id;
+      const {
+        firstName,
+        lastName,
+        dateOfBirth,
+        nationality,
+        passportNumber,
+        experience,
+        specialization,
+        previousEmployer,
+        certifications,
+        currentLocation,
+        residenceAddress,
+        phoneNumber,
+        email,
+        emergencyContact
+      } = req.body;
+
+      // Validate required fields
+      if (!firstName || !lastName || !dateOfBirth || !nationality || !passportNumber || !experience || !specialization || !currentLocation || !residenceAddress || !phoneNumber || !email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields for membership card request'
+        });
+      }
+
+      // Generate membership ID and card number
+      const membershipId = `PDB-${Date.now()}-${userId}`;
+      const cardNumber = `BC${Date.now().toString().slice(-8)}`;
+      
+      // Handle passport photo if uploaded
+      let passportPhotoPath = null;
+      if (req.file) {
+        passportPhotoPath = req.file.path;
+      }
+
+      // Store enhanced membership card request
+      const enhancedCardRequest = {
+        userId,
+        membershipId,
+        cardNumber,
+        firstName,
+        lastName,
+        dateOfBirth,
+        nationality,
+        passportNumber,
+        experience,
+        specialization,
+        previousEmployer: previousEmployer || null,
+        certifications: certifications || null,
+        passportPhotoPath,
+        currentLocation,
+        residenceAddress,
+        phoneNumber,
+        email,
+        emergencyContact: emergencyContact || null,
+        requestedAt: new Date(),
+        status: 'approved', // Auto-approve for paid members
+        cardType: 'Professional Oil Broker - Enhanced'
+      };
+
+      console.log('Enhanced membership card requested:', {
+        ...enhancedCardRequest,
+        passportPhotoPath: passportPhotoPath ? 'File uploaded' : 'No photo'
+      });
+
+      // Update user with broker membership status  
+      await storage.updateUserBrokerMembership(userId, true);
+
+      res.json({
+        success: true,
+        message: 'Enhanced membership card request submitted successfully',
+        membershipId,
+        cardNumber,
+        status: 'approved'
+      });
+
+    } catch (error: any) {
+      console.error('Error requesting enhanced membership card:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to request enhanced membership card: ' + error.message
+      });
+    }
+  });
   
   // API routes for vessel distribution data
   app.use("/api/distribution", vesselDistributionRouter);
