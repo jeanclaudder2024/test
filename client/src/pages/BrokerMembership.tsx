@@ -74,25 +74,22 @@ const BrokerMembershipForm = () => {
         });
       } else if (paymentIntent?.status === 'succeeded') {
         // Confirm broker membership activation
-        await apiRequest('POST', '/api/confirm-broker-membership', {
+        const confirmResponse = await apiRequest('POST', '/api/confirm-broker-membership', {
           paymentIntentId: paymentIntent.id
         });
 
         toast({
-          title: "Broker Membership Activated!",
-          description: "Welcome to PetroDealHub Broker Network! You now have full access to broker features.",
+          title: "Broker Membership Activated! ✅",
+          description: "Welcome to PetroDealHub Broker Network! You now have permanent broker access.",
           variant: "default",
         });
 
-        // User data will be updated on next page load
-        
-        // Show success message and enable card request button
-        setPaymentCompleted(true);
-        toast({
-          title: "Payment Successful! ✅", 
-          description: "Click the button below to request your membership card.",
-          variant: "default",
-        });
+        // Navigate directly to broker dashboard after 2 seconds
+        setTimeout(() => {
+          startTransition(() => {
+            setLocation('/broker-dashboard');
+          });
+        }, 2000);
       }
     } catch (error: any) {
       toast({
@@ -234,28 +231,14 @@ const BrokerMembershipForm = () => {
                 </div>
               </div>
 
-              {paymentCompleted ? (
-                <Button 
-                  onClick={() => {
-                    startTransition(() => {
-                      setLocation('/membership-card-request');
-                    });
-                  }}
-                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                  size="lg"
-                >
-                  Request Membership Card →
-                </Button>
-              ) : (
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700"
-                  disabled={!stripe || isProcessing}
-                  size="lg"
-                >
-                  {isProcessing ? 'Processing Payment...' : 'Activate Broker Membership - $299'}
-                </Button>
-              )}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700"
+                disabled={!stripe || isProcessing}
+                size="lg"
+              >
+                {isProcessing ? 'Processing Payment...' : 'Activate Broker Membership - $299'}
+              </Button>
 
               <p className="text-xs text-muted-foreground text-center">
                 By clicking "Activate Broker Membership", you agree to our terms of service and privacy policy.
