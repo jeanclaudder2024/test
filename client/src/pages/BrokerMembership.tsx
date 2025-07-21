@@ -15,7 +15,7 @@ const BrokerMembershipForm = () => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -30,8 +30,14 @@ const BrokerMembershipForm = () => {
 
     try {
       // Create payment intent for broker membership
-      const response = await apiRequest('POST', '/api/broker-membership-payment');
+      const response = await apiRequest('POST', '/api/broker-membership-payment') as any;
       const { clientSecret } = response;
+      
+      console.log('Payment intent response:', response);
+      
+      if (!clientSecret) {
+        throw new Error('No client secret received from server');
+      }
 
       // Confirm payment using the client secret
       const cardElement = elements.getElement(CardElement);
@@ -63,8 +69,7 @@ const BrokerMembershipForm = () => {
           variant: "default",
         });
 
-        // Refresh user data to update broker status
-        await refreshUser();
+        // User data will be updated on next page load
         
         // Redirect to broker card application
         setLocation('/broker-card-application');
