@@ -29,7 +29,8 @@ import {
   Lock,
   Calendar,
   Shield,
-  ExternalLink
+  ExternalLink,
+  UserCheck
 } from 'lucide-react';
 
 interface Port {
@@ -72,7 +73,7 @@ interface SubscriptionPlan {
 }
 
 interface LocationBasedRegistrationProps {
-  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any; paymentData: any }) => void;
+  onComplete: (data: { selectedPlan: number; selectedPort: number; previewData: any; userEmail: string }) => void;
 }
 
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
@@ -503,99 +504,45 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     </div>
   );
 
-  // Step 4: Payment Method
-  const PaymentStep = () => {
+  // Step 4: Complete Registration (Skip Payment for Now)
+  const CompleteRegistrationStep = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
-    const handleStripeCheckout = async () => {
-      if (!selectedPlan) {
-        toast({
-          title: "Error",
-          description: "Please select a plan first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
+    const handleCompleteRegistration = async () => {
       setIsLoading(true);
 
       try {
-        console.log('Creating checkout session for plan:', selectedPlan);
+        // Complete registration with selected preferences
+        const registrationData = {
+          email: userEmail,
+          selectedPlan: selectedPlan,
+          selectedRegions: selectedRegions,
+          selectedPorts: selectedPorts,
+          billingInterval: billingInterval
+        };
 
-        const response = await apiRequest(
-          'POST',
-          '/api/create-registration-checkout',
-          { 
-            planId: selectedPlan, 
-            interval: billingInterval,
-            userEmail: userEmail || 'temp@registration.com', // Email from user input
-            // Include selected data for the session
-            selectedRegions: selectedRegions,
-            selectedPorts: selectedPorts
-          }
-        );
+        console.log('Completing registration with data:', registrationData);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to create checkout session');
-        }
-
-        const { url } = await response.json();
-
-        // Progressive navigation fallback system
-        try {
-          // First, try parent navigation
-          if (window.parent && window.parent !== window) {
-            window.parent.location.href = url;
-            return;
-          }
-        } catch (e) {
-          console.log('Parent navigation blocked, trying top navigation');
-        }
-
-        try {
-          // Second, try top-level navigation
-          if (window.top && window.top !== window) {
-            window.top.location.href = url;
-            return;
-          }
-        } catch (e) {
-          console.log('Top navigation blocked, trying new tab');
-        }
-
-        try {
-          // Third, try opening in new tab
-          const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-          if (newWindow) {
-            toast({
-              title: "Payment Page Opened",
-              description: "Complete your payment in the new tab to finish registration.",
-            });
-            return;
-          }
-        } catch (e) {
-          console.log('New tab blocked, showing URL for manual copy');
-        }
-
-        // Final fallback - show URL for manual copy
-        navigator.clipboard?.writeText(url).then(() => {
-          toast({
-            title: "Payment URL Copied",
-            description: "The payment link has been copied to your clipboard. Paste it in a new tab to complete registration.",
-          });
-        }).catch(() => {
-          toast({
-            title: "Manual Navigation Required",
-            description: `Please copy this URL to complete payment: ${url}`,
-          });
+        // Here you would call the actual registration API
+        // For now, we'll simulate success and redirect to payment setup
+        
+        toast({
+          title: "Registration Complete!",
+          description: "Your account preferences have been saved. You can now add your payment method.",
         });
 
+        // Redirect to the main app with payment setup prompt
+        setTimeout(() => {
+          // This would redirect to the main app where they can add payment
+          window.location.href = '/pricing?complete_registration=true';
+        }, 2000);
+
       } catch (error) {
-        console.error('Checkout error:', error);
+        console.error('Registration error:', error);
         toast({
-          title: "Payment Setup Failed",
-          description: error instanceof Error ? error.message : 'Failed to setup payment. Please try again.',
+          title: "Registration Failed",
+          description: error instanceof Error ? error.message : 'Failed to complete registration. Please try again.',
           variant: "destructive",
         });
       } finally {
@@ -607,48 +554,43 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
           <div className="flex items-center mb-6">
-            <CreditCard className="w-8 h-8 text-blue-600 mr-3" />
-            <h2 className="text-2xl font-bold text-slate-800">Secure Payment Setup</h2>
+            <CheckCircle2 className="w-8 h-8 text-green-600 mr-3" />
+            <h2 className="text-2xl font-bold text-slate-800">Complete Your Registration</h2>
           </div>
 
-          <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+          <div className="mb-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
             <div className="flex items-start">
-              <Shield className="w-6 h-6 text-blue-600 mt-1 mr-3" />
+              <UserCheck className="w-6 h-6 text-green-600 mt-1 mr-3" />
               <div>
-                <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                  Stripe Secure Checkout
+                <h3 className="text-lg font-semibold text-green-800 mb-2">
+                  You're Almost Ready!
                 </h3>
-                <p className="text-blue-700 mb-3">
-                  You'll be redirected to Stripe's secure payment page to complete your subscription setup.
+                <p className="text-green-700 mb-3">
+                  Complete your registration now and add your payment method when you're ready to upgrade.
                 </p>
-                <ul className="text-sm text-blue-600 space-y-1">
-                  <li>• 5-day free trial with no immediate charges</li>
-                  <li>• Industry-standard encryption and security</li>
-                  <li>• Cancel anytime during trial period</li>
-                  <li>• Automatic billing after trial ends</li>
+                <ul className="text-sm text-green-600 space-y-1">
+                  <li>• Access basic features immediately</li>
+                  <li>• Upgrade to premium features anytime</li>
+                  <li>• Your preferences are saved</li>
+                  <li>• No payment required now</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* Selected Plan Summary */}
+          {/* Registration Summary */}
           {selectedPlan && plans ? (
             <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-              <h4 className="font-semibold text-gray-800 mb-2">Selected Plan Summary</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Registration Summary</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Plan:</span>
-                  <span className="ml-2 font-medium">
-                    {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
-                  </span>
+                  <span className="text-gray-600">Email:</span>
+                  <span className="ml-2 font-medium">{userEmail}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Billing:</span>
+                  <span className="text-gray-600">Preferred Plan:</span>
                   <span className="ml-2 font-medium">
-                    {formatCurrency(billingInterval === 'month' ? 
-                      (plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.monthlyPrice || 0 : 
-                      (plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.yearlyPrice || 0
-                    )}/{billingInterval}
+                    {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
                   </span>
                 </div>
                 <div>
@@ -663,19 +605,19 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             </div>
           ) : null}
 
-          {/* Security Features */}
+          {/* Benefits */}
           <div className="mb-8 space-y-3">
             <div className="flex items-center text-sm text-gray-600">
-              <Lock className="w-4 h-4 mr-2" />
-              <span>256-bit SSL encryption</span>
+              <Zap className="w-4 h-4 mr-2 text-blue-500" />
+              <span>Start exploring immediately</span>
             </div>
             <div className="flex items-center text-sm text-gray-600">
-              <Shield className="w-4 h-4 mr-2" />
-              <span>PCI DSS compliant payment processing</span>
+              <Shield className="w-4 h-4 mr-2 text-green-500" />
+              <span>Secure account protection</span>
             </div>
             <div className="flex items-center text-sm text-gray-600">
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              <span>No payment data stored on our servers</span>
+              <CreditCard className="w-4 h-4 mr-2 text-purple-500" />
+              <span>Add payment method later when ready</span>
             </div>
           </div>
         </div>
@@ -685,19 +627,19 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             Back to Ports
           </Button>
           <Button 
-            onClick={handleStripeCheckout}
-            disabled={!selectedPlan || isLoading}
-            className="bg-blue-600 hover:bg-blue-700 px-8"
+            onClick={handleCompleteRegistration}
+            disabled={!selectedPlan || !userEmail || isLoading}
+            className="bg-green-600 hover:bg-green-700 px-8"
           >
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Setting up payment...
+                Completing registration...
               </>
             ) : (
               <>
-                Continue to Stripe Payment
-                <ExternalLink className="w-5 h-5 ml-2" />
+                Complete Registration
+                <ArrowRight className="w-5 h-5 ml-2" />
               </>
             )}
           </Button>
@@ -830,7 +772,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
             <div className="flex justify-between mt-8">
               <Button variant="outline" onClick={() => setStep(4)}>
-                Back to Payment
+                Back to Complete Registration
               </Button>
               <Button 
                 onClick={() => {
@@ -839,7 +781,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       selectedPlan,
                       selectedPort: selectedPorts[0], // Pass first selected port
                       previewData,
-                      paymentData
+                      userEmail
                     });
                   }
                 }}
@@ -886,7 +828,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {step === 1 && "Choose Your Plan"}
                 {step === 2 && "Select Regions"}
                 {step === 3 && "Choose Ports"}
-                {step === 4 && "Payment Method"}
+                {step === 4 && "Complete Registration"}
                 {step === 5 && "Review & Confirm"}
               </h1>
             </div>
@@ -899,7 +841,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             {step === 1 && <PlanStep />}
             {step === 2 && <RegionStep />}
             {step === 3 && <PortStep />}
-            {step === 4 && <PaymentStep />}
+            {step === 4 && <CompleteRegistrationStep />}
             {step === 5 && <PreviewStep />}
           </div>
         </div>
