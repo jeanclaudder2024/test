@@ -104,6 +104,8 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
+      hasBrokerMembership: user.hasBrokerMembership || false,
+      brokerMembershipDate: user.brokerMembershipDate || null,
       subscription: subscription || undefined
     };
 
