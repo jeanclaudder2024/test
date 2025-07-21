@@ -1,82 +1,41 @@
--- QUICK DATABASE FIX for Broker Transaction Documents
--- Run this in your Supabase SQL Editor to fix the immediate issues
+-- QUICK BROKER SYSTEM DATABASE FIX
+-- Run this in Supabase SQL Editor to fix all broker issues
 
--- 1. Add missing columns to transaction_documents table
-ALTER TABLE transaction_documents ADD COLUMN IF NOT EXISTS document_name VARCHAR(255);
-ALTER TABLE transaction_documents ADD COLUMN IF NOT EXISTS file_path VARCHAR(500);
-ALTER TABLE transaction_documents ADD COLUMN IF NOT EXISTS file_size INTEGER;
-ALTER TABLE transaction_documents ADD COLUMN IF NOT EXISTS file_type VARCHAR(100);
+-- 1. Ensure users table has correct broker membership fields
+ALTER TABLE users ADD COLUMN IF NOT EXISTS has_broker_membership BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS broker_membership_date TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS broker_membership_payment_id TEXT;
 
--- 2. Create transaction_steps table if missing
-CREATE TABLE IF NOT EXISTS transaction_steps (
-    id SERIAL PRIMARY KEY,
-    deal_id INTEGER NOT NULL REFERENCES broker_deals(id) ON DELETE CASCADE,
-    step_number INTEGER NOT NULL,
-    step_name VARCHAR(200) NOT NULL,
-    step_description TEXT,
-    required_documents TEXT[],
-    status VARCHAR(50) DEFAULT 'pending',
-    submitted_at TIMESTAMP,
-    reviewed_at TIMESTAMP,
-    admin_notes TEXT,
-    admin_id INTEGER REFERENCES users(id),
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 2. Create broker_deals table (essential for broker dashboard)
+CREATE TABLE IF NOT EXISTS broker_deals (
+  id SERIAL PRIMARY KEY,
+  broker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  deal_title TEXT NOT NULL,
+  company_name TEXT NOT NULL,
+  deal_value DECIMAL(15,2) NOT NULL DEFAULT 0,
+  status TEXT DEFAULT 'pending',
+  progress_percentage INTEGER DEFAULT 0,
+  start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expected_close_date TIMESTAMP,
+  oil_type TEXT,
+  quantity TEXT,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Create deal_messages table if missing
-CREATE TABLE IF NOT EXISTS deal_messages (
-    id SERIAL PRIMARY KEY,
-    deal_id INTEGER NOT NULL REFERENCES broker_deals(id) ON DELETE CASCADE,
-    sender_id INTEGER NOT NULL REFERENCES users(id),
-    receiver_id INTEGER NOT NULL REFERENCES users(id),
-    message TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- 3. Grant broker membership to admin for testing
+UPDATE users 
+SET 
+  has_broker_membership = TRUE,
+  broker_membership_date = NOW(),
+  broker_membership_payment_id = 'admin_manual_grant'
+WHERE email = 'admin@petrodealhub.com';
 
--- 4. Insert default 8 transaction steps for existing deals
-INSERT INTO transaction_steps (deal_id, step_number, step_name, step_description, required_documents)
-SELECT 
-    bd.id,
-    generate_series(1, 8),
-    CASE generate_series(1, 8)
-        WHEN 1 THEN 'Letter of Intent (LOI)'
-        WHEN 2 THEN 'Freight Letter (FL)'
-        WHEN 3 THEN 'Commercial Invoice'
-        WHEN 4 THEN 'Bill of Lading (B/L)'
-        WHEN 5 THEN 'Insurance Certificate'
-        WHEN 6 THEN 'Certificate of Origin'
-        WHEN 7 THEN 'Quality & Inspection'
-        WHEN 8 THEN 'Final Settlement'
-    END,
-    CASE generate_series(1, 8)
-        WHEN 1 THEN 'Submit Letter of Intent with buyer/seller details and cargo specifications'
-        WHEN 2 THEN 'Submit Freight Letter with vessel details and shipping terms'
-        WHEN 3 THEN 'Submit Commercial Invoice with detailed cargo and pricing information'
-        WHEN 4 THEN 'Submit Bill of Lading and shipping documentation'
-        WHEN 5 THEN 'Submit Marine Insurance Certificate and coverage details'
-        WHEN 6 THEN 'Submit Certificate of Origin and customs documentation'
-        WHEN 7 THEN 'Submit Quality Inspection Report and Analysis Certificate'
-        WHEN 8 THEN 'Submit Final Settlement Documentation and Payment Confirmation'
-    END,
-    CASE generate_series(1, 8)
-        WHEN 1 THEN ARRAY['LOI Document', 'Company Registration', 'Authorization Letter']
-        WHEN 2 THEN ARRAY['Freight Letter', 'Vessel Specifications', 'Charter Party Terms']
-        WHEN 3 THEN ARRAY['Commercial Invoice', 'Packing List', 'Quality Certificate']
-        WHEN 4 THEN ARRAY['Bill of Lading', 'Mate Receipt', 'Shipping Instructions']
-        WHEN 5 THEN ARRAY['Insurance Certificate', 'Policy Schedule', 'Premium Receipt']
-        WHEN 6 THEN ARRAY['Certificate of Origin', 'Customs Declaration', 'Export License']
-        WHEN 7 THEN ARRAY['Quality Report', 'Inspection Certificate', 'Lab Analysis']
-        WHEN 8 THEN ARRAY['Settlement Statement', 'Payment Confirmation', 'Delivery Receipt']
-    END
-FROM broker_deals bd
-WHERE NOT EXISTS (
-    SELECT 1 FROM transaction_steps ts WHERE ts.deal_id = bd.id
-);
+-- 4. Verify setup
+SELECT id, email, role, has_broker_membership, broker_membership_date 
+FROM users 
+WHERE email = 'admin@petrodealhub.com';
 
--- 5. Verify the fix
-SELECT 'Database fixed successfully' as status;
-SELECT COUNT(*) as transaction_steps_created FROM transaction_steps;
-SELECT COUNT(*) as broker_deals_total FROM broker_deals;
+-- 5. Check if broker_deals table was created
+SELECT table_name FROM information_schema.tables WHERE table_name = 'broker_deals';
