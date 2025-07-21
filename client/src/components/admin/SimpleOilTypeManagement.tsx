@@ -73,10 +73,7 @@ export default function SimpleOilTypeManagement() {
   const createOilTypeMutation = useMutation({
     mutationFn: async (newOilType: CreateOilTypeForm) => {
       console.log("Creating oil type:", newOilType);
-      return await apiRequest("/api/admin/oil-types", {
-        method: "POST",
-        body: JSON.stringify(newOilType)
-      });
+      return await apiRequest("POST", "/api/admin/oil-types", newOilType);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
@@ -100,10 +97,7 @@ export default function SimpleOilTypeManagement() {
   const editOilTypeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CreateOilTypeForm }) => {
       console.log("Updating oil type:", id, data);
-      return await apiRequest(`/api/admin/oil-types/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data)
-      });
+      return await apiRequest("PUT", `/api/admin/oil-types/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });

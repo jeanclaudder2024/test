@@ -131,11 +131,7 @@ export function BrokerManagement() {
   // Create broker user mutation
   const createBrokerMutation = useMutation({
     mutationFn: async (brokerData: { email: string; firstName: string; lastName: string; password: string }) => {
-      return await apiRequest('/api/admin/brokers', {
-        method: 'POST',
-        body: JSON.stringify(brokerData),
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return await apiRequest('POST', '/api/admin/brokers', brokerData);
     },
     onSuccess: () => {
       toast({
@@ -220,11 +216,7 @@ export function BrokerManagement() {
   // Update deal status mutation
   const updateDealStatusMutation = useMutation({
     mutationFn: async ({ dealId, status }: { dealId: number; status: string }) => {
-      return await apiRequest(`/api/admin/broker-deals/${dealId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return await apiRequest('PATCH', `/api/admin/broker-deals/${dealId}`, { status });
     },
     onSuccess: () => {
       toast({
