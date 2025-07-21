@@ -53,7 +53,7 @@ import PDFTestPage from "@/pages/PDFTestPage";
 
 import LandingPageManager from "@/pages/LandingPageManager";
 
-import { useEffect } from "react";
+import { useEffect, lazy } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { MobileLayout } from "@/components/ui/mobile-layout";
 
