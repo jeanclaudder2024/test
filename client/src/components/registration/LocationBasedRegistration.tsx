@@ -102,15 +102,18 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   // Get regions based on selected plan limits
   const getRegionsForPlan = (planId: number) => {
     const plan = plans?.find(p => p.id === planId);
-    if (!plan) return [];
+    if (!plan) return regions; // Show all regions if no plan found
     
-    if (plan.id === 1) { // Basic - 2 regions
-      return regions.slice(0, 2);
-    } else if (plan.id === 2) { // Professional - 6 regions
-      return regions.slice(0, 6);
-    } else { // Enterprise - all regions
-      return regions;
-    }
+    // During registration, show all regions but indicate limitations
+    // The actual limitation will be applied after registration
+    return regions;
+  };
+
+  // Get maximum regions allowed for a plan (for display purposes)
+  const getMaxRegionsForPlan = (planId: number) => {
+    if (planId === 1) return 2; // Basic - 2 regions
+    if (planId === 2) return 6; // Professional - 6 regions
+    return regions.length; // Enterprise - all regions
   };
 
   // Filter ports by selected regions (no plan limits during registration)
@@ -284,30 +287,60 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         </p>
         
         {selectedPlan && plans && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-blue-800 font-semibold">
-              Your {plans.find(p => p.id === selectedPlan)?.name} plan allows access to{' '}
-              {selectedPlan === 1 ? '2' : selectedPlan === 2 ? '6' : 'all'} maritime regions.
-            </p>
+          <div className="mt-6 space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-blue-800 font-semibold">
+                Your {plans.find(p => p.id === selectedPlan)?.name} plan allows access to{' '}
+                {getMaxRegionsForPlan(selectedPlan)} of {regions.length} available maritime regions.
+              </p>
+            </div>
+            
+            {selectedRegions.length > 0 && (
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-green-800 font-semibold">
+                  Selected: {selectedRegions.length} / {getMaxRegionsForPlan(selectedPlan)} regions
+                </p>
+                {selectedRegions.length >= getMaxRegionsForPlan(selectedPlan) && selectedPlan !== 3 && (
+                  <p className="text-green-600 text-sm mt-1">
+                    You've reached your plan limit. Upgrade to access more regions.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {getRegionsForPlan(selectedPlan || 1).map((region) => (
-          <Card 
-            key={region}
-            className={`cursor-pointer transition-all duration-300 hover:shadow-xl ${
-              selectedRegions.includes(region) 
-                ? 'ring-4 ring-blue-500 bg-blue-50 border-blue-200' 
-                : 'hover:shadow-lg'
-            }`}
+        {getRegionsForPlan(selectedPlan || 1).map((region) => {
+          const isSelected = selectedRegions.includes(region);
+          const maxRegions = getMaxRegionsForPlan(selectedPlan || 1);
+          const isAtLimit = selectedRegions.length >= maxRegions && !isSelected;
+          
+          return (
+            <Card 
+              key={region}
+              className={`transition-all duration-300 ${
+                isSelected
+                  ? 'ring-4 ring-blue-500 bg-blue-50 border-blue-200' 
+                  : isAtLimit
+                    ? 'opacity-50 cursor-not-allowed bg-gray-50'
+                    : 'cursor-pointer hover:shadow-lg hover:shadow-xl'
+              }`}
             onClick={() => {
-              setSelectedRegions(prev => 
-                prev.includes(region) 
-                  ? prev.filter(r => r !== region)
-                  : [...prev, region]
-              );
+              setSelectedRegions(prev => {
+                if (prev.includes(region)) {
+                  // Remove region if already selected
+                  return prev.filter(r => r !== region);
+                } else {
+                  // Add region if under limit
+                  const maxRegions = getMaxRegionsForPlan(selectedPlan || 1);
+                  if (prev.length < maxRegions) {
+                    return [...prev, region];
+                  }
+                  return prev; // Don't add if at limit
+                }
+              });
             }}
           >
             <CardHeader className="text-center">
@@ -342,7 +375,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               </Button>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex justify-between mt-8">

@@ -607,6 +607,13 @@ Changelog:
   * **Fixed Dialog Accessibility**: Added missing DialogDescription to command.tsx component and fixed missing key prop in PortCard vessel mapping
   * **Improved User Experience**: Registration page and pricing displays now show correct pricing structure (e.g., $399 monthly, $3830.40 yearly for Enterprise)
   * **Console Error Resolution**: Fixed React warnings about missing DialogTitle/DialogDescription and missing key props in component iterations
+- July 21, 2025. **REGION SELECTION FIX: All Maritime Regions Now Display Correctly in Registration**:
+  * **Fixed Region Display Issue**: Resolved problem where not all port regions were showing in registration flow
+  * **Updated getRegionsForPlan()**: Modified function to show all 7 available regions (Africa, Asia-Pacific, Europe, Latin America, Middle East, North America, Oceania) during registration
+  * **Enhanced Selection Logic**: Added proper plan limits with visual feedback - Basic (2 regions), Professional (6 regions), Enterprise (all regions)
+  * **Improved User Experience**: Added selection counters, plan limit notifications, and visual indicators for disabled regions when at limit
+  * **Smart Validation**: Prevents selecting more regions than allowed by chosen plan with clear feedback messaging
+  * **All Regions Visible**: Registration now properly displays all 7 maritime regions with port counts for each region
 - July 10, 2025. **CRITICAL STRIPE CHECKOUT LOADING LOOP FIX**:
   * **Root Cause Identified**: Stripe checkout pages showed loading loops because trial periods displayed $0 immediate charges
   * **Trial Period Removed**: Eliminated `trial_period_days` from Stripe checkout sessions to prevent loading loops
