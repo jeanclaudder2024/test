@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   MapPin, 
   Ship, 
@@ -25,7 +28,8 @@ import {
   CreditCard,
   Lock,
   Calendar,
-  Shield
+  Shield,
+  ExternalLink
 } from 'lucide-react';
 
 interface Port {
@@ -492,10 +496,101 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
   // Step 4: Payment Method
   const PaymentStep = () => {
-    const isPaymentValid = paymentData.cardNumber && paymentData.expiryMonth && paymentData.expiryYear && paymentData.cvv && paymentData.cardholderName;
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
 
-    const handlePaymentChange = (field: string, value: string) => {
-      setPaymentData(prev => ({ ...prev, [field]: value }));
+    const handleStripeCheckout = async () => {
+      if (!selectedPlan) {
+        toast({
+          title: "Error",
+          description: "Please select a plan first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        console.log('Creating checkout session for plan:', selectedPlan);
+
+        const response = await apiRequest(
+          'POST',
+          '/api/create-checkout-session',
+          { 
+            planId: selectedPlan, 
+            interval: billingInterval,
+            // Include selected data for the session
+            selectedRegions: selectedRegions,
+            selectedPorts: selectedPorts
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create checkout session');
+        }
+
+        const { url } = await response.json();
+
+        // Progressive navigation fallback system
+        try {
+          // First, try parent navigation
+          if (window.parent && window.parent !== window) {
+            window.parent.location.href = url;
+            return;
+          }
+        } catch (e) {
+          console.log('Parent navigation blocked, trying top navigation');
+        }
+
+        try {
+          // Second, try top-level navigation
+          if (window.top && window.top !== window) {
+            window.top.location.href = url;
+            return;
+          }
+        } catch (e) {
+          console.log('Top navigation blocked, trying new tab');
+        }
+
+        try {
+          // Third, try opening in new tab
+          const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+          if (newWindow) {
+            toast({
+              title: "Payment Page Opened",
+              description: "Complete your payment in the new tab to finish registration.",
+            });
+            return;
+          }
+        } catch (e) {
+          console.log('New tab blocked, showing URL for manual copy');
+        }
+
+        // Final fallback - show URL for manual copy
+        navigator.clipboard?.writeText(url).then(() => {
+          toast({
+            title: "Payment URL Copied",
+            description: "The payment link has been copied to your clipboard. Paste it in a new tab to complete registration.",
+          });
+        }).catch(() => {
+          toast({
+            title: "Manual Navigation Required",
+            description: `Please copy this URL to complete payment: ${url}`,
+          });
+        });
+
+      } catch (error) {
+        console.error('Checkout error:', error);
+        toast({
+          title: "Payment Setup Failed",
+          description: error instanceof Error ? error.message : 'Failed to setup payment. Please try again.',
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     return (
@@ -503,124 +598,74 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
           <div className="flex items-center mb-6">
             <CreditCard className="w-8 h-8 text-blue-600 mr-3" />
-            <h2 className="text-2xl font-bold text-slate-800">Payment Information</h2>
+            <h2 className="text-2xl font-bold text-slate-800">Secure Payment Setup</h2>
           </div>
 
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
             <div className="flex items-start">
-              <Shield className="w-5 h-5 text-blue-600 mt-0.5 mr-2" />
+              <Shield className="w-6 h-6 text-blue-600 mt-1 mr-3" />
               <div>
-                <p className="text-sm font-medium text-blue-800 mb-1">
-                  Secure Payment Processing
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                  Stripe Secure Checkout
+                </h3>
+                <p className="text-blue-700 mb-3">
+                  You'll be redirected to Stripe's secure payment page to complete your subscription setup.
                 </p>
-                <p className="text-sm text-blue-600">
-                  Your card will be charged automatically after your 5-day free trial ends. You can cancel anytime during the trial period.
-                </p>
+                <ul className="text-sm text-blue-600 space-y-1">
+                  <li>• 5-day free trial with no immediate charges</li>
+                  <li>• Industry-standard encryption and security</li>
+                  <li>• Cancel anytime during trial period</li>
+                  <li>• Automatic billing after trial ends</li>
+                </ul>
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-2">
-                Cardholder Name
-              </Label>
-              <input
-                type="text"
-                id="cardholderName"
-                value={paymentData.cardholderName}
-                onChange={(e) => handlePaymentChange('cardholderName', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter name as it appears on card"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                Card Number
-              </Label>
-              <input
-                type="text"
-                id="cardNumber"
-                value={paymentData.cardNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
-                  handlePaymentChange('cardNumber', value);
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="expiryMonth" className="block text-sm font-medium text-gray-700 mb-2">
-                  Month
-                </Label>
-                <Select onValueChange={(value) => handlePaymentChange('expiryMonth', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="MM" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                      <SelectItem key={month} value={month.toString().padStart(2, '0')}>
-                        {month.toString().padStart(2, '0')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="expiryYear" className="block text-sm font-medium text-gray-700 mb-2">
-                  Year
-                </Label>
-                <Select onValueChange={(value) => handlePaymentChange('expiryYear', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="YY" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i).map(year => (
-                      <SelectItem key={year} value={year.toString().slice(-2)}>
-                        {year.toString().slice(-2)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-2">
-                  CVV
-                </Label>
-                <input
-                  type="text"
-                  id="cvv"
-                  value={paymentData.cvv}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    handlePaymentChange('cvv', value);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="123"
-                  maxLength={4}
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-start">
-                <Lock className="w-5 h-5 text-gray-600 mt-0.5 mr-2" />
+          {/* Selected Plan Summary */}
+          {selectedPlan && plans ? (
+            <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
+              <h4 className="font-semibold text-gray-800 mb-2">Selected Plan Summary</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-sm font-medium text-gray-800 mb-1">
-                    Your information is secure
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    We use industry-standard encryption to protect your payment information. Your data is never stored on our servers.
-                  </p>
+                  <span className="text-gray-600">Plan:</span>
+                  <span className="ml-2 font-medium">
+                    {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected Plan'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Billing:</span>
+                  <span className="ml-2 font-medium">
+                    {formatCurrency(billingInterval === 'month' ? 
+                      (plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.monthlyPrice || 0 : 
+                      (plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.yearlyPrice || 0
+                    )}/{billingInterval}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Regions:</span>
+                  <span className="ml-2 font-medium">{selectedRegions.length} selected</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Ports:</span>
+                  <span className="ml-2 font-medium">{selectedPorts.length} selected</span>
                 </div>
               </div>
+            </div>
+          ) : null}
+
+          {/* Security Features */}
+          <div className="mb-8 space-y-3">
+            <div className="flex items-center text-sm text-gray-600">
+              <Lock className="w-4 h-4 mr-2" />
+              <span>256-bit SSL encryption</span>
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <Shield className="w-4 h-4 mr-2" />
+              <span>PCI DSS compliant payment processing</span>
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              <span>No payment data stored on our servers</span>
             </div>
           </div>
         </div>
@@ -630,15 +675,21 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             Back to Ports
           </Button>
           <Button 
-            onClick={() => {
-              // Move to final step (preview data is auto-generated via useEffect)
-              setStep(5);
-            }}
-            disabled={!isPaymentValid}
-            className="bg-blue-600 hover:bg-blue-700"
+            onClick={handleStripeCheckout}
+            disabled={!selectedPlan || isLoading}
+            className="bg-blue-600 hover:bg-blue-700 px-8"
           >
-            Continue to Review
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Setting up payment...
+              </>
+            ) : (
+              <>
+                Continue to Stripe Payment
+                <ExternalLink className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>
