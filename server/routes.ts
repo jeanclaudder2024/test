@@ -2404,13 +2404,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Apply filters based on query parameters
+      // FORCE FRESH DATABASE QUERY - NO CACHING
       let vessels;
       if (region) {
         vessels = await vesselService.getVesselsByRegion(region);
       } else {
         vessels = await vesselService.getAllVessels();
       }
+      
+      console.log(`🚢 FRESH DATABASE QUERY: Retrieved ${vessels.length} total vessels`);
       
       // Filter to show only oil-related vessels and exclude inactive vessels
       vessels = vessels.filter(v => {
@@ -2437,6 +2439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                vesselTypeStr.includes('bitumen');
       });
       
+      console.log(`🚢 Filtered to ${vessels.length} oil vessels`);
+      
       // Apply vessel type filter if specified
       if (vesselType && vesselType !== 'all') {
         vessels = vessels.filter(v => 
@@ -2451,6 +2455,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Applied subscription limit: showing ${finalLimit} of ${vessels.length} total vessels`);
       }
       
+      // Prevent caching
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      console.log(`🚢 RETURNING ${vessels.length} VESSELS TO CLIENT`);
       res.json(vessels);
     } catch (error) {
       console.error("Error fetching vessels:", error);
@@ -2576,14 +2586,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get region from query parameter if present
       const region = req.query.region as string | undefined;
       
-      // Fetch vessels
+      // FORCE FRESH DATABASE QUERY - NO CACHING
       let vessels;
       if (region && region !== 'global') {
         vessels = await vesselService.getVesselsByRegion(region);
-        console.log(`Fetched ${vessels.length} vessels for region: ${region}`);
+        console.log(`🚢 POLLING: Fetched ${vessels.length} vessels for region: ${region}`);
       } else {
         vessels = await vesselService.getAllVessels();
-        console.log(`Fetched ${vessels.length} vessels globally`);
+        console.log(`🚢 POLLING: Fetched ${vessels.length} vessels globally`);
       }
       
       // Get pagination parameters from query or use defaults
@@ -2601,6 +2611,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const endIndex = startIndex + pageSize;
       const paginatedVessels = limitedVessels.slice(startIndex, endIndex);
       
+      // Prevent caching
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       // Return with timestamp and metadata for pagination (using limited vessel count)
       res.json({
         vessels: paginatedVessels,
@@ -2609,7 +2624,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalCount: limitedVessels.length, // Use limited count for subscription-aware pagination
         totalPages: Math.ceil(limitedVessels.length / pageSize),
         currentPage: page,
-        pageSize: pageSize
+        pageSize: pageSize,
+        _forceRefresh: true // Indicate this is fresh data
       });
       
       console.log(`Sent ${paginatedVessels.length} vessels to client via REST API polling (page ${page}/${Math.ceil(vessels.length / pageSize)})`);
@@ -3327,7 +3343,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Admin vessels endpoint called");
       const vessels = await storage.getVessels();
       console.log(`Retrieved ${vessels.length} vessels for admin`);
-      res.json(vessels);
+      
+      // Add timestamp to prevent caching issues
+      const vesselsWithTimestamp = vessels.map(vessel => ({
+        ...vessel,
+        _lastFetched: new Date().toISOString()
+      }));
+      
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.json(vesselsWithTimestamp);
     } catch (error) {
       console.error("Error fetching vessels for admin:", error);
       res.status(500).json({ error: "Failed to fetch vessels" });
