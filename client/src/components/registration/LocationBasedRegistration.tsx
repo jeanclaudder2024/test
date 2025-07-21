@@ -113,13 +113,17 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     return errors;
   };
 
-  // Update password errors when password changes
+  // Update password errors when password changes - with debounce to prevent re-renders
   React.useEffect(() => {
-    if (userPassword) {
-      setPasswordErrors(validatePassword(userPassword));
-    } else {
-      setPasswordErrors([]);
-    }
+    const timeoutId = setTimeout(() => {
+      if (userPassword) {
+        setPasswordErrors(validatePassword(userPassword));
+      } else {
+        setPasswordErrors([]);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [userPassword]);
 
   // Fetch ports from public endpoint for registration
@@ -818,12 +822,33 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     );
   };
 
-  // Step 4: Account Creation - Stable Form Component
-  const AccountCreationStep = React.useCallback(() => {
+  // Step 4: Account Creation - Stable Form Component  
+  const AccountCreationStep = () => {
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
                        passwordErrors.length === 0 && 
                        userPassword === confirmPassword;
+
+    // Stable event handlers to prevent re-renders
+    const handleFirstNameChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      setFirstName(e.target.value);
+    }, []);
+
+    const handleLastNameChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      setLastName(e.target.value);
+    }, []);
+
+    const handleEmailChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      setUserEmail(e.target.value);
+    }, []);
+
+    const handlePasswordChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      setUserPassword(e.target.value);
+    }, []);
+
+    const handleConfirmPasswordChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      setConfirmPassword(e.target.value);
+    }, []);
 
     return (
       <div className="space-y-8">
@@ -851,7 +876,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     id="firstName"
                     type="text"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={handleFirstNameChange}
                     placeholder="John"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
@@ -869,7 +894,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     id="lastName"
                     type="text"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={handleLastNameChange}
                     placeholder="Doe"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
@@ -890,7 +915,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   id="email"
                   type="email"
                   value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   placeholder="your@company.com"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   required
@@ -910,7 +935,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={userPassword}
-                  onChange={(e) => setUserPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   placeholder="Create strong password"
                   className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   required
@@ -958,7 +983,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={handleConfirmPasswordChange}
                   placeholder="Confirm password"
                   className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   required
@@ -1028,7 +1053,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         </div>
       </div>
     );
-  }, [firstName, lastName, userEmail, userPassword, confirmPassword, passwordErrors, showPassword, showConfirmPassword]);
+  };
 
   return (
     <div className="min-h-screen w-full">
