@@ -15342,5 +15342,100 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // ADMIN BROKER CHAT API ROUTES
+
+  // Get broker conversations for admin
+  app.get('/api/admin/broker/:brokerId/conversations', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const adminId = req.user?.id;
+      const brokerId = parseInt(req.params.brokerId);
+      
+      if (!adminId) {
+        return res.status(401).json({ message: 'Admin not authenticated' });
+      }
+
+      // Mock conversations between admin and specific broker
+      const conversations = [
+        {
+          id: 1,
+          brokerId,
+          adminId,
+          title: "Deal Issue - Document Verification",
+          status: "active",
+          priority: "high", 
+          createdAt: new Date().toISOString(),
+          lastMessageAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          brokerId,
+          adminId,
+          title: "Payment Processing Support",
+          status: "active",
+          priority: "normal",
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          lastMessageAt: new Date(Date.now() - 3600000).toISOString()
+        }
+      ];
+
+      res.json(conversations);
+    } catch (error: any) {
+      console.error('Error fetching admin conversations:', error);
+      res.status(500).json({ message: 'Error fetching conversations', error: error.message });
+    }
+  });
+
+  // Create new conversation from admin to broker
+  app.post('/api/admin/broker/:brokerId/conversations', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const adminId = req.user?.id;
+      const brokerId = parseInt(req.params.brokerId);
+      const { title, priority = 'normal' } = req.body;
+      
+      if (!adminId) {
+        return res.status(401).json({ message: 'Admin not authenticated' });
+      }
+
+      if (!title || title.trim() === '') {
+        return res.status(400).json({ message: 'Conversation title is required' });
+      }
+
+      const conversation = {
+        id: Date.now(),
+        brokerId,
+        adminId,
+        title: title.trim(),
+        priority,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        lastMessageAt: new Date().toISOString()
+      };
+      
+      console.log(`New conversation created by admin ${adminId} for broker ${brokerId}: ${title}`);
+      
+      res.json({ success: true, conversation });
+    } catch (error: any) {
+      console.error('Error creating admin conversation:', error);
+      res.status(500).json({ message: 'Error creating conversation', error: error.message });
+    }
+  });
+
+  // View document endpoint for admin
+  app.get('/api/admin/transaction-documents/:id/view', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: 'Invalid document ID' });
+      }
+
+      // For now, redirect to download - in production you'd implement PDF/image viewer
+      res.redirect(`/api/admin/transaction-documents/${documentId}/download`);
+    } catch (error: any) {
+      console.error('Error viewing document:', error);
+      res.status(500).json({ message: 'Error viewing document', error: error.message });
+    }
+  });
+
   return httpServer;
 }

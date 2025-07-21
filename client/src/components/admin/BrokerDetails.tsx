@@ -28,6 +28,7 @@ import {
   Eye,
   ExternalLink
 } from 'lucide-react';
+import AdminBrokerChat from '@/components/chat/AdminBrokerChat';
 
 interface BrokerDetailsProps {
   broker: any;
@@ -299,6 +300,14 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
                         <Button 
                           variant="outline" 
                           size="sm"
+                          onClick={() => window.open(`/api/admin/transaction-documents/${doc.id}/view`, '_blank')}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
                           onClick={() => window.open(`/api/admin/transaction-documents/${doc.id}/download`, '_blank')}
                         >
                           <Download className="h-4 w-4 mr-1" />
@@ -366,92 +375,7 @@ export default function BrokerDetails({ broker, onBack }: BrokerDetailsProps) {
 
         {/* Chat Tab */}
         <TabsContent value="chat" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Deal Communication</CardTitle>
-              <CardDescription>Chat with the broker about their deals</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Deal Selection */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium">Select Deal:</label>
-                <select
-                  value={selectedDeal?.id || ''}
-                  onChange={(e) => {
-                    const dealId = e.target.value;
-                    setSelectedDeal(dealId ? thisBrokerDeals.find(d => d.id === parseInt(dealId)) : null);
-                  }}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">General Message</option>
-                  {thisBrokerDeals.map((deal) => (
-                    <option key={deal.id} value={deal.id}>
-                      {deal.dealTitle} - Step {deal.currentStep}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Message History */}
-              <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
-                {messagesLoading ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-2 text-sm text-gray-500">Loading messages...</p>
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No messages yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.map((message: any) => (
-                      <div key={message.id} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2">
-                            <p className="text-sm font-medium">
-                              {message.senderName || 'Unknown'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatDate(message.createdAt)}
-                            </p>
-                            {message.dealTitle && (
-                              <Badge variant="outline" className="text-xs">
-                                {message.dealTitle}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-700 mt-1">{message.message}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Send Message */}
-              <div className="space-y-3">
-                <Textarea
-                  placeholder="Type your message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="min-h-[80px]"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                  className="w-full"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {sendMessageMutation.isPending ? 'Sending...' : 'Send Message'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <AdminBrokerChat brokerId={broker.id} broker={broker} />
         </TabsContent>
       </Tabs>
     </div>
