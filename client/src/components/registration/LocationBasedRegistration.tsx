@@ -832,12 +832,6 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
   // Step 4: Account Creation - Login Page Style Design
   const AccountCreationStep = () => {
-    // Stable component mounting
-    useEffect(() => {
-      // Simple component initialization without aggressive scroll prevention
-      return () => {};
-    }, []);
-
     const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
                        userPassword && confirmPassword && 
                        passwordErrors.length === 0 && 
@@ -894,19 +888,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   <Label htmlFor="firstName" className="text-white font-medium">
                     First Name
                   </Label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
-                    <Input
+                  <div className="relative">
+                    <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                    <input
                       id="firstName"
                       type="text"
                       value={firstName}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        setFirstName(e.target.value);
-                      }}
-                      onFocus={(e) => e.target.focus()}
+                      onChange={(e) => setFirstName(e.target.value)}
                       placeholder="John"
-                      className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20 backdrop-blur-sm"
+                      className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none backdrop-blur-sm transition-colors"
                       required
                       autoComplete="given-name"
                     />
@@ -916,19 +906,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   <Label htmlFor="lastName" className="text-white font-medium">
                     Last Name
                   </Label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
-                    <Input
+                  <div className="relative">
+                    <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                    <input
                       id="lastName"
                       type="text"
                       value={lastName}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        setLastName(e.target.value);
-                      }}
-                      onFocus={(e) => e.target.focus()}
+                      onChange={(e) => setLastName(e.target.value)}
                       placeholder="Doe"
-                      className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-400/20 backdrop-blur-sm"
+                      className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none backdrop-blur-sm transition-colors"
                       required
                       autoComplete="family-name"
                     />
@@ -941,19 +927,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 <Label htmlFor="email" className="text-white font-medium">
                   Email Address
                 </Label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
-                  <Input
+                <div className="relative">
+                  <Mail className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <input
                     id="email"
                     type="email"
                     value={userEmail}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setUserEmail(e.target.value);
-                    }}
-                    onFocus={(e) => e.target.focus()}
+                    onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="your@company.com"
-                    className="pl-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20 backdrop-blur-sm"
+                    className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none backdrop-blur-sm transition-colors"
                     required
                     autoComplete="email"
                   />
@@ -965,19 +947,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 <Label htmlFor="password" className="text-white font-medium">
                   Password
                 </Label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 group-focus-within:text-green-400 transition-colors" />
-                  <Input
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={userPassword}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setUserPassword(e.target.value);
-                    }}
-                    onFocus={(e) => e.target.focus()}
+                    onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="Create strong password"
-                    className="pl-12 pr-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-green-400 focus:ring-green-400/20 backdrop-blur-sm"
+                    className="w-full pl-12 pr-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none backdrop-blur-sm transition-colors"
                     required
                     autoComplete="new-password"
                   />
@@ -1017,19 +995,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 <Label htmlFor="confirmPassword" className="text-white font-medium">
                   Confirm Password
                 </Label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 group-focus-within:text-orange-400 transition-colors" />
-                  <Input
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setConfirmPassword(e.target.value);
-                    }}
-                    onFocus={(e) => e.target.focus()}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"
-                    className="pl-12 pr-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-400/20 backdrop-blur-sm"
+                    className="w-full pl-12 pr-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none backdrop-blur-sm transition-colors"
                     required
                     autoComplete="new-password"
                   />
