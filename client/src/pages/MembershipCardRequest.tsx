@@ -14,6 +14,10 @@ export default function MembershipCardRequest() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [cardRequested, setCardRequested] = useState(false);
 
+  // Debug logging
+  console.log('MembershipCardRequest - User:', user);
+  console.log('MembershipCardRequest - Has broker membership:', user?.hasBrokerMembership);
+
   const handleRequestCard = async () => {
     setIsRequesting(true);
 
@@ -111,8 +115,8 @@ export default function MembershipCardRequest() {
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-medium">Account: {user?.email}</p>
-                  <p className="text-sm text-muted-foreground">Verified broker member</p>
+                  <p className="font-medium">Account: {user?.email || 'Loading...'}</p>
+                  <p className="text-sm text-muted-foreground">{user?.hasBrokerMembership ? 'Verified broker member' : 'Payment completed'}</p>
                 </div>
               </div>
 
