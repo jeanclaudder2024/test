@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useTransition, startTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ export default function MembershipCardRequest() {
   const [, setLocation] = useLocation();
   const [isRequesting, setIsRequesting] = useState(false);
   const [cardRequested, setCardRequested] = useState(false);
+  const [isPending, startTransitionLocal] = useTransition();
 
   // Show loading state if auth is loading
   if (isLoading) {
@@ -68,10 +69,12 @@ export default function MembershipCardRequest() {
 
       setCardRequested(true);
 
-      // Wait a moment then redirect to broker dashboard
-      setTimeout(() => {
-        setLocation('/broker-dashboard');
-      }, 1500);
+      // Use startTransition to avoid React suspend errors
+      startTransition(() => {
+        setTimeout(() => {
+          setLocation('/broker-dashboard');
+        }, 1000);
+      });
 
     } catch (error: any) {
       toast({

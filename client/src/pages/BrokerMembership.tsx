@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useTransition, startTransition } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ const BrokerMembershipForm = () => {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPending, startTransitionLocal] = useTransition();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -84,10 +85,12 @@ const BrokerMembershipForm = () => {
 
         // User data will be updated on next page load
         
-        // Wait a moment before redirect to avoid React suspend errors
-        setTimeout(() => {
-          setLocation('/membership-card-request');
-        }, 1000);
+        // Use startTransition to avoid React suspend errors
+        startTransition(() => {
+          setTimeout(() => {
+            setLocation('/membership-card-request');
+          }, 500);
+        });
       }
     } catch (error: any) {
       toast({
