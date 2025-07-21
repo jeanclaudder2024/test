@@ -98,10 +98,17 @@ const BrokerMembershipForm = () => {
     }
   };
 
-  // If user already has broker membership, redirect to dashboard
+  // If user already has broker membership, show message instead of redirect
   if (user?.hasBrokerMembership) {
-    setLocation('/broker-dashboard');
-    return null;
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-8 text-center">
+        <h1 className="text-4xl font-bold text-green-600">Already a Broker Member!</h1>
+        <p className="text-lg text-muted-foreground">You already have broker membership.</p>
+        <Button onClick={() => setLocation('/broker-dashboard')} className="bg-blue-600 hover:bg-blue-700">
+          Go to Broker Dashboard
+        </Button>
+      </div>
+    );
   }
 
   return (

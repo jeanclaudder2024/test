@@ -9,14 +9,28 @@ import { useLocation } from 'wouter';
 
 export default function MembershipCardRequest() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [isRequesting, setIsRequesting] = useState(false);
   const [cardRequested, setCardRequested] = useState(false);
 
-  // Debug logging
-  console.log('MembershipCardRequest - User:', user);
-  console.log('MembershipCardRequest - Has broker membership:', user?.hasBrokerMembership);
+  // Show loading state if auth is loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-lg">Loading membership card request...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user, redirect to login
+  if (!user) {
+    setLocation('/login');
+    return null;
+  }
 
   const handleRequestCard = async () => {
     setIsRequesting(true);
