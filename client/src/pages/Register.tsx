@@ -391,32 +391,34 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 right-10 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-        <div className="absolute top-40 left-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
-        <div className="absolute -bottom-8 right-20 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
-      </div>
+    <div className="min-h-screen w-full">
+      {currentStep === 'location' ? (
+        <LocationBasedRegistration onComplete={handleLocationBasedComplete} />
+      ) : (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-10 right-10 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+            <div className="absolute top-40 left-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
+            <div className="absolute -bottom-8 right-20 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+          </div>
 
-      {/* Floating Elements */}
-      <div className="absolute top-20 right-1/4 opacity-20">
-        <Anchor className="h-14 w-14 text-blue-300 animate-float" />
-      </div>
-      <div className="absolute bottom-32 left-1/4 opacity-20">
-        <Waves className="h-10 w-10 text-cyan-300 animate-bounce" />
-      </div>
-      <div className="absolute top-1/2 left-10 opacity-15">
-        <Star className="h-8 w-8 text-blue-200 animate-pulse" />
-      </div>
+          {/* Floating Elements */}
+          <div className="absolute top-20 right-1/4 opacity-20">
+            <Anchor className="h-14 w-14 text-blue-300 animate-float" />
+          </div>
+          <div className="absolute bottom-32 left-1/4 opacity-20">
+            <Waves className="h-10 w-10 text-cyan-300 animate-bounce" />
+          </div>
+          <div className="absolute top-1/2 left-10 opacity-15">
+            <Star className="h-8 w-8 text-blue-200 animate-pulse" />
+          </div>
 
-      <div className="relative z-10 w-full flex justify-center">
-        {currentStep === 'location' ? (
-          <LocationBasedRegistration onComplete={handleLocationBasedComplete} />
-        ) : (
-          <RegistrationFormStep />
-        )}
-      </div>
+          <div className="relative z-10">
+            <RegistrationFormStep />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

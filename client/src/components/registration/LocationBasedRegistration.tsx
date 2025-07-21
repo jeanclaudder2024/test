@@ -580,44 +580,50 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full">
+      <div className="w-full">
         {/* Progress Indicator */}
-        <div className="mb-12">
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            {[1, 2, 3, 4].map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                  step >= stepNumber 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {stepNumber}
+        <div className="w-full bg-white border-b border-gray-200 py-8">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              {[1, 2, 3, 4].map((stepNumber) => (
+                <div key={stepNumber} className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
+                    step >= stepNumber 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {stepNumber}
+                  </div>
+                  {stepNumber < 4 && (
+                    <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
+                      step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
+                    }`} />
+                  )}
                 </div>
-                {stepNumber < 4 && (
-                  <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
-                    step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-          
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-800">
-              {step === 1 && "Choose Your Plan"}
-              {step === 2 && "Select Regions"}
-              {step === 3 && "Choose Ports"}
-              {step === 4 && "Review & Confirm"}
-            </h1>
+              ))}
+            </div>
+            
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-slate-800">
+                {step === 1 && "Choose Your Plan"}
+                {step === 2 && "Select Regions"}
+                {step === 3 && "Choose Ports"}
+                {step === 4 && "Review & Confirm"}
+              </h1>
+            </div>
           </div>
         </div>
 
         {/* Step Content */}
-        {step === 1 && <PlanStep />}
-        {step === 2 && <RegionStep />}
-        {step === 3 && <PortStep />}
-        {step === 4 && <PreviewStep />}
+        <div className="w-full min-h-[calc(100vh-200px)] bg-gray-50">
+          <div className="max-w-7xl mx-auto px-6 py-12">
+            {step === 1 && <PlanStep />}
+            {step === 2 && <RegionStep />}
+            {step === 3 && <PortStep />}
+            {step === 4 && <PreviewStep />}
+          </div>
+        </div>
       </div>
     </div>
   );
