@@ -32,7 +32,12 @@ import {
   ExternalLink,
   UserCheck,
   User,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff,
+  Mail,
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-react';
 
 interface Port {
@@ -88,7 +93,32 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [userEmail, setUserEmail] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Password validation function
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = [];
+    if (password.length < 8) errors.push("At least 8 characters long");
+    if (!/[A-Z]/.test(password)) errors.push("One uppercase letter");
+    if (!/[a-z]/.test(password)) errors.push("One lowercase letter");
+    if (!/[0-9]/.test(password)) errors.push("One number");
+    if (!/[!@#$%^&*]/.test(password)) errors.push("One special character (!@#$%^&*)");
+    return errors;
+  };
+
+  // Update password errors when password changes
+  React.useEffect(() => {
+    if (userPassword) {
+      setPasswordErrors(validatePassword(userPassword));
+    } else {
+      setPasswordErrors([]);
+    }
+  }, [userPassword]);
 
   // Fetch ports from public endpoint for registration
   const { data: portsResponse, isLoading: portsLoading } = useQuery({
@@ -494,91 +524,239 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     </div>
   );
 
-  // Step 4: Account Creation with Email and Password
+  // Step 4: Account Creation with Email and Password (Login-style design)
   const AccountCreationStep = () => {
+    const isFormValid = firstName.trim() && lastName.trim() && userEmail.trim() && 
+                       userPassword && confirmPassword && 
+                       passwordErrors.length === 0 && 
+                       userPassword === confirmPassword;
+
     return (
-      <div className="space-y-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-slate-800 mb-4">Create Your Account</h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Set up your PetroDealHub account to complete the registration process.
-          </p>
+      <div className="min-h-[80vh] bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center relative overflow-hidden rounded-2xl">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-40 right-10 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
+          <div className="absolute -bottom-8 left-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
         </div>
 
-        <Card className="max-w-md mx-auto border-2 border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-2xl text-blue-800 flex items-center justify-center">
-              <User className="w-6 h-6 mr-2" />
-              Account Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email Address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                placeholder="your@company.com"
-                className="w-full"
-                required
-              />
-            </div>
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-1/4 opacity-20">
+          <Ship className="h-16 w-16 text-blue-300 animate-float" />
+        </div>
+        <div className="absolute bottom-32 right-1/4 opacity-20">
+          <Waves className="h-12 w-12 text-cyan-300 animate-bounce" />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={userPassword}
-                onChange={(e) => setUserPassword(e.target.value)}
-                placeholder="Create a strong password"
-                className="w-full"
-                required
-              />
+        <div className="relative z-10 w-full max-w-md px-6">
+          {/* Logo and Header */}
+          <div className="text-center mb-8 space-y-6">
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <Ship className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-white" />
+                </div>
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                Confirm Password
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div className="p-4 bg-blue-100 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <Shield className="w-4 h-4 inline mr-1" />
-                Your account will be created with a {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-day free trial
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-2">
+                Create Your Account
+              </h1>
+              <p className="text-blue-200 opacity-90">
+                Set up your PetroDealHub account to complete registration
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <div className="flex justify-between mt-8 max-w-md mx-auto">
-          <Button variant="outline" onClick={() => setStep(3)}>
-            Back to Ports
-          </Button>
-          <Button 
-            onClick={() => setStep(5)}
-            disabled={!userEmail || !userPassword || userPassword !== confirmPassword}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Continue to Review
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
+          {/* Form Card */}
+          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+            <CardContent className="p-8 space-y-6">
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                    First Name
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="John"
+                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                    Last Name
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Doe"
+                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email Address
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="your@company.com"
+                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={userPassword}
+                    onChange={(e) => setUserPassword(e.target.value)}
+                    placeholder="Create a strong password"
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
+                
+                {/* Password Requirements */}
+                {userPassword && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs font-medium text-gray-600 mb-1">Password Requirements:</p>
+                    {['At least 8 characters long', 'One uppercase letter', 'One lowercase letter', 'One number', 'One special character (!@#$%^&*)'].map((requirement, index) => {
+                      const isMet = !passwordErrors.includes(requirement);
+                      return (
+                        <div key={index} className="flex items-center space-x-2">
+                          {isMet ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className={`text-xs ${isMet ? 'text-green-600' : 'text-red-600'}`}>
+                            {requirement}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                  Confirm Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm your password"
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
+                
+                {/* Password Match Indicator */}
+                {confirmPassword && (
+                  <div className="flex items-center space-x-2 mt-1">
+                    {userPassword === confirmPassword ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-xs text-green-600">Passwords match</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <span className="text-xs text-red-600">Passwords do not match</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Trial Info */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-3">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">
+                      Free {(plans as SubscriptionPlan[])?.find(p => p.id === selectedPlan)?.trialDays || 5}-Day Trial Included
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      No credit card required • Cancel anytime
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8">
+            <Button 
+              variant="outline" 
+              onClick={() => setStep(3)}
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+            >
+              Back to Ports
+            </Button>
+            <Button 
+              onClick={() => setStep(5)}
+              disabled={!isFormValid}
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8"
+            >
+              Continue to Review
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -597,6 +775,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         const registrationData = {
           email: userEmail,
           password: userPassword,
+          firstName: firstName,
+          lastName: lastName,
           selectedPlan: selectedPlan,
           selectedRegions: selectedRegions,
           selectedPorts: selectedPorts,

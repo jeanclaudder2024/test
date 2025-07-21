@@ -188,12 +188,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Complete registration endpoint with account creation
   app.post("/api/complete-registration", async (req: Request, res: Response) => {
     try {
-      const { email, password, selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
+      const { email, password, firstName, lastName, selectedPlan, selectedRegions, selectedPorts, billingInterval } = req.body;
       
-      if (!email || !password) {
+      if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ 
           success: false,
-          message: "Email and password are required" 
+          message: "Email, password, first name, and last name are required" 
         });
       }
       
@@ -204,8 +204,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [user] = await db.insert(users).values({
         email: email,
         password: hashedPassword,
-        firstName: 'User',
-        lastName: 'Account'
+        firstName: firstName,
+        lastName: lastName
       }).returning();
       
       // Create subscription for the user
