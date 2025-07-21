@@ -861,10 +861,10 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           </div>
 
           {/* Account Creation Form - Login Style */}
-          <Card className="backdrop-blur-xl bg-white/10 border-white/20 shadow-2xl stable-form">
+          <Card className="bg-white border-gray-200 shadow-xl stable-form">
             <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl text-white">Account Setup</CardTitle>
-              <CardDescription className="text-slate-300">
+              <CardTitle className="text-2xl text-gray-900">Account Setup</CardTitle>
+              <CardDescription className="text-gray-600">
                 Create your oil trading account
               </CardDescription>
             </CardHeader>
@@ -872,7 +872,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-white font-medium">
+                  <Label htmlFor="firstName" className="text-gray-700 font-medium">
                     First Name
                   </Label>
                   <div className="relative">
@@ -883,14 +883,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="John"
-                      className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none backdrop-blur-sm transition-colors"
+                      className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
                       required
                       autoComplete="given-name"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-white font-medium">
+                  <Label htmlFor="lastName" className="text-gray-700 font-medium">
                     Last Name
                   </Label>
                   <div className="relative">
@@ -901,7 +901,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Doe"
-                      className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none backdrop-blur-sm transition-colors"
+                      className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
                       required
                       autoComplete="family-name"
                     />
@@ -911,7 +911,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white font-medium">
+                <Label htmlFor="email" className="text-gray-700 font-medium">
                   Email Address
                 </Label>
                 <div className="relative">
@@ -922,7 +922,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="your@company.com"
-                    className="w-full pl-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none backdrop-blur-sm transition-colors"
+                    className="w-full pl-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
                     required
                     autoComplete="email"
                   />
@@ -931,7 +931,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-white font-medium">
+                <Label htmlFor="password" className="text-gray-700 font-medium">
                   Password
                 </Label>
                 <div className="relative">
@@ -942,7 +942,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="Create strong password"
-                    className="w-full pl-12 pr-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none backdrop-blur-sm transition-colors"
+                    className="w-full pl-12 pr-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
                     required
                     autoComplete="new-password"
                   />
@@ -979,7 +979,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
               {/* Confirm Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-white font-medium">
+                <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
                   Confirm Password
                 </Label>
                 <div className="relative">
@@ -990,7 +990,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"
-                    className="w-full pl-12 pr-12 h-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none backdrop-blur-sm transition-colors"
+                    className="w-full pl-12 pr-12 h-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
                     required
                     autoComplete="new-password"
                   />
