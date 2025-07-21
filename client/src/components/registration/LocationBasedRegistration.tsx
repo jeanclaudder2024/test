@@ -68,7 +68,7 @@ interface LocationBasedRegistrationProps {
 
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
   const [step, setStep] = useState(1);
-  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
@@ -102,13 +102,10 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   // Get regions based on selected plan limits
   const getRegionsForPlan = (planId: number) => {
     const plan = plans?.find(p => p.id === planId);
-    if (!plan) return ['Middle East', 'Europe']; // Show only Middle East and Europe by default
+    if (!plan) return regions; // Show all regions if no plan found
     
-    // Show only Middle East and Europe regions during registration
-    const availableRegions = regions.filter(region => 
-      region === 'Middle East' || region === 'Europe'
-    );
-    return availableRegions;
+    // Show all available regions during registration
+    return regions;
   };
 
   // Get maximum regions allowed for a plan (for display purposes)
@@ -118,9 +115,9 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     return regions.length; // Enterprise - all regions
   };
 
-  // Filter ports by selected regions (no plan limits during registration)
-  const filteredPorts = selectedRegions.length > 0
-    ? ports.filter((port: Port) => selectedRegions.includes(port.region))
+  // Filter ports by selected region (show all ports in selected region)
+  const filteredPorts = selectedRegion
+    ? ports.filter((port: Port) => port.region === selectedRegion)
     : [];
 
   // Generate preview data when ports and plan are selected
@@ -132,14 +129,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       if (plan && selectedPortData.length > 0) {
         setPreviewData({
           selectedPorts: selectedPortData,
-          selectedRegions: selectedRegions,
+          selectedRegion: selectedRegion,
           selectedPlan: plan,
           totalPortsSelected: selectedPorts.length,
-          totalRegionsSelected: selectedRegions.length
+          regionName: selectedRegion
         });
       }
     }
-  }, [selectedPorts, selectedPlan, selectedRegions, ports, plans]);
+  }, [selectedPorts, selectedPlan, selectedRegion, ports, plans]);
 
   // Step 1: Select Subscription Plan (Beautiful Design Matching Pricing Page)
   const PlanStep = () => {
@@ -292,21 +289,18 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-blue-800 font-semibold">
-                Your {plans.find(p => p.id === selectedPlan)?.name} plan allows access to{' '}
-                {getMaxRegionsForPlan(selectedPlan)} of {regions.length} available maritime regions.
+                Select a region to view all available ports in that area.
               </p>
             </div>
             
-            {selectedRegions.length > 0 && (
+            {selectedRegion && (
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-green-800 font-semibold">
-                  Selected: {selectedRegions.length} / {getMaxRegionsForPlan(selectedPlan)} regions
+                  Selected Region: {selectedRegion}
                 </p>
-                {selectedRegions.length >= getMaxRegionsForPlan(selectedPlan) && selectedPlan !== 3 && (
-                  <p className="text-green-600 text-sm mt-1">
-                    You've reached your plan limit. Upgrade to access more regions.
-                  </p>
-                )}
+                <p className="text-green-600 text-sm mt-1">
+                  {ports.filter((p: Port) => p.region === selectedRegion).length} ports available in this region
+                </p>
               </div>
             )}
           </div>
@@ -315,34 +309,18 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {getRegionsForPlan(selectedPlan || 1).map((region) => {
-          const isSelected = selectedRegions.includes(region);
-          const maxRegions = getMaxRegionsForPlan(selectedPlan || 1);
-          const isAtLimit = selectedRegions.length >= maxRegions && !isSelected;
+          const isSelected = selectedRegion === region;
           
           return (
             <Card 
               key={region}
-              className={`transition-all duration-300 ${
+              className={`transition-all duration-300 cursor-pointer ${
                 isSelected
                   ? 'ring-4 ring-blue-500 bg-blue-50 border-blue-200' 
-                  : isAtLimit
-                    ? 'opacity-50 cursor-not-allowed bg-gray-50'
-                    : 'cursor-pointer hover:shadow-lg hover:shadow-xl'
+                  : 'hover:shadow-lg hover:shadow-xl'
               }`}
             onClick={() => {
-              setSelectedRegions(prev => {
-                if (prev.includes(region)) {
-                  // Remove region if already selected
-                  return prev.filter(r => r !== region);
-                } else {
-                  // Add region if under limit
-                  const maxRegions = getMaxRegionsForPlan(selectedPlan || 1);
-                  if (prev.length < maxRegions) {
-                    return [...prev, region];
-                  }
-                  return prev; // Don't add if at limit
-                }
-              });
+              setSelectedRegion(region);
             }}
           >
             <CardHeader className="text-center">
@@ -359,14 +337,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             
             <CardContent className="text-center">
               <Button 
-                variant={selectedRegions.includes(region) ? "default" : "outline"}
+                variant={isSelected ? "default" : "outline"}
                 className={`w-full ${
-                  selectedRegions.includes(region) 
+                  isSelected 
                     ? 'bg-blue-600 hover:bg-blue-700' 
                     : 'hover:bg-blue-50'
                 }`}
               >
-                {selectedRegions.includes(region) ? (
+                {isSelected ? (
                   <span className="flex items-center justify-center">
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Selected
@@ -387,7 +365,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         </Button>
         <Button 
           onClick={() => setStep(3)}
-          disabled={selectedRegions.length === 0}
+          disabled={!selectedRegion}
           className="bg-blue-600 hover:bg-blue-700"
         >
           Continue to Port Selection
@@ -409,17 +387,15 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         </p>
       </div>
 
-      {selectedRegions.map((region) => (
-        <div key={region} className="mb-12">
+      {selectedRegion && (
+        <div className="mb-12">
           <h3 className="text-2xl font-bold mb-6 text-slate-800 flex items-center">
             <Waves className="w-6 h-6 mr-3 text-blue-600" />
-            {region}
+            {selectedRegion} - All Available Ports
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ports
-              .filter((port: Port) => port.region === region)
-              .map((port: Port) => (
+            {filteredPorts.map((port: Port) => (
                 <Card 
                   key={port.id}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
@@ -458,7 +434,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               ))}
           </div>
         </div>
-      ))}
+      )}
 
       <div className="flex justify-between mt-8">
         <Button variant="outline" onClick={() => setStep(2)}>
@@ -526,13 +502,11 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             <CardContent>
               <div className="space-y-6">
                 <div className="bg-white p-4 rounded-lg">
-                  <h4 className="font-bold text-green-800 mb-2">Maritime Regions ({previewData.totalRegionsSelected})</h4>
+                  <h4 className="font-bold text-green-800 mb-2">Selected Region</h4>
                   <div className="flex flex-wrap gap-2">
-                    {previewData.selectedRegions.map((region: string) => (
-                      <Badge key={region} variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                        {region}
-                      </Badge>
-                    ))}
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                      {previewData.regionName}
+                    </Badge>
                   </div>
                 </div>
                 
