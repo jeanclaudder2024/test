@@ -78,6 +78,7 @@ function ProtectedRoutes() {
           </Route>
           <Route path="/broker-locked" component={BrokerLocked} />
           <Route path="/broker-membership" component={BrokerMembership} />
+          <Route path="/membership-card-request" component={lazy(() => import("./pages/MembershipCardRequest"))} />
           <Route path="/broker-card-application" component={BrokerCardApplication} />
           <Route path="/broker-upgrade" component={BrokerUpgrade} />
           <Route path="/broker-payment" component={BrokerPayment} />

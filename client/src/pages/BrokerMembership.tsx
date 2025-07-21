@@ -84,8 +84,8 @@ const BrokerMembershipForm = () => {
 
         // User data will be updated on next page load
         
-        // Redirect to broker card application
-        setLocation('/broker-card-application');
+        // Redirect to membership card request page
+        setLocation('/membership-card-request');
       }
     } catch (error: any) {
       toast({

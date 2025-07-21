@@ -5431,6 +5431,54 @@ Only use authentic, real-world data for existing refineries.`;
       res.status(500).json({ message: "Error confirming broker membership: " + error.message });
     }
   });
+
+  // Request broker membership card
+  app.post('/api/broker/request-membership-card', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const userId = req.user.id;
+
+      // Check if user has broker membership
+      const user = await storage.getUserById(userId);
+      if (!user?.hasBrokerMembership) {
+        return res.status(403).json({ 
+          message: 'Broker membership required to request membership card'
+        });
+      }
+
+      // Generate membership card request (in a real app, this would trigger card generation/mailing)
+      const membershipCardRequest = {
+        userId: userId,
+        requestedAt: new Date(),
+        status: 'requested',
+        membershipId: `PDB-${Date.now()}-${userId}`,
+        cardType: 'Professional Oil Broker'
+      };
+
+      console.log('Membership card requested:', membershipCardRequest);
+
+      // In a real application, you would:
+      // 1. Save the card request to database
+      // 2. Generate a physical membership card
+      // 3. Send card to user's address
+      // 4. Send confirmation email
+
+      res.json({ 
+        success: true, 
+        message: 'Membership card requested successfully',
+        membershipId: membershipCardRequest.membershipId
+      });
+    } catch (error: any) {
+      console.error('Error requesting membership card:', error);
+      res.status(500).json({ 
+        message: 'Failed to request membership card',
+        error: error.message 
+      });
+    }
+  });
   
   // API routes for vessel distribution data
   app.use("/api/distribution", vesselDistributionRouter);
