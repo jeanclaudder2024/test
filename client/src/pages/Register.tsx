@@ -410,7 +410,7 @@ export default function RegisterPage() {
         <Star className="h-8 w-8 text-blue-200 animate-pulse" />
       </div>
 
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full flex justify-center">
         {currentStep === 'location' ? (
           <LocationBasedRegistration onComplete={handleLocationBasedComplete} />
         ) : (

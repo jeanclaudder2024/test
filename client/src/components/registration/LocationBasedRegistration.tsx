@@ -275,7 +275,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   };
 
   // Step 2: Select Maritime Regions
-  const RegionStep = () => (
+  const RegionStep = (): React.JSX.Element => (
     <div className="space-y-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
@@ -285,11 +285,11 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           Choose the maritime regions you want to focus on based on your selected plan.
         </p>
         
-        {selectedPlan && plans && (
+        {selectedPlan && plans && plans.length > 0 && (
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-blue-800 font-semibold">
-                Your {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name} plan allows access to{' '}
+                Your {(plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name || 'Selected'} plan allows access to{' '}
                 {getMaxRegionsForPlan(selectedPlan)} of {regions.length} available maritime regions.
               </p>
             </div>
