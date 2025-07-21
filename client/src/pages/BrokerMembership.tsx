@@ -30,10 +30,23 @@ const BrokerMembershipForm = () => {
 
     try {
       // Create payment intent for broker membership
-      const response = await apiRequest('POST', '/api/broker-membership-payment') as any;
-      const { clientSecret } = response;
+      console.log('Calling broker membership payment endpoint...');
+      const response = await fetch('/api/broker-membership-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       
-      console.log('Payment intent response:', response);
+      const responseData = await response.json();
+      console.log('Payment intent response:', responseData);
+      
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Failed to create payment intent');
+      }
+      
+      const { clientSecret } = responseData;
       
       if (!clientSecret) {
         throw new Error('No client secret received from server');
