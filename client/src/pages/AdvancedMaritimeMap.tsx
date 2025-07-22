@@ -265,9 +265,9 @@ export default function AdvancedMaritimeMap() {
     staleTime: 5 * 60 * 1000
   });
 
-  // Filter vessels based on selected types and search
+  // Filter vessels based on selected types and search - show ALL by default
   const filteredVessels = useMemo(() => {
-    return vessels.filter(vessel => {
+    const filtered = vessels.filter(vessel => {
       const matchesType = selectedVesselTypes.length === 0 || 
         selectedVesselTypes.includes(vessel.vesselType);
       const matchesSearch = !searchTerm || 
@@ -276,6 +276,10 @@ export default function AdvancedMaritimeMap() {
         vessel.mmsi.includes(searchTerm);
       return matchesType && matchesSearch;
     });
+    
+    // Debug logging
+    console.log(`Advanced Map: ${vessels.length} total vessels, ${filtered.length} after filtering`);
+    return filtered;
   }, [vessels, selectedVesselTypes, searchTerm]);
 
   // Get exact same vessel icon as vessel detail page

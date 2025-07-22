@@ -161,6 +161,21 @@ export default function OilVesselMap() {
   const error = vesselError;
   const connectionStatus = 'connected';
 
+  // Filter vessels with valid coordinates
+  const mappableVessels = oilVessels.filter(vessel => 
+    vessel.currentLat && 
+    vessel.currentLng && 
+    !isNaN(parseFloat(vessel.currentLat.toString())) && 
+    !isNaN(parseFloat(vessel.currentLng.toString()))
+  );
+
+  // Debug logging for vessel filtering
+  React.useEffect(() => {
+    console.log(`Loaded ${vessels.length} vessels from database`);
+    console.log(`After filtering: ${oilVessels.length} vessels (before coordinate check)`);
+    console.log(`Final mappable vessels: ${mappableVessels.length} vessels`);
+  }, [vessels.length, oilVessels.length, mappableVessels.length]);
+
   // Fetch ports data with error handling - use public endpoint
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery({
     queryKey: ['/api/ports'],
@@ -231,21 +246,13 @@ export default function OilVesselMap() {
     }
   };
 
-  // Filter for oil vessels with dynamic oil types
+  // Show ALL vessels from database (same as vessels page) - no oil filtering
   const oilVessels = vessels.filter(vessel => {
     const vesselType = vessel.vesselType?.toLowerCase() || '';
     const oilType = vessel.oilType?.toLowerCase() || '';
     const cargoType = vessel.cargoType?.toLowerCase() || '';
     
-    // Check if vessel is oil-related
-    const isOilVessel = vesselType.includes('tanker') || 
-           vesselType.includes('oil') || 
-           vesselType.includes('crude') || 
-           vesselType.includes('lng') || 
-           vesselType.includes('lpg') || 
-           vesselType.includes('chemical');
-    
-    // Apply vessel filter based on oil types from admin panel
+    // Apply vessel filter based on oil types from admin panel (only if filter is selected)
     if (vesselFilter !== 'all') {
       // Check if filter matches any oil type from admin panel
       const matchesOilType = Array.isArray(oilTypes) && oilTypes.some((oilTypeObj: any) => {
@@ -263,6 +270,9 @@ export default function OilVesselMap() {
         if (vesselFilter === 'crude' && !vesselType.includes('crude')) return false;
         if (vesselFilter === 'lng' && !vesselType.includes('lng')) return false;
         if (vesselFilter === 'lpg' && !vesselType.includes('lpg')) return false;
+        if (vesselFilter === 'diesel' && !vesselType.includes('diesel')) return false;
+        if (vesselFilter === 'gasoline' && !vesselType.includes('gasoline')) return false;
+        if (vesselFilter === 'fuel' && !vesselType.includes('fuel')) return false;
       } else if (!matchesOilType) {
         return false;
       }
@@ -277,19 +287,12 @@ export default function OilVesselMap() {
                            vessel.mmsi?.toLowerCase().includes(searchLower) ||
                            oilType.includes(searchLower) ||
                            cargoType.includes(searchLower);
-      return isOilVessel && matchesSearch;
+      return matchesSearch;
     }
     
-    return isOilVessel;
+    // Show ALL vessels by default (no oil-only filtering)
+    return true;
   });
-
-  // Filter vessels with valid coordinates
-  const mappableVessels = oilVessels.filter(vessel => 
-    vessel.currentLat && 
-    vessel.currentLng && 
-    !isNaN(parseFloat(vessel.currentLat.toString())) && 
-    !isNaN(parseFloat(vessel.currentLng.toString()))
-  );
 
   const defaultCenter: [number, number] = [25.0, 55.0]; // Dubai area
   const defaultZoom = 4;
