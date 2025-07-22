@@ -171,9 +171,7 @@ export default function Vessels() {
     staleTime: 0, // Always fetch fresh data
   });
 
-  // For direct API access using the API endpoint
-  const [apiVessels, setApiVessels] = useState<Vessel[]>([]);
-  const [apiLoading, setApiLoading] = useState(false);
+  // Direct database access only - removed API state variables
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string>("global");
   // Track which data source is being used - database only
@@ -221,6 +219,41 @@ export default function Vessels() {
     // If it's a number but we can't find the port, show it as is
     return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
+
+  // Fetch vessels from database only
+  useEffect(() => {
+    const fetchVesselsFromDatabase = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('authToken');
+        
+        const response = await axios.get('/api/vessels/database', {
+          params: {
+            region: selectedRegion,
+            limit: 1540, // Get up to 1540 vessels as requested
+            vesselType: 'oil'
+          },
+          headers: {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          }
+        });
+        
+        if (response.status === 200 && response.data) {
+          const vesselsData = response.data;
+          setVessels(vesselsData);
+          setActualTotalCount(vesselsData.length);
+          console.log(`Loaded ${vesselsData.length} vessels from database`);
+        }
+      } catch (error) {
+        console.error("Error fetching vessels from database:", error);
+        setFetchError("Failed to load vessels from database");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVesselsFromDatabase();
+  }, [selectedRegion]);
 
   // Fetch ports data for name resolution
   useEffect(() => {
@@ -278,61 +311,10 @@ export default function Vessels() {
     .slice(0, MAX_OIL_VESSELS); // Limit to requested max
   };
 
-  // Fetch vessels directly from database only
-  const fetchVesselsFromDatabase = async () => {
-    try {
-      setApiLoading(true);
-      setFetchError(null);
-      
-      console.log('Fetching vessels from database only...');
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get('/api/vessels/database', {
-        params: { 
-          region: selectedRegion,
-          limit: MAX_OIL_VESSELS * 2, // Request more to ensure we get enough after filtering
-          vesselType: 'oil'
-        },
-        headers: {
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
-        }
-      });
-      
-      if (response.data && Array.isArray(response.data)) {
-        console.log('Fetched vessels from database:', response.data.length);
-        // Filter to only show oil vessels with real locations
-        const filteredVessels = filterOilVesselsWithRealLocations(response.data);
-        console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
-        setApiVessels(filteredVessels);
-        setFetchError(null);
-        setDataSource('database');
-      } else {
-        setFetchError('No vessels found in database');
-      }
-    } catch (error) {
-      console.error('Error fetching vessels from database:', error);
-      setFetchError('Failed to fetch vessels from database');
-    } finally {
-      setApiLoading(false);
-    }
-  };
-  
-  // Fetch vessels on component mount and when region changes
+  // Use database vessels only - no external APIs or WebSocket
   useEffect(() => {
-    fetchVesselsFromDatabase();
-    // Fetch again every 5 minutes
-    const intervalId = setInterval(fetchVesselsFromDatabase, 5 * 60 * 1000);
-    
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
-  }, [selectedRegion]);
-  
-  // Use database vessels only
-  useEffect(() => {
-    // Use database vessels only - no external APIs or WebSocket
-    const sourceVessels = apiVessels; // apiVessels now contains database data only
-    
-    // Make sure we have all required fields for the Vessel type
-    const processedVessels = sourceVessels.map(vessel => ({
+    // Use database vessels from the main useEffect above
+    const processedVessels = vessels.map(vessel => ({
       ...vessel,
       currentSpeed: vessel.currentSpeed || 0,
       departureTime: vessel.departureTime || null,
@@ -343,12 +325,9 @@ export default function Vessels() {
       isOilVessel: true
     })) as Vessel[];
     
-    console.log(`Showing ${processedVessels.length} authentic oil vessels from database only`);
-    
-    setVessels(processedVessels);
-    setActualTotalCount(processedVessels.length);
-    setLoading(apiLoading);
-  }, [apiVessels, apiLoading]);
+    // Vessels are already loaded and processed in the main database fetch useEffect above
+    // No additional processing needed here
+  }, []);
   
   // Helper function to determine oil category using database oil types
   const getOilCategory = (cargoType: string | null | undefined): string => {
@@ -552,7 +531,7 @@ export default function Vessels() {
   
   // Handler for the WebSocket pagination
   const handleWsPageChange = (newPage: number) => {
-    goToPage(newPage);
+    setCurrentPage(newPage);
   };
   
   // Function to ensure all vessels have destinations
@@ -644,7 +623,7 @@ export default function Vessels() {
           <div className="p-4 text-center">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Vessels</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-              {loading ? '—' : (totalCount || vessels.length || apiVessels.length || filteredVessels.length || currentVessels.length || vesselsWithCategories.length || 2499).toLocaleString()}
+              {loading ? '—' : (actualTotalCount || vessels.length || 0).toLocaleString()}
             </p>
           </div>
           <div className="p-4 text-center">
@@ -659,14 +638,14 @@ export default function Vessels() {
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Vessels</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {loading ? '—' : 
-                Math.round(0.82 * (totalCount || vessels.length || apiVessels.length || filteredVessels.length || currentVessels.length || vesselsWithCategories.length || 2499)).toLocaleString()}
+                Math.round(0.82 * (actualTotalCount || vessels.length || 0)).toLocaleString()}
             </p>
           </div>
           <div className="p-4 text-center">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Loading/Unloading</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {loading ? '—' : 
-                Math.round(0.09 * (totalCount || vessels.length || apiVessels.length || filteredVessels.length || currentVessels.length || vesselsWithCategories.length || 2499)).toLocaleString()}
+                Math.round(0.09 * (actualTotalCount || vessels.length || 0)).toLocaleString()}
             </p>
           </div>
         </div>
@@ -874,7 +853,7 @@ export default function Vessels() {
       </div>
       
       {/* Simple Pagination Controls */}
-      {totalCount > 0 && totalPages > 1 && (
+      {actualTotalCount > 0 && Math.ceil(actualTotalCount / vesselsPerPage) > 1 && (
         <div className="mb-6 p-4 border rounded-md bg-gray-50">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-2">
             <h3 className="text-base font-medium flex items-center mb-2 sm:mb-0">
@@ -885,8 +864,8 @@ export default function Vessels() {
               <label className="text-sm mr-2">Items per page:</label>
               <select 
                 className="text-sm border rounded-md px-2 py-1"
-                value={pageSize}
-                onChange={(e) => changePageSize(Number(e.target.value))}
+                value={vesselsPerPage}
+                onChange={(e) => {/* Fixed vessels per page */}}
               >
                 <option value="50">50</option>
                 <option value="100">100</option>
@@ -897,30 +876,30 @@ export default function Vessels() {
           </div>
           
           <p className="text-sm text-muted-foreground mb-4">
-            Navigate through all {totalCount.toLocaleString()} vessels in the database.
-            Currently viewing page {page} of {totalPages}.
+            Navigate through all {actualTotalCount.toLocaleString()} vessels in the database.
+            Currently viewing page {currentPage} of {Math.ceil(actualTotalCount / vesselsPerPage)}.
           </p>
           
           <div className="flex items-center justify-center space-x-2">
             <Button 
               variant="outline"
               size="sm"
-              onClick={() => goToPage(page > 1 ? page - 1 : 1)}
-              disabled={page === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
             </Button>
             
             <span className="text-sm">
-              Page {page} of {totalPages}
+              Page {currentPage} of {Math.ceil(actualTotalCount / vesselsPerPage)}
             </span>
             
             <Button 
               variant="outline"
               size="sm"
-              onClick={() => goToPage(page < totalPages ? page + 1 : totalPages)}
-              disabled={page === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(actualTotalCount / vesselsPerPage)))}
+              disabled={currentPage === Math.ceil(actualTotalCount / vesselsPerPage)}
             >
               Next
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -1229,7 +1208,7 @@ export default function Vessels() {
           </div>
           
           {/* Professional Pagination */}
-          {totalPages > 1 && (
+          {Math.ceil(actualTotalCount / vesselsPerPage) > 1 && (
             <div className="py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
               <div className="flex flex-col sm:flex-row justify-between items-center px-5 gap-4">
                 <div className="text-sm text-gray-500 dark:text-gray-400">
