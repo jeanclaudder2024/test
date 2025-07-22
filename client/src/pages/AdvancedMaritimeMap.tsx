@@ -166,7 +166,7 @@ export default function AdvancedMaritimeMap() {
 
   // Fetch data using React Query with error handling
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery<any>({
-    queryKey: ['/api/vessels/polling'],
+    queryKey: ['/api/vessels/database'],
     refetchInterval: realTimeTracking ? 30000 : false,
     retry: 1,
     enabled: isAuthenticated

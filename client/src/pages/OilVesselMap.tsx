@@ -141,7 +141,7 @@ export default function OilVesselMap() {
 
   // Use polling endpoint for vessel data with authentication
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery({
-    queryKey: ['/api/vessels/polling'],
+    queryKey: ['/api/vessels/database'],
     enabled: isAuthenticated,
     refetchInterval: 30000,
     retry: 1

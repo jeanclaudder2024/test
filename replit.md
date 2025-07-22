@@ -758,6 +758,8 @@ Changelog:
   * **Performance Optimization**: Direct database queries with proper oil vessel type filtering and coordinate validation
   * **CRITICAL FIX**: Updated `/api/vessels/database` endpoint to be IDENTICAL to `/api/admin/vessels` endpoint - both now use the exact same `storage.getVessels()` method and database table
   * **Database Consistency**: Vessels page and vessel management page now use the same database table and fetch identical data without any filtering differences
+  * **Oil Map Integration**: Updated both OilVesselMap and AdvancedMaritimeMap to use the same `/api/vessels/database` endpoint for consistent vessel data across all pages
+  * **Complete Data Synchronization**: All vessel-related pages (Vessels, Oil Map, Advanced Map, Admin Vessel Management) now use the same PostgreSQL database table
   * **User Request Fulfilled**: Vessels page now shows only authentic database vessels without any external API calls
   * **Production Ready**: Complete removal of external dependencies ensures reliable operation with database-only vessel data
 - July 15, 2025. **CRITICAL DATABASE SCHEMA FIX: Complete Broker Transaction Documents System**:
