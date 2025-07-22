@@ -1175,7 +1175,7 @@ export default function Vessels() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {vessel.departurePort}
+                    {(vessel as any).departurePortName || vessel.departurePort}
                     {vessel.departureTime && (
                       <div className="text-xs text-muted-foreground">
                         {formatDate(vessel.departureTime, 'PP')}
@@ -1183,9 +1183,9 @@ export default function Vessels() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
+                    {(vessel as any).destinationPortName || (typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
                       ? vessel.destinationPort.split(':')[2]
-                      : getPortName(vessel.destinationPort)}
+                      : getPortName(vessel.destinationPort))}
                     {vessel.eta && (
                       <div className="text-xs text-muted-foreground">
                         ETA: {formatDate(vessel.eta, 'PP')}
