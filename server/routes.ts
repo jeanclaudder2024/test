@@ -2458,126 +2458,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Database-only vessels endpoint
+  // Database vessels endpoint - IDENTICAL to admin/vessels (uses same database table)
   apiRouter.get("/vessels/database", async (req, res) => {
     try {
-      console.log("Database-only vessels endpoint requested");
-      
-      const region = req.query.region as string | undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      const vesselType = req.query.vesselType as string | undefined;
-      
-      // Get user subscription and apply limits
-      const user = req.user;
-      let subscriptionLimits = { maxVessels: 50, maxPorts: 5, maxRefineries: 10 }; // Default Basic plan limits
-      
-      if (user) {
-        try {
-          // Get user's subscription from database
-          const userSubscription = await db.select()
-            .from(userSubscriptions)
-            .where(eq(userSubscriptions.userId, user.id))
-            .limit(1);
-          
-          const subscription = userSubscription[0];
-          const planId = subscription?.planId || 1; // Default to Basic plan
-          
-          // Apply limits based on plan (admin users get unlimited access)
-          if (user.role === 'admin') {
-            subscriptionLimits = { maxVessels: 999, maxPorts: 999, maxRefineries: 999 };
-          } else {
-            subscriptionLimits = getSubscriptionLimits(planId);
-          }
-          
-          console.log(`User ${user.email} (Plan ${planId}) vessel limit: ${subscriptionLimits.maxVessels}`);
-        } catch (subError) {
-          console.error("Error fetching subscription:", subError);
-          // Use default Basic plan limits on error
-        }
-      }
-      
-      // Get vessels from database only
-      let vessels = await storage.getVessels();
-      
-      // Filter to show only oil-related vessels with valid locations
-      vessels = vessels.filter(v => {
-        // Must have valid coordinates
-        const hasValidCoords = v.currentLat && v.currentLng && 
-                              !isNaN(Number(v.currentLat)) && 
-                              !isNaN(Number(v.currentLng));
-        if (!hasValidCoords) return false;
-        
-        // Only show active vessels (exclude inactive ones)
-        if (v.status === 'inactive') return false;
-        
-        // Only show oil-related vessel types
-        const vesselTypeStr = v.vesselType?.toLowerCase() || '';
-        const cargoTypeStr = v.cargoType?.toLowerCase() || '';
-        
-        return vesselTypeStr.includes('tanker') || 
-               vesselTypeStr.includes('oil') || 
-               vesselTypeStr.includes('crude') || 
-               vesselTypeStr.includes('lng') || 
-               vesselTypeStr.includes('lpg') || 
-               vesselTypeStr.includes('chemical') || 
-               vesselTypeStr.includes('product') || 
-               vesselTypeStr.includes('vlcc') || 
-               vesselTypeStr.includes('ulcc') ||
-               vesselTypeStr.includes('aframax') ||
-               vesselTypeStr.includes('suezmax') ||
-               vesselTypeStr.includes('panamax') ||
-               cargoTypeStr.includes('oil') ||
-               cargoTypeStr.includes('fuel') ||
-               cargoTypeStr.includes('diesel') ||
-               cargoTypeStr.includes('gasoline') ||
-               cargoTypeStr.includes('crude');
-      });
-      
-      // Apply region filter if specified
-      if (region && region !== 'global') {
-        // Basic region filtering based on coordinates (simplified)
-        vessels = vessels.filter(v => {
-          const lat = Number(v.currentLat);
-          const lng = Number(v.currentLng);
-          
-          switch(region.toLowerCase()) {
-            case 'north-america':
-              return lat >= 25 && lat <= 70 && lng >= -150 && lng <= -50;
-            case 'europe':
-              return lat >= 35 && lat <= 75 && lng >= -10 && lng <= 50;
-            case 'asia-pacific':
-              return lat >= -50 && lat <= 70 && lng >= 50 && lng <= 180;
-            case 'middle-east':
-              return lat >= 12 && lat <= 42 && lng >= 25 && lng <= 75;
-            case 'africa':
-              return lat >= -35 && lat <= 37 && lng >= -20 && lng <= 55;
-            case 'latin-america':
-              return lat >= -60 && lat <= 30 && lng >= -120 && lng <= -30;
-            default:
-              return true;
-          }
-        });
-      }
-      
-      // Apply vessel type filter if specified
-      if (vesselType && vesselType !== 'all' && vesselType !== 'oil') {
-        vessels = vessels.filter(v => 
-          v.vesselType?.toLowerCase().includes(vesselType.toLowerCase())
-        );
-      }
-      
-      // Apply subscription-based vessel limit (override query limit if subscription limit is lower)
-      const finalLimit = limit ? Math.min(limit, subscriptionLimits.maxVessels) : subscriptionLimits.maxVessels;
-      if (vessels.length > finalLimit) {
-        vessels = vessels.slice(0, finalLimit);
-        console.log(`Applied subscription limit: showing ${finalLimit} of ${vessels.length} total database vessels`);
-      }
-      
-      console.log(`Returning ${vessels.length} vessels from database only`);
+      console.log("Database vessels endpoint called - IDENTICAL to admin/vessels");
+      // Use EXACT same method as /admin/vessels endpoint - same database table, same storage method
+      const vessels = await storage.getVessels();
+      console.log(`Retrieved ${vessels.length} vessels for public (identical to admin)`);
       res.json(vessels);
     } catch (error) {
-      console.error("Error fetching vessels from database:", error);
-      res.status(500).json({ message: "Failed to fetch vessels from database" });
+      console.error("Error fetching vessels for public:", error);
+      res.status(500).json({ error: "Failed to fetch vessels" });
     }
   });
 

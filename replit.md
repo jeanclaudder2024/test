@@ -756,6 +756,8 @@ Changelog:
   * **Enhanced Filtering**: Added comprehensive oil vessel filtering with valid coordinate validation and subscription-based limits
   * **Regional Support**: Implemented region-based filtering for North America, Europe, Asia-Pacific, Middle East, Africa, and Latin America
   * **Performance Optimization**: Direct database queries with proper oil vessel type filtering and coordinate validation
+  * **CRITICAL FIX**: Updated `/api/vessels/database` endpoint to be IDENTICAL to `/api/admin/vessels` endpoint - both now use the exact same `storage.getVessels()` method and database table
+  * **Database Consistency**: Vessels page and vessel management page now use the same database table and fetch identical data without any filtering differences
   * **User Request Fulfilled**: Vessels page now shows only authentic database vessels without any external API calls
   * **Production Ready**: Complete removal of external dependencies ensures reliable operation with database-only vessel data
 - July 15, 2025. **CRITICAL DATABASE SCHEMA FIX: Complete Broker Transaction Documents System**:
