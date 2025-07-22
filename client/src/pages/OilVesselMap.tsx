@@ -149,7 +149,7 @@ export default function OilVesselMap() {
 
   const vessels = React.useMemo(() => {
     if (!vesselData) return [];
-    const vesselArray = vesselData.vessels || vesselData || [];
+    const vesselArray = Array.isArray(vesselData) ? vesselData : (vesselData as any)?.vessels || [];
     if (!Array.isArray(vesselArray)) return [];
     
     return vesselArray.filter((v: any) => 
@@ -161,28 +161,13 @@ export default function OilVesselMap() {
   const error = vesselError;
   const connectionStatus = 'connected';
 
-  // Filter vessels with valid coordinates
-  const mappableVessels = oilVessels.filter(vessel => 
-    vessel.currentLat && 
-    vessel.currentLng && 
-    !isNaN(parseFloat(vessel.currentLat.toString())) && 
-    !isNaN(parseFloat(vessel.currentLng.toString()))
-  );
-
-  // Debug logging for vessel filtering
-  React.useEffect(() => {
-    console.log(`Loaded ${vessels.length} vessels from database`);
-    console.log(`After filtering: ${oilVessels.length} vessels (before coordinate check)`);
-    console.log(`Final mappable vessels: ${mappableVessels.length} vessels`);
-  }, [vessels.length, oilVessels.length, mappableVessels.length]);
-
   // Fetch ports data with error handling - use public endpoint
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery({
     queryKey: ['/api/ports'],
     enabled: isAuthenticated,
     retry: 1
   });
-  const ports = Array.isArray(portsData) ? portsData : (portsData?.ports || []);
+  const ports = Array.isArray(portsData) ? portsData : (portsData as any)?.ports || [];
 
   // Fetch refineries data with error handling - use public endpoint (no auth needed)
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery({
@@ -293,6 +278,21 @@ export default function OilVesselMap() {
     // Show ALL vessels by default (no oil-only filtering)
     return true;
   });
+
+  // Filter vessels with valid coordinates
+  const mappableVessels = oilVessels.filter(vessel => 
+    vessel.currentLat && 
+    vessel.currentLng && 
+    !isNaN(parseFloat(vessel.currentLat.toString())) && 
+    !isNaN(parseFloat(vessel.currentLng.toString()))
+  );
+
+  // Debug logging for vessel filtering
+  React.useEffect(() => {
+    console.log(`Oil Map: Loaded ${vessels.length} vessels from database`);
+    console.log(`Oil Map: After filtering: ${oilVessels.length} vessels (before coordinate check)`);
+    console.log(`Oil Map: Final mappable vessels: ${mappableVessels.length} vessels`);
+  }, [vessels.length, oilVessels.length, mappableVessels.length]);
 
   const defaultCenter: [number, number] = [25.0, 55.0]; // Dubai area
   const defaultZoom = 4;
