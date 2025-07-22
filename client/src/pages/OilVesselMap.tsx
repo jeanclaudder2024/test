@@ -141,7 +141,7 @@ export default function OilVesselMap() {
 
   // Use polling endpoint for vessel data with authentication
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery({
-    queryKey: ['/api/vessels/database'],
+    queryKey: ['/api/vessels/polling'],
     enabled: isAuthenticated,
     refetchInterval: 30000,
     retry: 1
@@ -149,7 +149,7 @@ export default function OilVesselMap() {
 
   const vessels = React.useMemo(() => {
     if (!vesselData) return [];
-    const vesselArray = Array.isArray(vesselData) ? vesselData : (vesselData as any)?.vessels || [];
+    const vesselArray = vesselData.vessels || vesselData || [];
     if (!Array.isArray(vesselArray)) return [];
     
     return vesselArray.filter((v: any) => 
@@ -167,7 +167,7 @@ export default function OilVesselMap() {
     enabled: isAuthenticated,
     retry: 1
   });
-  const ports = Array.isArray(portsData) ? portsData : (portsData as any)?.ports || [];
+  const ports = Array.isArray(portsData) ? portsData : (portsData?.ports || []);
 
   // Fetch refineries data with error handling - use public endpoint (no auth needed)
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery({
@@ -231,13 +231,21 @@ export default function OilVesselMap() {
     }
   };
 
-  // Show ALL vessels from database (same as vessels page) - no oil filtering
+  // Filter for oil vessels with dynamic oil types
   const oilVessels = vessels.filter(vessel => {
     const vesselType = vessel.vesselType?.toLowerCase() || '';
     const oilType = vessel.oilType?.toLowerCase() || '';
     const cargoType = vessel.cargoType?.toLowerCase() || '';
     
-    // Apply vessel filter based on oil types from admin panel (only if filter is selected)
+    // Check if vessel is oil-related
+    const isOilVessel = vesselType.includes('tanker') || 
+           vesselType.includes('oil') || 
+           vesselType.includes('crude') || 
+           vesselType.includes('lng') || 
+           vesselType.includes('lpg') || 
+           vesselType.includes('chemical');
+    
+    // Apply vessel filter based on oil types from admin panel
     if (vesselFilter !== 'all') {
       // Check if filter matches any oil type from admin panel
       const matchesOilType = Array.isArray(oilTypes) && oilTypes.some((oilTypeObj: any) => {
@@ -255,9 +263,6 @@ export default function OilVesselMap() {
         if (vesselFilter === 'crude' && !vesselType.includes('crude')) return false;
         if (vesselFilter === 'lng' && !vesselType.includes('lng')) return false;
         if (vesselFilter === 'lpg' && !vesselType.includes('lpg')) return false;
-        if (vesselFilter === 'diesel' && !vesselType.includes('diesel')) return false;
-        if (vesselFilter === 'gasoline' && !vesselType.includes('gasoline')) return false;
-        if (vesselFilter === 'fuel' && !vesselType.includes('fuel')) return false;
       } else if (!matchesOilType) {
         return false;
       }
@@ -272,11 +277,10 @@ export default function OilVesselMap() {
                            vessel.mmsi?.toLowerCase().includes(searchLower) ||
                            oilType.includes(searchLower) ||
                            cargoType.includes(searchLower);
-      return matchesSearch;
+      return isOilVessel && matchesSearch;
     }
     
-    // Show ALL vessels by default (no oil-only filtering)
-    return true;
+    return isOilVessel;
   });
 
   // Filter vessels with valid coordinates
@@ -286,13 +290,6 @@ export default function OilVesselMap() {
     !isNaN(parseFloat(vessel.currentLat.toString())) && 
     !isNaN(parseFloat(vessel.currentLng.toString()))
   );
-
-  // Debug logging for vessel filtering
-  React.useEffect(() => {
-    console.log(`Oil Map: Loaded ${vessels.length} vessels from database`);
-    console.log(`Oil Map: After filtering: ${oilVessels.length} vessels (before coordinate check)`);
-    console.log(`Oil Map: Final mappable vessels: ${mappableVessels.length} vessels`);
-  }, [vessels.length, oilVessels.length, mappableVessels.length]);
 
   const defaultCenter: [number, number] = [25.0, 55.0]; // Dubai area
   const defaultZoom = 4;

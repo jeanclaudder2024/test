@@ -166,7 +166,7 @@ export default function AdvancedMaritimeMap() {
 
   // Fetch data using React Query with error handling
   const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery<any>({
-    queryKey: ['/api/vessels/database'],
+    queryKey: ['/api/vessels/polling'],
     refetchInterval: realTimeTracking ? 30000 : false,
     retry: 1,
     enabled: isAuthenticated
@@ -265,9 +265,9 @@ export default function AdvancedMaritimeMap() {
     staleTime: 5 * 60 * 1000
   });
 
-  // Filter vessels based on selected types and search - show ALL by default
+  // Filter vessels based on selected types and search
   const filteredVessels = useMemo(() => {
-    const filtered = vessels.filter(vessel => {
+    return vessels.filter(vessel => {
       const matchesType = selectedVesselTypes.length === 0 || 
         selectedVesselTypes.includes(vessel.vesselType);
       const matchesSearch = !searchTerm || 
@@ -276,10 +276,6 @@ export default function AdvancedMaritimeMap() {
         vessel.mmsi.includes(searchTerm);
       return matchesType && matchesSearch;
     });
-    
-    // Debug logging
-    console.log(`Advanced Map: ${vessels.length} total vessels, ${filtered.length} after filtering`);
-    return filtered;
   }, [vessels, selectedVesselTypes, searchTerm]);
 
   // Get exact same vessel icon as vessel detail page

@@ -2458,20 +2458,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Database vessels endpoint - IDENTICAL to admin/vessels (uses same database table)
-  apiRouter.get("/vessels/database", async (req, res) => {
-    try {
-      console.log("Database vessels endpoint called - IDENTICAL to admin/vessels");
-      // Use EXACT same method as /admin/vessels endpoint - same database table, same storage method
-      const vessels = await storage.getVessels();
-      console.log(`Retrieved ${vessels.length} vessels for public (identical to admin)`);
-      res.json(vessels);
-    } catch (error) {
-      console.error("Error fetching vessels for public:", error);
-      res.status(500).json({ error: "Failed to fetch vessels" });
-    }
-  });
-
   // Static vessels endpoint for emergency fallback
   apiRouter.get("/vessels/static", async (req, res) => {
     try {
