@@ -681,7 +681,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   </div>
                   <div className="ml-3">
                     <p className="text-xs text-gray-500">DEPARTURE</p>
-                    <p className="text-sm font-medium">{getPortName(vessel.departurePort)}</p>
+                    <p className="text-sm font-medium">{(vessel as any).departurePortName || getPortName(vessel.departurePort)}</p>
                     <p className="text-xs text-gray-500">
                       {vessel.departureTime ? formatDate(new Date(vessel.departureTime)) : "N/A"}
                     </p>
@@ -695,7 +695,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   </div>
                   <div className="ml-3">
                     <p className="text-xs text-gray-500">DESTINATION</p>
-                    <p className="text-sm font-medium">{getPortName(vessel.destinationPort)}</p>
+                    <p className="text-sm font-medium">{(vessel as any).destinationPortName || getPortName(vessel.destinationPort)}</p>
                     <p className="text-xs text-gray-500">
                       {vessel.eta ? `ETA: ${formatDate(new Date(vessel.eta))}` : "ETA: N/A"}
                     </p>
@@ -1218,7 +1218,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Departure Port</p>
-                    <p className="text-sm font-medium">{getPortName(vessel.departurePort)}</p>
+                    <p className="text-sm font-medium">{(vessel as any).departurePortName || getPortName(vessel.departurePort)}</p>
                   </div>
                   {vessel.departureDate && (
                     <div>
@@ -1244,7 +1244,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Destination Port</p>
-                    <p className="text-sm font-medium">{getPortName(vessel.destinationPort)}</p>
+                    <p className="text-sm font-medium">{(vessel as any).destinationPortName || getPortName(vessel.destinationPort)}</p>
                   </div>
                   {vessel.eta && (
                     <div>
