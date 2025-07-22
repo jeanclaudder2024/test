@@ -749,6 +749,15 @@ Changelog:
   * **Dashboard Alert System**: Added broker dashboard notifications showing count of rejected steps requiring attention with direct navigation to step management
   * **Manage Steps Button**: Added blue "Manage Steps" button to deal cards that opens selected deal and switches to steps tab automatically
   * **Professional UI Enhancements**: Added visual status indicators, hover effects, and improved layout for better user experience with rejection handling workflow
+- July 22, 2025. **COMPLETE VESSELS PAGE DATABASE-ONLY IMPLEMENTATION**: 
+  * **Removed External API Dependencies**: Completely eliminated MyShipTracking API, Marine Traffic API, and WebSocket connections from Vessels.tsx
+  * **Database-Only Data Source**: Created new `/api/vessels/database` endpoint that fetches vessel data exclusively from PostgreSQL database
+  * **Clean Architecture**: Removed useVesselClient, useVesselWebSocket, and useDataStream hooks for simplified database-only approach
+  * **Enhanced Filtering**: Added comprehensive oil vessel filtering with valid coordinate validation and subscription-based limits
+  * **Regional Support**: Implemented region-based filtering for North America, Europe, Asia-Pacific, Middle East, Africa, and Latin America
+  * **Performance Optimization**: Direct database queries with proper oil vessel type filtering and coordinate validation
+  * **User Request Fulfilled**: Vessels page now shows only authentic database vessels without any external API calls
+  * **Production Ready**: Complete removal of external dependencies ensures reliable operation with database-only vessel data
 - July 15, 2025. **CRITICAL DATABASE SCHEMA FIX: Complete Broker Transaction Documents System**:
   * **Database Schema Issues Resolved**: Fixed missing columns in transaction_documents table (document_name, file_path, file_size, file_type)
   * **Transaction Steps Table**: Created comprehensive transaction_steps table with 8-step CIF-ASWP workflow integration

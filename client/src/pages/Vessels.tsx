@@ -1,7 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useDataStream } from '@/hooks/useDataStream';
-import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
-import { useVesselClient } from '@/hooks/useVesselClient';
+// Removed external API and WebSocket imports - using database only
 import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -178,31 +176,12 @@ export default function Vessels() {
   const [apiLoading, setApiLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string>("global");
-  // Track which data source is being used
-  const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
+  // Track which data source is being used - database only
+  const [dataSource, setDataSource] = useState<'database'>('database');
   // Ports data for name resolution
   const [ports, setPorts] = useState<any[]>([]);
   
-  // Use our new robust vessel client with WebSocket and REST API fallback
-  const { 
-    vessels: realTimeVessels, 
-    loading: wsLoading, 
-    connected: wsConnected,
-    connectionType,
-    connectionStatus,
-    page,
-    pageSize,
-    totalPages,
-    totalCount,
-    goToPage,
-    changePageSize,
-    refreshData
-  } = useVesselClient({
-    region: selectedRegion,
-    page: 1,
-    pageSize: 500,
-    vesselType: 'oil'
-  });
+  // Using database only - no WebSocket or external API connections
   
   // Combined vessels from both sources
   const [vessels, setVessels] = useState<Vessel[]>([]);
@@ -299,89 +278,39 @@ export default function Vessels() {
     .slice(0, MAX_OIL_VESSELS); // Limit to requested max
   };
 
-  // Fetch vessels directly from the API endpoint 
-  const fetchVesselsFromAPI = async () => {
+  // Fetch vessels directly from database only
+  const fetchVesselsFromDatabase = async () => {
     try {
       setApiLoading(true);
       setFetchError(null);
       
-      // First try MyShipTracking API - prioritize real API data
-      try {
-        console.log('Fetching vessels from MyShipTracking API...');
-        const response = await axios.get('/api/vessels/myshiptracking');
-        
-        if (response.data && response.data.length > 0) {
-          console.log('Fetched vessels from MyShipTracking API:', response.data.length);
-          // Filter to only show oil vessels with real locations
-          const filteredVessels = filterOilVesselsWithRealLocations(response.data);
-          console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
-          setApiVessels(filteredVessels);
-          setFetchError(null);
-          setDataSource('myshiptracking');
-          setApiLoading(false);
-          return; // Success - exit function
-        } else {
-          console.warn('MyShipTracking API returned empty response');
+      console.log('Fetching vessels from database only...');
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('/api/vessels/database', {
+        params: { 
+          region: selectedRegion,
+          limit: MAX_OIL_VESSELS * 2, // Request more to ensure we get enough after filtering
+          vesselType: 'oil'
+        },
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
         }
-      } catch (myshipError) {
-        console.error('Error fetching from MyShipTracking API:', myshipError);
-      }
+      });
       
-      // If MyShipTracking failed, try marine-traffic API
-      try {
-        console.log('Trying Marine Traffic API...');
-        const marineResponse = await axios.get('/api/vessels/marine-traffic');
-        
-        if (marineResponse.data && marineResponse.data.length > 0) {
-          console.log('Fetched vessels from Marine Traffic API:', marineResponse.data.length);
-          // Filter to only show oil vessels with real locations
-          const filteredVessels = filterOilVesselsWithRealLocations(marineResponse.data);
-          console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
-          setApiVessels(filteredVessels);
-          setFetchError(null);
-          setDataSource('marine-traffic');
-          setApiLoading(false);
-          return; // Success - exit function
-        } else {
-          console.warn('Marine Traffic API returned empty response');
-        }
-      } catch (marineError) {
-        console.error('Error fetching from Marine Traffic API:', marineError);
-      }
-      
-      // If all external APIs failed, try polling endpoint as final fallback
-      try {
-        console.log('Trying fallback REST polling endpoint...');
-        const token = localStorage.getItem('authToken');
-        const fallbackResponse = await axios.get('/api/vessels/polling', {
-          params: { 
-            region: selectedRegion,
-            limit: MAX_OIL_VESSELS * 2, // Request more to ensure we get enough after filtering
-            vesselType: 'oil'
-          },
-          headers: {
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          }
-        });
-        
-        if (fallbackResponse.data && fallbackResponse.data.vessels) {
-          console.log('Fetched vessels from fallback endpoint:', fallbackResponse.data.vessels.length);
-          // Filter to only show oil vessels with real locations
-          const filteredVessels = filterOilVesselsWithRealLocations(fallbackResponse.data.vessels);
-          console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
-          setApiVessels(filteredVessels);
-          setFetchError(null);
-          setDataSource('polling');
-        } else {
-          setFetchError('Failed to fetch vessels from all data sources');
-        }
-      } catch (fallbackError) {
-        console.error('Error with fallback endpoint:', fallbackError);
-        setFetchError('Failed to fetch vessels from all endpoints');
+      if (response.data && Array.isArray(response.data)) {
+        console.log('Fetched vessels from database:', response.data.length);
+        // Filter to only show oil vessels with real locations
+        const filteredVessels = filterOilVesselsWithRealLocations(response.data);
+        console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
+        setApiVessels(filteredVessels);
+        setFetchError(null);
+        setDataSource('database');
+      } else {
+        setFetchError('No vessels found in database');
       }
     } catch (error) {
-      console.error('Unexpected error in fetchVesselsFromAPI:', error);
-      setFetchError('Failed to fetch vessels from API');
+      console.error('Error fetching vessels from database:', error);
+      setFetchError('Failed to fetch vessels from database');
     } finally {
       setApiLoading(false);
     }
@@ -389,32 +318,18 @@ export default function Vessels() {
   
   // Fetch vessels on component mount and when region changes
   useEffect(() => {
-    fetchVesselsFromAPI();
+    fetchVesselsFromDatabase();
     // Fetch again every 5 minutes
-    const intervalId = setInterval(fetchVesselsFromAPI, 5 * 60 * 1000);
+    const intervalId = setInterval(fetchVesselsFromDatabase, 5 * 60 * 1000);
     
     // Clean up interval on unmount
     return () => clearInterval(intervalId);
   }, [selectedRegion]);
   
-  // Combine vessels from real-time WebSocket and API
+  // Use database vessels only
   useEffect(() => {
-    // Determine which source to use
-    let sourceVessels: any[] = [];
-    
-    if (wsConnected && realTimeVessels.length > 0) {
-      // WebSocket is connected and has data - prefer this
-      sourceVessels = realTimeVessels;
-      console.log('Using WebSocket vessels:', realTimeVessels.length);
-      setDataSource('websocket');
-    } else if (apiVessels.length > 0) {
-      // Fall back to API data if WebSocket isn't connected
-      sourceVessels = apiVessels;
-      console.log('Using API vessels:', apiVessels.length);
-      
-      // The data source is set in fetchVesselsFromAPI function when the data is fetched
-      // We're not changing it here to preserve which API was actually successful
-    }
+    // Use database vessels only - no external APIs or WebSocket
+    const sourceVessels = apiVessels; // apiVessels now contains database data only
     
     // Make sure we have all required fields for the Vessel type
     const processedVessels = sourceVessels.map(vessel => ({
@@ -428,15 +343,12 @@ export default function Vessels() {
       isOilVessel: true
     })) as Vessel[];
     
-    // Use only your authentic vessels from database - no duplication
-    let limitedVessels = processedVessels;
+    console.log(`Showing ${processedVessels.length} authentic oil vessels from database only`);
     
-    console.log(`Showing ${limitedVessels.length} authentic oil vessels from your database`);
-    
-    setVessels(limitedVessels);
-    setActualTotalCount(limitedVessels.length);
-    setLoading(wsLoading && apiLoading);
-  }, [realTimeVessels, apiVessels, wsConnected, wsLoading, apiLoading, MAX_OIL_VESSELS]);
+    setVessels(processedVessels);
+    setActualTotalCount(processedVessels.length);
+    setLoading(apiLoading);
+  }, [apiVessels, apiLoading]);
   
   // Helper function to determine oil category using database oil types
   const getOilCategory = (cargoType: string | null | undefined): string => {
@@ -711,23 +623,16 @@ export default function Vessels() {
               
               <div className="flex items-center px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-sm">
                 <span className="text-gray-500 dark:text-gray-400 mr-2">Connection:</span>
-                {wsConnected ? (
-                  <span className="flex items-center text-green-600 dark:text-green-400 font-medium">
-                    <Wifi className="h-3.5 w-3.5 mr-1.5" />
-                    Real-time
-                  </span>
-                ) : (
-                  <span className="flex items-center text-amber-600 dark:text-amber-400 font-medium">
-                    <WifiOff className="h-3.5 w-3.5 mr-1.5" />
-                    Rest API
-                  </span>
-                )}
+                <span className="flex items-center text-green-600 dark:text-green-400 font-medium">
+                  <Wifi className="h-3.5 w-3.5 mr-1.5" />
+                  Database
+                </span>
               </div>
               
               <div className="flex items-center px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-sm">
                 <span className="text-gray-500 dark:text-gray-400 mr-2">Data:</span>
                 <span className="text-blue-600 dark:text-blue-400 font-medium">
-                  {dataSource === 'websocket' ? 'Live' : dataSource === 'myshiptracking' ? 'MyShipTracking' : 'API'}
+                  Database
                 </span>
               </div>
             </div>
