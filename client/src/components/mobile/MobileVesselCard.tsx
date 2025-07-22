@@ -105,14 +105,14 @@ export function MobileVesselCard({ vessel, className }: MobileVesselCardProps) {
               <div className="flex items-center gap-2 text-sm">
                 <Anchor className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-muted-foreground">From:</span>
-                <span className="truncate">{(vessel as any).departurePortName || vessel.departurePort}</span>
+                <span className="truncate">{vessel.departurePort}</span>
               </div>
             )}
             {vessel.destinationPort && (
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-muted-foreground">To:</span>
-                <span className="truncate">{(vessel as any).destinationPortName || vessel.destinationPort}</span>
+                <span className="truncate">{vessel.destinationPort}</span>
               </div>
             )}
             {vessel.eta && (
