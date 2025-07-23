@@ -42,6 +42,7 @@ import DocumentationCenter from "@/pages/DocumentationCenter";
 import BecomeABroker from "@/pages/BecomeABroker";
 import PortsAccess from "@/pages/PortsAccess";
 import RefineriesAccess from "@/pages/RefineriesAccess";
+import FutureTradingPage from "@/pages/FutureTradingPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
@@ -176,6 +177,7 @@ function AuthenticatedApp() {
     if (location === "/become-broker") return <BecomeABroker />;
     if (location === "/ports-access") return <PortsAccess />;
     if (location === "/refineries-access") return <RefineriesAccess />;
+    if (location === "/future-trading") return <FutureTradingPage />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;

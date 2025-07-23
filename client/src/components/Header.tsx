@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
 
 interface HeaderProps {
-  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'cookie-policy' | 'documentation' | 'become-broker' | 'ports-access' | 'refineries-access' | 'refineries' | 'vessels';
+  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'cookie-policy' | 'documentation' | 'become-broker' | 'ports-access' | 'refineries-access' | 'future-trading' | 'refineries' | 'vessels';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
@@ -35,6 +35,7 @@ export default function Header({ currentPage }: HeaderProps) {
       case 'become-broker': return 'Become a Broker';
       case 'ports-access': return 'Ports Access';
       case 'refineries-access': return 'Refineries Access';
+      case 'future-trading': return 'Future Trading';
       case 'refineries': return 'Refineries';
       case 'vessels': return 'Vessels';
       default: return page;
@@ -53,6 +54,7 @@ export default function Header({ currentPage }: HeaderProps) {
     { key: 'become-broker', href: '/become-broker', label: 'Become a Broker' },
     { key: 'ports-access', href: '/ports-access', label: 'Ports Access' },
     { key: 'refineries-access', href: '/refineries-access', label: 'Refineries Access' },
+    { key: 'future-trading', href: '/future-trading', label: 'Future Trading' },
   ];
 
   const platformItems = [
