@@ -50,87 +50,121 @@ export default function About() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header Navigation */}
       <header 
-        className={`px-4 lg:px-6 h-20 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
           scrolled 
-            ? "bg-slate-900/95 border-b border-orange-500/20 backdrop-blur-lg shadow-lg" 
-            : "bg-slate-900/80 backdrop-blur-md"
+            ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
+            : "bg-transparent"
         }`}
       >
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
-            <span className="text-white font-bold text-xl">PetroDealHub</span>
-          </Link>
+        <div className="flex items-center gap-2 font-bold text-2xl">
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
+          <span className="text-white sr-only">PetroDealHub</span>
         </div>
         
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex gap-6 items-center">
-          <Link href="/" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Home
+        {/* Desktop Menu */}
+        <nav className="hidden lg:flex gap-8 items-center">
+          <Link 
+            href="#features" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Features
+          </Link>
+          <Link 
+            href="#why-us" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Why Us
+          </Link>
+          <Link 
+            href="#how-it-works" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            How It Works
+          </Link>
+          <Link 
+            href="#results" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Results
+          </Link>
+          <Link 
+            href="#pricing" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Pricing
+          </Link>
+          <span className="text-sm font-medium text-orange-500">
+            About
+          </span>
+          <div className="h-6 w-px bg-slate-700"></div>
+          <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Refineries
           </Link>
           <Link href="/vessels" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Vessels
           </Link>
-          <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Refineries
-          </Link>
-          <Link href="/ports" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Ports
-          </Link>
-          <span className="text-orange-500 text-sm font-medium">About</span>
-          <div className="h-6 w-px bg-slate-700"></div>
-          <Link href="/login">
+        </nav>
+        
+        <div className="hidden lg:flex items-center gap-4">
+          <Link href="/dashboard">
             <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-              Login
+              Dashboard
             </Button>
           </Link>
-          <Link href="/register">
+          <Link href="/vessels">
             <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
-              Get Started
+              View Vessels
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
-        </nav>
+        </div>
         
         {/* Mobile Menu Toggle */}
         <button 
-          className="lg:hidden text-white"
+          className="lg:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? (
-            <XIcon className="h-6 w-6" />
+            <XIcon className="h-6 w-6 text-white" />
           ) : (
-            <MenuIcon className="h-6 w-6" />
+            <MenuIcon className="h-6 w-6 text-white" />
           )}
         </button>
       </header>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-20 px-4 py-6 flex flex-col">
+        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
           <nav className="flex flex-col gap-4">
-            <Link href="/" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Home
+            <Link href="#features" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Features
+            </Link>
+            <Link href="#why-us" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Why Us
+            </Link>
+            <Link href="#how-it-works" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              How It Works
+            </Link>
+            <Link href="#results" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Results
+            </Link>
+            <Link href="#pricing" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Pricing
+            </Link>
+            <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
+            <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Refineries
             </Link>
             <Link href="/vessels" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Vessels
             </Link>
-            <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Refineries
-            </Link>
-            <Link href="/ports" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Ports
-            </Link>
-            <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
           </nav>
           <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-slate-700 text-white">Login</Button>
+            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full border-slate-700 text-white">Dashboard</Button>
             </Link>
-            <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Get Started</Button>
+            <Link href="/vessels" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">View Vessels</Button>
             </Link>
           </div>
         </div>
@@ -147,7 +181,7 @@ export default function About() {
       </div>
       
       {/* Main Content */}
-      <div className="pt-20">
+      <div className="pt-40">
       {/* Hero Section */}
       <section className="relative py-24 lg:py-40 overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900">
         {/* Enhanced Background Effects */}
