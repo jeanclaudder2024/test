@@ -26,7 +26,6 @@ import {
   LifeBuoy,
   AlertCircle,
   Lock,
-  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -63,7 +62,6 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     const secondaryNavigation = [
       { name: "Companies", href: "/companies", icon: Briefcase },
       { name: "Oil Prices", href: "/oil-prices", icon: RefreshCw },
-      { name: "About Us", href: "/about", icon: Info },
       { name: "PDF Test", href: "/pdf-test", icon: FileText },
       { 
         name: "Broker", 
