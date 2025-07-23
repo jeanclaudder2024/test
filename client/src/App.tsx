@@ -32,6 +32,7 @@ import AccountPage from "@/pages/AccountPage";
 import Account from "@/pages/Account";
 import UserProfile from "@/pages/UserProfile";
 import LandingPage from "@/pages/LandingPage";
+import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
@@ -156,6 +157,7 @@ function AuthenticatedApp() {
     if (location === "/auth/callback") return <AuthCallback />;
     if (location === "/verify-email") return <VerifyEmail />;
     if (location === "/subscription/success") return <SubscriptionSuccess />;
+    if (location === "/about") return <About />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;
