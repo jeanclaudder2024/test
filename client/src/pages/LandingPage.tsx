@@ -280,6 +280,12 @@ export default function LandingPage() {
           >
             Careers
           </Link>
+          <Link 
+            href="/blog" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Blog
+          </Link>
           <div className="h-6 w-px bg-slate-700"></div>
           <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Refineries
@@ -340,6 +346,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/careers" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Careers
+            </Link>
+            <Link href="/blog" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Blog
             </Link>
             <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Refineries
