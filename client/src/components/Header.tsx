@@ -1,7 +1,32 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
+import { 
+  ChevronRight, 
+  ChevronDown,
+  Menu as MenuIcon, 
+  X as XIcon,
+  Ship,
+  MapPin,
+  Factory,
+  TrendingUp,
+  FileText,
+  Users,
+  Phone,
+  Info,
+  Shield,
+  Settings,
+  HeadphonesIcon,
+  Building,
+  Briefcase,
+  BookOpen,
+  Code,
+  UserPlus,
+  Home,
+  Eye,
+  Cookie
+} from 'lucide-react';
 
 interface HeaderProps {
   currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'support-center' | 'terms-of-service' | 'privacy-policy' | 'cookie-policy' | 'documentation' | 'become-broker' | 'ports-access' | 'refineries-access' | 'future-trading' | 'vessels-tracking' | 'refineries' | 'vessels';
@@ -10,6 +35,7 @@ interface HeaderProps {
 export default function Header({ currentPage }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,178 +48,256 @@ export default function Header({ currentPage }: HeaderProps) {
     };
   }, []);
 
-  const getPageDisplayName = (page: string) => {
-    switch (page) {
-      case 'home': return 'Home';
-      case 'about': return 'About';
-      case 'careers': return 'Careers';
-      case 'blog': return 'Blog';
-      case 'api': return 'API Integration';
-      case 'contact': return 'Contact Us';
-      case 'support-center': return 'Support Center';
-      case 'terms-of-service': return 'Terms of Service';
-      case 'privacy-policy': return 'Privacy Policy';
-      case 'cookie-policy': return 'Cookie Policy';
-      case 'documentation': return 'Documentation Center';
-      case 'become-broker': return 'Become a Broker';
-      case 'ports-access': return 'Ports Access';
-      case 'refineries-access': return 'Refineries Access';
-      case 'future-trading': return 'Future Trading';
-      case 'vessels-tracking': return 'Vessels Tracking';
-      case 'refineries': return 'Refineries';
-      case 'vessels': return 'Vessels';
-      default: return page;
+  // Organized navigation structure
+  const navigationStructure = {
+    main: [
+      { key: 'home', href: '/', label: 'Home', icon: Home }
+    ],
+    intelligence: {
+      label: 'Intelligence',
+      icon: Eye,
+      items: [
+        { key: 'ports-access', href: '/ports-access', label: 'Ports Access', icon: MapPin },
+        { key: 'refineries-access', href: '/refineries-access', label: 'Refineries Access', icon: Factory },
+        { key: 'future-trading', href: '/future-trading', label: 'Future Trading', icon: TrendingUp },
+        { key: 'vessels-tracking', href: '/vessels-tracking', label: 'Vessels Tracking', icon: Ship },
+      ]
+    },
+    platform: {
+      label: 'Platform',
+      icon: Settings,
+      items: [
+        { key: 'refineries', href: '/refineries', label: 'Refineries', icon: Factory },
+        { key: 'vessels', href: '/vessels', label: 'Vessels', icon: Ship },
+      ]
+    },
+    company: {
+      label: 'Company',
+      icon: Building,
+      items: [
+        { key: 'about', href: '/about', label: 'About Us', icon: Info },
+        { key: 'careers', href: '/careers', label: 'Careers', icon: Briefcase },
+        { key: 'blog', href: '/blog', label: 'Blog', icon: BookOpen },
+      ]
+    },
+    services: {
+      label: 'Services',
+      icon: UserPlus,
+      items: [
+        { key: 'become-broker', href: '/become-broker', label: 'Become a Broker', icon: Users },
+        { key: 'api', href: '/api-integration', label: 'API Integration', icon: Code },
+        { key: 'documentation', href: '/documentation', label: 'Documentation', icon: FileText },
+      ]
+    },
+    support: {
+      label: 'Support',
+      icon: HeadphonesIcon,
+      items: [
+        { key: 'support-center', href: '/support-center', label: 'Support Center', icon: HeadphonesIcon },
+        { key: 'contact', href: '/contact', label: 'Contact Us', icon: Phone },
+      ]
+    },
+    legal: {
+      label: 'Legal',
+      icon: Shield,
+      items: [
+        { key: 'terms-of-service', href: '/terms-of-service', label: 'Terms of Service', icon: FileText },
+        { key: 'privacy-policy', href: '/privacy-policy', label: 'Privacy Policy', icon: Shield },
+        { key: 'cookie-policy', href: '/cookie-policy', label: 'Cookie Policy', icon: Cookie },
+      ]
     }
   };
 
-  const navigationItems = [
-    { key: 'home', href: '/', label: 'Home' },
-    { key: 'about', href: '/about', label: 'About' },
-    { key: 'careers', href: '/careers', label: 'Careers' },
-    { key: 'blog', href: '/blog', label: 'Blog' },
-    { key: 'api', href: '/api-integration', label: 'API Integration' },
-    { key: 'contact', href: '/contact', label: 'Contact Us' },
-    { key: 'support-center', href: '/support-center', label: 'Support Center' },
-    { key: 'terms-of-service', href: '/terms-of-service', label: 'Terms of Service' },
-    { key: 'privacy-policy', href: '/privacy-policy', label: 'Privacy Policy' },
-    { key: 'cookie-policy', href: '/cookie-policy', label: 'Cookie Policy' },
-    { key: 'documentation', href: '/documentation', label: 'Documentation Center' },
-    { key: 'become-broker', href: '/become-broker', label: 'Become a Broker' },
-    { key: 'ports-access', href: '/ports-access', label: 'Ports Access' },
-    { key: 'refineries-access', href: '/refineries-access', label: 'Refineries Access' },
-    { key: 'future-trading', href: '/future-trading', label: 'Future Trading' },
-    { key: 'vessels-tracking', href: '/vessels-tracking', label: 'Vessels Tracking' },
-  ];
+  const isActiveInDropdown = (items: any[]) => {
+    return items.some(item => item.key === currentPage);
+  };
 
-  const platformItems = [
-    { key: 'refineries', href: '/refineries', label: 'Refineries' },
-    { key: 'vessels', href: '/vessels', label: 'Vessels' },
-  ];
+  const handleDropdownToggle = (dropdownKey: string) => {
+    setActiveDropdown(activeDropdown === dropdownKey ? null : dropdownKey);
+  };
 
   return (
     <>
       {/* Header Navigation */}
       <header 
-        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+        className={`px-4 lg:px-6 h-20 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
           scrolled 
-            ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
-            : "bg-transparent"
+            ? "bg-slate-900/95 border-b border-orange-500/20 backdrop-blur-lg shadow-xl" 
+            : "bg-slate-900/80 backdrop-blur-sm"
         }`}
       >
         <div className="flex items-center gap-2 font-bold text-2xl">
-          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
-          <span className="text-white sr-only">PetroDealHub</span>
+          <Link href="/">
+            <div className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-blue-500 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">P</span>
+              </div>
+              <span className="text-white font-bold text-xl">PetroDealHub</span>
+            </div>
+          </Link>
         </div>
         
         {/* Desktop Menu */}
-        <nav className="hidden lg:flex gap-8 items-center">
-          {navigationItems.map((item) => (
-            item.key === currentPage ? (
-              <span key={item.key} className="text-sm font-medium text-orange-500">
-                {item.label}
-              </span>
-            ) : (
-              <Link 
-                key={item.key}
-                href={item.href} 
-                className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-              >
-                {item.label}
-              </Link>
-            )
+        <nav className="hidden lg:flex items-center gap-1">
+          {/* Home */}
+          {navigationStructure.main.map((item) => (
+            <Link 
+              key={item.key}
+              href={item.href} 
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                item.key === currentPage 
+                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" 
+                  : "text-white/80 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Link>
           ))}
-          <div className="h-6 w-px bg-slate-700"></div>
-          {platformItems.map((item) => (
-            item.key === currentPage ? (
-              <span key={item.key} className="text-sm font-medium text-orange-500">
-                {item.label}
-              </span>
-            ) : (
-              <Link 
-                key={item.key}
-                href={item.href} 
-                className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+
+          {/* Dropdown Menus */}
+          {Object.entries(navigationStructure).filter(([key]) => key !== 'main').map(([key, section]) => (
+            <div key={key} className="relative">
+              <button
+                onClick={() => handleDropdownToggle(key)}
+                onMouseEnter={() => setActiveDropdown(key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  isActiveInDropdown(section.items) 
+                    ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" 
+                    : "text-white/80 hover:text-white hover:bg-white/5"
+                }`}
               >
-                {item.label}
-              </Link>
-            )
+                <section.icon className="h-4 w-4" />
+                {section.label}
+                <ChevronDown className={`h-3 w-3 transition-transform ${activeDropdown === key ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {activeDropdown === key && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-lg border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+                    onMouseLeave={() => setActiveDropdown(null)}
+                  >
+                    <div className="p-2">
+                      {section.items.map((item, index) => (
+                        <Link
+                          key={item.key}
+                          href={item.href}
+                          className={`block px-4 py-3 rounded-lg text-sm transition-all duration-200 flex items-center gap-3 ${
+                            item.key === currentPage
+                              ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                              : "text-white/80 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => setActiveDropdown(null)}
+                        >
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                          <span>{item.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           ))}
         </nav>
-        
-        <div className="hidden lg:flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-              Dashboard
-            </Button>
-          </Link>
-          <Link href="/vessels">
-            <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
-              View Vessels
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
-        </div>
-        
-        {/* Mobile Menu Toggle */}
-        <button 
-          className="lg:hidden"
+
+        {/* Mobile Menu Button */}
+        <button
+          className="lg:hidden p-2 text-white/80 hover:text-white transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          {mobileMenuOpen ? (
-            <XIcon className="h-6 w-6 text-white" />
-          ) : (
-            <MenuIcon className="h-6 w-6 text-white" />
-          )}
+          {mobileMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
         </button>
       </header>
 
       {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
-          <nav className="flex flex-col gap-4">
-            {navigationItems.map((item) => (
-              item.key === currentPage ? (
-                <span key={item.key} className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">
-                  {item.label}
-                </span>
-              ) : (
-                <Link 
-                  key={item.key}
-                  href={item.href} 
-                  className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" 
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              )
-            ))}
-            {platformItems.map((item) => (
-              item.key === currentPage ? (
-                <span key={item.key} className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">
-                  {item.label}
-                </span>
-              ) : (
-                <Link 
-                  key={item.key}
-                  href={item.href} 
-                  className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" 
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              )
-            ))}
-          </nav>
-          <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-slate-700 text-white">Dashboard</Button>
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'tween', duration: 0.3 }}
+            className="fixed inset-0 z-40 lg:hidden"
+          >
+            <div className="bg-slate-900/95 backdrop-blur-lg h-full w-full pt-24 px-6 overflow-y-auto">
+              <div className="space-y-6">
+                {/* Home */}
+                {navigationStructure.main.map((item) => (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 flex items-center gap-3 ${
+                      item.key === currentPage 
+                        ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" 
+                        : "text-white/80 hover:text-white hover:bg-white/10"
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </Link>
+                ))}
+
+                {/* Mobile Dropdown Sections */}
+                {Object.entries(navigationStructure).filter(([key]) => key !== 'main').map(([key, section]) => (
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center gap-3 px-4 py-2 text-white/60 text-sm font-semibold uppercase tracking-wider">
+                      <section.icon className="h-4 w-4" />
+                      {section.label}
+                    </div>
+                    <div className="pl-4 space-y-1">
+                      {section.items.map((item) => (
+                        <Link
+                          key={item.key}
+                          href={item.href}
+                          className={`block px-4 py-3 rounded-lg text-base transition-all duration-200 flex items-center gap-3 ${
+                            item.key === currentPage
+                              ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                              : "text-white/80 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Breadcrumb */}
+      <div className="pt-24 pb-4 px-4 lg:px-6 bg-slate-900 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 text-sm text-white/60">
+            <Link href="/" className="hover:text-orange-400 transition-colors flex items-center gap-1">
+              <Home className="h-4 w-4" />
+              Home
             </Link>
-            <Link href="/vessels" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">View Vessels</Button>
-            </Link>
+            {currentPage !== 'home' && (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-orange-400 font-medium">
+                  {Object.values(navigationStructure).flat().find((item: any) => 
+                    Array.isArray(item) ? item.some((subItem: any) => subItem.key === currentPage) :
+                    item.items?.some((subItem: any) => subItem.key === currentPage)
+                  )?.label || currentPage}
+                </span>
+              </>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
