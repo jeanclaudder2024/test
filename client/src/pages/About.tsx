@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { 
   Globe, 
@@ -19,120 +18,18 @@ import {
   Eye,
   Lock,
   Lightbulb,
-  ChevronRight,
-  MenuIcon,
-  XIcon,
-  ArrowLeft,
   Mail,
   Phone,
   ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
 
 export default function About() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header Navigation */}
-      <header 
-        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
-          scrolled 
-            ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
-            : "bg-transparent"
-        }`}
-      >
-        <div className="flex items-center gap-2 font-bold text-2xl">
-          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
-          <span className="text-white sr-only">PetroDealHub</span>
-        </div>
-        
-        {/* Desktop Menu */}
-        <nav className="hidden lg:flex gap-8 items-center">
-          <Link 
-            href="/" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Home
-          </Link>
-          <span className="text-sm font-medium text-orange-500">
-            About
-          </span>
-          <div className="h-6 w-px bg-slate-700"></div>
-          <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Refineries
-          </Link>
-          <Link href="/vessels" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Vessels
-          </Link>
-        </nav>
-        
-        <div className="hidden lg:flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-              Dashboard
-            </Button>
-          </Link>
-          <Link href="/vessels">
-            <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
-              View Vessels
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
-        </div>
-        
-        {/* Mobile Menu Toggle */}
-        <button 
-          className="lg:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? (
-            <XIcon className="h-6 w-6 text-white" />
-          ) : (
-            <MenuIcon className="h-6 w-6 text-white" />
-          )}
-        </button>
-      </header>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
-          <nav className="flex flex-col gap-4">
-            <Link href="/" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Home
-            </Link>
-            <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
-            <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Refineries
-            </Link>
-            <Link href="/vessels" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Vessels
-            </Link>
-          </nav>
-          <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-slate-700 text-white">Dashboard</Button>
-            </Link>
-            <Link href="/vessels" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">View Vessels</Button>
-            </Link>
-          </div>
-        </div>
-      )}
+      <Header currentPage="about" />
 
 
       
