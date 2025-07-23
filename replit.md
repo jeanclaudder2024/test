@@ -762,6 +762,21 @@ Changelog:
   * **Dark Theme Consistency**: Maintained consistent slate-900 background and professional styling matching all other pages
   * **Navigation Integration**: Added Support Center to Header navigation menu and App.tsx routing with proper TypeScript interfaces
   * **Authentication-Based Button Logic**: Vessels page buttons now redirect users to login if not authenticated, or to app pages if logged in
+
+- July 23, 2025. **TERMS OF SERVICE - COMPREHENSIVE LEGAL FRAMEWORK**:
+  * **Complete Terms of Service Page**: Created comprehensive TermsOfService.tsx with exact user-provided legal content effective July 19, 2025
+  * **Professional Legal Structure**: Organized 12 detailed sections covering Platform Purpose, User Eligibility, Use of Services, Subscriptions, Guarantees, IP, Privacy, Modifications, Termination, Governing Law, Liability, and Contact
+  * **Platform Purpose Section**: Detailed services including data access, document formatting (LOI, B/L, SPA), subscription features, deal flows, shipment trackers, and commercial presentation tools
+  * **User Compliance Framework**: Clear guidelines prohibiting misrepresentation, platform exploitation, misleading content, and illegal practices
+  * **Subscription Terms**: Comprehensive coverage of dealer access, professional documents, insight dashboards, simulated deal modules with no guarantee disclaimers
+  * **Legal Protection**: No guarantees/endorsements section, intellectual property protection, limitation of liability under Delaware state law
+  * **Contact Integration**: Added legal@petrodealhub.com contact for PetroDealHub Legal Department inquiries
+  * **Professional Legal Theme**: Used legal-themed icons (Scale, Shield, FileText, Users, CreditCard, Eye, Edit, XCircle, Globe, AlertTriangle) with purple gradient color scheme
+  * **Advanced Legal Design**: Professional card layout with color-coded sections, check marks for list items, and highlighted notes for important disclaimers
+  * **Delaware Jurisdiction**: Terms governed by Delaware state law with clear limitation of liability framework
+  * **Effective Date Display**: Prominent "Effective Date: July 19, 2025" badge in hero section with professional legal styling
+  * **Navigation Integration**: Added Terms of Service to Header navigation menu and App.tsx routing with proper TypeScript interfaces
+  * **Comprehensive Legal Coverage**: All 12 sections properly structured with professional legal language and user agreement requirements
   * **Enterprise-Grade Design**: Professional layout featuring API capabilities, consultation process, and contact information
   * **Beautiful Scroll Animations**: Applied same advanced animation system as Blog page with smooth reveals and interactions
   * **Contact Integration**: Added direct email, phone, and location contact cards with hover effects and professional styling

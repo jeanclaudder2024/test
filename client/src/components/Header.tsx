@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
 
 interface HeaderProps {
-  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'support-center' | 'cookie-policy' | 'documentation' | 'become-broker' | 'ports-access' | 'refineries-access' | 'future-trading' | 'vessels-tracking' | 'refineries' | 'vessels';
+  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'support-center' | 'terms-of-service' | 'cookie-policy' | 'documentation' | 'become-broker' | 'ports-access' | 'refineries-access' | 'future-trading' | 'vessels-tracking' | 'refineries' | 'vessels';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
@@ -31,6 +31,7 @@ export default function Header({ currentPage }: HeaderProps) {
       case 'api': return 'API Integration';
       case 'contact': return 'Contact Us';
       case 'support-center': return 'Support Center';
+      case 'terms-of-service': return 'Terms of Service';
       case 'cookie-policy': return 'Cookie Policy';
       case 'documentation': return 'Documentation Center';
       case 'become-broker': return 'Become a Broker';
@@ -52,6 +53,7 @@ export default function Header({ currentPage }: HeaderProps) {
     { key: 'api', href: '/api-integration', label: 'API Integration' },
     { key: 'contact', href: '/contact', label: 'Contact Us' },
     { key: 'support-center', href: '/support-center', label: 'Support Center' },
+    { key: 'terms-of-service', href: '/terms-of-service', label: 'Terms of Service' },
     { key: 'cookie-policy', href: '/cookie-policy', label: 'Cookie Policy' },
     { key: 'documentation', href: '/documentation', label: 'Documentation Center' },
     { key: 'become-broker', href: '/become-broker', label: 'Become a Broker' },
