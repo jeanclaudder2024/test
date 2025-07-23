@@ -44,7 +44,7 @@ export default function ProfessionalPlansComparison() {
   const { data: plans, isLoading, error } = useQuery({
     queryKey: ['/api/subscription-plans'],
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache the results
+    gcTime: 0, // Don't cache the results (replaced cacheTime in newer React Query)
     queryFn: async () => {
       try {
         const response = await apiRequest(
@@ -59,7 +59,7 @@ export default function ProfessionalPlansComparison() {
         // Parse the response from the public API
         const plansData = await response.json();
         
-        return plansData.map((plan: any) => ({
+        return plansData.map((plan: any): PricingPlan => ({
           id: plan.id,
           name: plan.name,
           slug: plan.name.toLowerCase().replace(/\s+/g, '-'),
@@ -75,7 +75,7 @@ export default function ProfessionalPlansComparison() {
           })) : [],
           isPopular: plan.id === 2, // Professional plan is popular
           trialDays: plan.trialDays || 5
-        })).sort((a: PricingPlan, b: PricingPlan) => a.id - b.id);
+        })).sort((a, b) => a.id - b.id);
       } catch (err) {
         console.error('Error fetching plans:', err);
         
@@ -486,7 +486,7 @@ export default function ProfessionalPlansComparison() {
                 <thead>
                   <tr className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-blue-200">
                     <th className="text-left p-6 font-bold text-gray-900 text-lg">Features & Capabilities</th>
-                    {plans?.map((plan, index) => (
+                    {plans?.map((plan: PricingPlan, index: number) => (
                       <th key={plan.id} className="text-center p-6 min-w-[200px]">
                         <div className="flex flex-col items-center space-y-3">
                           <div className="flex items-center space-x-2">
@@ -520,7 +520,7 @@ export default function ProfessionalPlansComparison() {
                       </div>
                       Feature Comparison
                     </td>
-                    {plans?.map((plan) => (
+                    {plans?.map((plan: PricingPlan) => (
                       <td key={plan.id} className="p-6 text-center">
                         <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
                           <span className="font-bold text-blue-700">{plan.features.length} features</span>

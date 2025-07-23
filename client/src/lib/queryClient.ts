@@ -27,6 +27,17 @@ export async function apiRequest(
     credentials: "include",
   });
 
+  // Handle token expiration
+  if (res.status === 401 || res.status === 403) {
+    const responseText = await res.text();
+    if (responseText.includes('Invalid token') || responseText.includes('Unauthorized')) {
+      // Clear expired token
+      localStorage.removeItem('authToken');
+      // Redirect to login or show appropriate error
+      throw new Error('Authentication expired. Please sign in again.');
+    }
+  }
+
   await throwIfResNotOk(res);
   return res;
 }

@@ -3,12 +3,84 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Crown, Star, CheckCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function TrialExpired() {
   const { logout, user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSignOut = () => {
     logout();
+  };
+
+  const handleSubscription = async (interval: 'month' | 'year') => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to continue",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await apiRequest(
+        'POST',
+        '/api/create-checkout-session',
+        { 
+          planId: 2, // Professional Plan
+          interval 
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create checkout session');
+      }
+
+      const data = await response.json();
+      
+      // Redirect to Stripe checkout
+      const checkoutUrl = data.url || data.redirectUrl;
+      
+      if (checkoutUrl) {
+        // Try different methods for navigation
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.location.href = checkoutUrl;
+          } else if (window.top && window.top !== window) {
+            window.top.location.href = checkoutUrl;
+          } else {
+            window.location.href = checkoutUrl;
+          }
+        } catch (securityError) {
+          // Fallback to new window
+          const newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+          if (newWindow) {
+            toast({
+              title: "Checkout Opened",
+              description: "Stripe checkout opened in a new tab. Please complete your payment there.",
+            });
+          }
+        }
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast({
+        title: "Payment Error",
+        description: error instanceof Error ? error.message : "Failed to start checkout process. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -90,10 +162,14 @@ export default function TrialExpired() {
                 <div className="bg-white/5 p-6 rounded-lg border border-white/10 hover:border-orange-500/30 transition-colors">
                   <div className="text-center">
                     <h4 className="text-lg font-semibold text-white mb-2">Monthly</h4>
-                    <div className="text-3xl font-bold text-orange-400 mb-1">$99</div>
+                    <div className="text-3xl font-bold text-orange-400 mb-1">$350</div>
                     <p className="text-white/60 text-sm mb-4">per month</p>
                     
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button 
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                      onClick={() => handleSubscription('month')}
+                      disabled={isLoading}
+                    >
                       Choose Monthly
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -111,11 +187,15 @@ export default function TrialExpired() {
                   
                   <div className="text-center">
                     <h4 className="text-lg font-semibold text-white mb-2">Annual</h4>
-                    <div className="text-3xl font-bold text-orange-400 mb-1">$990</div>
+                    <div className="text-3xl font-bold text-orange-400 mb-1">$3,360</div>
                     <p className="text-white/60 text-sm mb-2">per year</p>
-                    <p className="text-green-400 text-xs mb-4">Save $198 (2 months free)</p>
+                    <p className="text-green-400 text-xs mb-4">Save $840 (2 months free)</p>
                     
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button 
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                      onClick={() => handleSubscription('year')}
+                      disabled={isLoading}
+                    >
                       <Crown className="mr-2 h-4 w-4" />
                       Choose Annual
                     </Button>
