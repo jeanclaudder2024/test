@@ -20,6 +20,7 @@ import {
   Building2
 } from 'lucide-react';
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Link } from 'wouter';
 import { useEffect, useState } from 'react';
 
@@ -456,67 +457,7 @@ export default function ApiIntegration() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="bg-slate-950 py-16">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-4 gap-8">
-              <div className="md:col-span-2">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">P</span>
-                  </div>
-                  <span className="text-white font-bold text-xl">PetroDealHub</span>
-                </div>
-                <p className="text-white/70 mb-6">
-                  Enterprise-grade API integration for the petroleum trading industry.
-                </p>
-                <div className="flex gap-4">
-                  <Link href="/">
-                    <Button variant="ghost" size="sm" className="text-white/80 hover:text-blue-500">
-                      Home
-                    </Button>
-                  </Link>
-                  <Link href="/about">
-                    <Button variant="ghost" size="sm" className="text-white/80 hover:text-blue-500">
-                      About
-                    </Button>
-                  </Link>
-                  <Link href="/blog">
-                    <Button variant="ghost" size="sm" className="text-white/80 hover:text-blue-500">
-                      Blog
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-white font-semibold mb-4">Platform</h3>
-                <ul className="space-y-2">
-                  <li><Link href="/vessels" className="text-white/70 hover:text-blue-500 transition-colors">Vessels</Link></li>
-                  <li><Link href="/refineries" className="text-white/70 hover:text-blue-500 transition-colors">Refineries</Link></li>
-                  <li><Link href="/ports" className="text-white/70 hover:text-blue-500 transition-colors">Ports</Link></li>
-                  <li><Link href="/dashboard" className="text-white/70 hover:text-blue-500 transition-colors">Dashboard</Link></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="text-white font-semibold mb-4">Enterprise</h3>
-                <ul className="space-y-2">
-                  <li><Link href="/api-integration" className="text-white/70 hover:text-blue-500 transition-colors">API Integration</Link></li>
-                  <li><a href="mailto:api@petrodealhub.com" className="text-white/70 hover:text-blue-500 transition-colors">API Access</a></li>
-                  <li><a href="tel:+18005554271" className="text-white/70 hover:text-blue-500 transition-colors">Contact Sales</a></li>
-                  <li><Link href="/careers" className="text-white/70 hover:text-blue-500 transition-colors">Careers</Link></li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="border-t border-slate-800 mt-12 pt-8 text-center">
-              <p className="text-white/60">
-                © 2025 PetroDealHub. All rights reserved. | Enterprise API Integration Platform
-              </p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

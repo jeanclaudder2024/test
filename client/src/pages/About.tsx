@@ -25,6 +25,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function About() {
   return (
@@ -480,80 +481,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-950 border-t border-slate-800 py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Company Info */}
-              <div className="lg:col-span-2">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">P</span>
-                  </div>
-                  <span className="text-white font-bold text-2xl">PetroDealHub</span>
-                </div>
-                <p className="text-white/70 mb-6 max-w-md">
-                  The global platform for petroleum trading intelligence, transparency, and secure deal execution. Empowering brokers, traders, and industry professionals worldwide.
-                </p>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2 text-white/60">
-                    <Mail className="h-4 w-4" />
-                    <span className="text-sm">contact@petrodealhub.com</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-white/60">
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm">+1 (555) 123-4567</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Links */}
-              <div>
-                <h3 className="font-semibold mb-4 text-white">Platform</h3>
-                <ul className="space-y-2">
-                  <li><Link href="/vessels" className="text-white/60 hover:text-orange-500 transition-colors">Vessel Tracking</Link></li>
-                  <li><Link href="/refineries" className="text-white/60 hover:text-orange-500 transition-colors">Refineries</Link></li>
-                  <li><Link href="/ports" className="text-white/60 hover:text-orange-500 transition-colors">Ports</Link></li>
-                  <li><Link href="/oil-prices" className="text-white/60 hover:text-orange-500 transition-colors">Oil Prices</Link></li>
-                  <li><Link href="/dashboard" className="text-white/60 hover:text-orange-500 transition-colors">Dashboard</Link></li>
-                </ul>
-              </div>
-
-              {/* Company */}
-              <div>
-                <h3 className="font-semibold mb-4 text-white">Company</h3>
-                <ul className="space-y-2">
-                  <li><span className="text-orange-500">About Us</span></li>
-                  <li><Link href="/contact" className="text-white/60 hover:text-orange-500 transition-colors">Contact</Link></li>
-                  <li><Link href="/privacy" className="text-white/60 hover:text-orange-500 transition-colors">Privacy Policy</Link></li>
-                  <li><Link href="/terms" className="text-white/60 hover:text-orange-500 transition-colors">Terms of Service</Link></li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between">
-              <div className="text-sm text-white/50 mb-4 md:mb-0">
-                © 2025 PetroDealHub. All rights reserved. | Built for the global petroleum trading industry.
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 text-white/40">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-sm">Global Platform</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/40">
-                  <Shield className="h-4 w-4" />
-                  <span className="text-sm">Secure Trading</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/40">
-                  <Award className="h-4 w-4" />
-                  <span className="text-sm">Industry Leading</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
       </div>
     </div>
   );
