@@ -143,7 +143,11 @@ router.post('/login', async (req, res) => {
 
     // Check trial status - Admin users never have trial expiration
     const now = new Date();
-    const trialExpired = user.role === 'admin' ? false : (subscription && subscription.trialEndDate ? now > new Date(subscription.trialEndDate) : true);
+    let trialExpired = user.role === 'admin' ? false : (subscription && subscription.trialEndDate ? now > new Date(subscription.trialEndDate) : true);
+    
+    // Override: If user has any active subscription, never show trial expired
+    const hasActiveSubscription = subscription && (subscription.status === 'active' || subscription.status === 'paid');
+    trialExpired = hasActiveSubscription ? false : trialExpired;
 
     // Generate token
     const token = generateToken(user);
@@ -237,10 +241,14 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
     }
     
     // Check if trial is expired for regular users
-    // Users with active subscriptions should not see trial expired page
+    // Users with active subscriptions should NEVER see trial expired page
     const trialExpired = userSubscription 
       ? (userSubscription.status === 'trial' && new Date() > new Date(userSubscription.trialEndDate))
-      : false;
+      : true; // No subscription = trial expired
+    
+    // Override: If user has any active subscription, never show trial expired
+    const hasActiveSubscription = userSubscription && (userSubscription.status === 'active' || userSubscription.status === 'paid');
+    const finalTrialExpired = hasActiveSubscription ? false : trialExpired;
 
     res.json({
       user: {
@@ -253,7 +261,7 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
         brokerMembershipDate: freshUser.brokerMembershipDate || null
       },
       subscription: userSubscription,
-      trialExpired
+      trialExpired: finalTrialExpired
     });
 
   } catch (error) {
