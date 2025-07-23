@@ -13835,12 +13835,32 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(404).json({ error: 'Subscription plan not found' });
       }
 
-      // Use correct price based on interval (monthly or yearly)
-      const basePrice = interval === 'year' ? plan.yearlyPrice || plan.monthlyPrice : plan.monthlyPrice || parseFloat(plan.price);
+      // Use fixed pricing for now until database columns are properly set up
+      let basePrice;
+      if (planId === 1) {
+        // Basic Plan
+        basePrice = interval === 'year' ? 690 : 69;
+      } else if (planId === 2) {
+        // Professional Plan  
+        basePrice = interval === 'year' ? 3360 : 350;
+      } else if (planId === 3) {
+        // Enterprise Plan
+        basePrice = interval === 'year' ? 3990 : 399;
+      } else {
+        // Fallback to database price
+        basePrice = parseFloat(plan.price) || 69;
+      }
+      
+      // Ensure we have a valid price
+      if (!basePrice || isNaN(basePrice)) {
+        console.error("Invalid price calculation:", { plan, interval, basePrice });
+        return res.status(400).json({ error: 'Invalid plan pricing configuration' });
+      }
+      
       const priceInCents = Math.round(basePrice * 100);
       const periodText = interval === 'year' ? 'Annual' : 'Monthly';
       
-      console.log("Plan details:", { name: plan.name, interval, basePrice, priceInCents, periodText });
+      console.log("Plan details:", { name: plan.name, interval, basePrice, priceInCents, periodText, planData: plan });
 
       if (priceInCents <= 0) {
         return res.status(400).json({ error: 'Invalid plan price: ' + basePrice });

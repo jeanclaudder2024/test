@@ -9,6 +9,8 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   name: text("name").notNull(), // "Free Trial", "Basic", "Pro", "Enterprise", "Broker"
   description: text("description"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  monthlyPrice: decimal("monthlyPrice", { precision: 10, scale: 2 }),
+  yearlyPrice: decimal("yearlyPrice", { precision: 10, scale: 2 }),
   interval: text("interval").notNull().default("month"), // "month", "year"
   trialDays: integer("trial_days").default(3),
   stripeProductId: text("stripe_product_id"),
