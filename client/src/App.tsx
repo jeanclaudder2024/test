@@ -37,6 +37,7 @@ import Careers from "@/pages/Careers";
 import Blog from "@/pages/Blog";
 import ApiIntegration from "@/pages/ApiIntegration";
 import ContactUs from "@/pages/ContactUs";
+import SupportCenter from "@/pages/SupportCenter";
 import CookiePolicy from "@/pages/CookiePolicy";
 import DocumentationCenter from "@/pages/DocumentationCenter";
 import BecomeABroker from "@/pages/BecomeABroker";
@@ -173,6 +174,7 @@ function AuthenticatedApp() {
     if (location === "/blog") return <Blog />;
     if (location === "/api-integration") return <ApiIntegration />;
     if (location === "/contact") return <ContactUs />;
+    if (location === "/support-center") return <SupportCenter />;
     if (location === "/cookie-policy") return <CookiePolicy />;
     if (location === "/documentation") return <DocumentationCenter />;
     if (location === "/become-broker") return <BecomeABroker />;

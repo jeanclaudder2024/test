@@ -747,6 +747,21 @@ Changelog:
 
 - July 23, 2025. **NEW API INTEGRATION PAGE WITH ENTERPRISE FOCUS**:
   * **Complete API Integration Page**: Created comprehensive page with exact user-provided content about PetroDealHub API services
+
+- July 23, 2025. **SUPPORT CENTER - YOUR TRUSTED PARTNER IN EVERY STEP OF THE OIL DEAL LIFECYCLE**:
+  * **Comprehensive Support Center Page**: Created complete SupportCenter.tsx with exact user-provided content about 24/7 global support services
+  * **Professional Support Ecosystem**: Included 6 main support features (Knowledge Base & FAQs, Step-by-Step Tutorials, Technical Support, Ticketing System, Account Managers, Live Training)
+  * **Global Coverage Section**: Added "Global Coverage. Localized Response" with multilingual support, compliance assistance, and confidential data handling
+  * **Support Features**: Detailed cards for Knowledge Base, Technical Support, Ticketing System (24/7), Account Managers (Enterprise), and Live Onboarding
+  * **Trust & Reliability Section**: Added "You're Never Alone in a Deal" emphasizing support bridge between action and assurance
+  * **Contact Integration**: Added support@petrodealhub.com contact with dual support options (email and dashboard ticketing)
+  * **Professional Theme**: Used support-themed icons (HelpCircle, BookOpen, Settings, Ticket, Users, Video) with blue gradient color scheme
+  * **Global Reach**: Emphasized coverage across North America, Europe, Latin America, Asia, Middle East, and Africa
+  * **Final Statement**: Added memorable tagline "PetroDealHub – Precision Trade Support, Built for the Global Oil Market"
+  * **Advanced Animations**: Implemented same scroll animation system with staggered timing and hover effects as other pages
+  * **Dark Theme Consistency**: Maintained consistent slate-900 background and professional styling matching all other pages
+  * **Navigation Integration**: Added Support Center to Header navigation menu and App.tsx routing with proper TypeScript interfaces
+  * **Authentication-Based Button Logic**: Vessels page buttons now redirect users to login if not authenticated, or to app pages if logged in
   * **Enterprise-Grade Design**: Professional layout featuring API capabilities, consultation process, and contact information
   * **Beautiful Scroll Animations**: Applied same advanced animation system as Blog page with smooth reveals and interactions
   * **Contact Integration**: Added direct email, phone, and location contact cards with hover effects and professional styling
