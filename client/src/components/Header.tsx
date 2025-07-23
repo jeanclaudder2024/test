@@ -127,14 +127,8 @@ export default function Header({ currentPage }: HeaderProps) {
         }`}
       >
         <div className="flex items-center gap-2 font-bold text-2xl">
-          <Link href="/">
-            <div className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-blue-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
-              <span className="text-white font-bold text-xl">PetroDealHub</span>
-            </div>
-          </Link>
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-16 w-auto" />
+          <span className="text-white sr-only">PetroDealHub</span>
         </div>
         
         {/* Desktop Menu */}
@@ -204,6 +198,14 @@ export default function Header({ currentPage }: HeaderProps) {
               </AnimatePresence>
             </div>
           ))}
+          
+          {/* Get Started Button */}
+          <div className="ml-4 pl-4 border-l border-white/20">
+            <Button className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 px-6 py-2 font-medium transition-all duration-200">
+              Get Started
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </nav>
 
         {/* Mobile Menu Button */}
@@ -270,6 +272,14 @@ export default function Header({ currentPage }: HeaderProps) {
                     </div>
                   </div>
                 ))}
+                
+                {/* Mobile Get Started Button */}
+                <div className="pt-6 mt-6 border-t border-white/20">
+                  <Button className="w-full bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 px-6 py-3 font-medium transition-all duration-200">
+                    Get Started
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.div>
