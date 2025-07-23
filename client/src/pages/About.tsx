@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { 
   Globe, 
   Target, 
@@ -16,18 +18,151 @@ import {
   Handshake,
   Eye,
   Lock,
-  Lightbulb
+  Lightbulb,
+  ChevronRight,
+  MenuIcon,
+  XIcon,
+  ArrowLeft,
+  Mail,
+  Phone,
+  ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function About() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Header Navigation */}
+      <header 
+        className={`px-4 lg:px-6 h-20 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+          scrolled 
+            ? "bg-slate-900/95 border-b border-orange-500/20 backdrop-blur-lg shadow-lg" 
+            : "bg-slate-900/80 backdrop-blur-md"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-lg">P</span>
+            </div>
+            <span className="text-white font-bold text-xl">PetroDealHub</span>
+          </Link>
+        </div>
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex gap-6 items-center">
+          <Link href="/" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Home
+          </Link>
+          <Link href="/vessels" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Vessels
+          </Link>
+          <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Refineries
+          </Link>
+          <Link href="/ports" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Ports
+          </Link>
+          <span className="text-orange-500 text-sm font-medium">About</span>
+          <div className="h-6 w-px bg-slate-700"></div>
+          <Link href="/login">
+            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
+              Login
+            </Button>
+          </Link>
+          <Link href="/register">
+            <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
+              Get Started
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Link>
+        </nav>
+        
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="lg:hidden text-white"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? (
+            <XIcon className="h-6 w-6" />
+          ) : (
+            <MenuIcon className="h-6 w-6" />
+          )}
+        </button>
+      </header>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-20 px-4 py-6 flex flex-col">
+          <nav className="flex flex-col gap-4">
+            <Link href="/" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Home
+            </Link>
+            <Link href="/vessels" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Vessels
+            </Link>
+            <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Refineries
+            </Link>
+            <Link href="/ports" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Ports
+            </Link>
+            <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
+          </nav>
+          <div className="mt-auto flex flex-col gap-3 pt-6">
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full border-slate-700 text-white">Login</Button>
+            </Link>
+            <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Back to Home Button */}
+      <div className="fixed top-24 left-4 z-40">
+        <Link href="/">
+          <Button variant="ghost" className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-white hover:bg-slate-700/80 hover:text-orange-500">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+        </Link>
+      </div>
+      
+      {/* Main Content */}
+      <div className="pt-20">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,111,0,0.1),transparent_40%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,111,0,0.05),transparent_40%)]"></div>
+      <section className="relative py-24 lg:py-40 overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900">
+        {/* Enhanced Background Effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,111,0,0.15),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,51,102,0.2),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,111,0,0.05),transparent_70%)]"></div>
+        
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9Im5vbmUiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBkPSJNNjAgMHYxaC0xVjBoMXptMCA1OXYxaC0xdi0xaDF6TTEgMHYxSDB2LTFIMXM2MCAwaDB2NjBIMHYtMWgxVjBoNTl2NTlIMXoiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L2c+PC9zdmc+')] opacity-30"></div>
+        
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 w-2 h-2 bg-orange-500/30 rounded-full animate-ping"></div>
+        <div className="absolute top-40 right-20 w-3 h-3 bg-orange-400/20 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-2 h-2 bg-orange-600/40 rounded-full animate-bounce"></div>
+        <div className="absolute bottom-40 right-10 w-1 h-1 bg-orange-300/50 rounded-full animate-ping"></div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
@@ -59,43 +194,52 @@ export default function About() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-20 bg-[#003366] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,111,0,0.05),transparent_40%)]"></div>
+      <section className="py-24 bg-gradient-to-br from-[#003366] via-[#004080] to-[#003366] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,111,0,0.1),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,165,0,0.08),transparent_60%)]"></div>
+        
+        {/* Animated Background Elements */}
+        <div className="absolute top-10 left-10 w-32 h-32 border border-orange-500/10 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-24 h-24 border border-orange-400/20 rounded-full animate-ping"></div>
+        <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-orange-500/40 rounded-full animate-bounce"></div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">
+            <div className="text-center mb-20">
+              <Badge variant="outline" className="mb-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-300 border-orange-500/30 px-6 py-3 text-lg">
                 Our Mission
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-white bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
                 Empowering Global Oil Trade Intelligence
               </h2>
+              <p className="text-xl text-white/80 max-w-4xl mx-auto leading-relaxed mb-8">
+                We revolutionize petroleum trading through cutting-edge technology, transparent processes, and global connectivity
+              </p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* Mission Item 1 */}
-              <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
-                <CardHeader>
-                  <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform">
-                    <BarChart3 className="h-6 w-6 text-orange-500" />
+              <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-slate-700/30 hover:border-orange-500/30 hover:bg-gradient-to-br hover:from-slate-800/80 hover:to-slate-900/80 transition-all duration-500 group backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-orange-500/10">
+                <CardHeader className="pb-6">
+                  <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl inline-flex mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                    <BarChart3 className="h-7 w-7 text-orange-400" />
                   </div>
-                  <CardTitle className="text-white">Track & Validate</CardTitle>
-                  <CardDescription className="text-white/70">
-                    Track, verify, and validate every stage of the petroleum deal cycle with complete transparency
+                  <CardTitle className="text-white text-xl font-bold mb-3">Track & Validate</CardTitle>
+                  <CardDescription className="text-white/80 leading-relaxed">
+                    Track, verify, and validate every stage of the petroleum deal cycle with complete transparency and real-time monitoring
                   </CardDescription>
                 </CardHeader>
               </Card>
 
               {/* Mission Item 2 */}
-              <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
-                <CardHeader>
-                  <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform">
-                    <Eye className="h-6 w-6 text-orange-500" />
+              <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-slate-700/30 hover:border-orange-500/30 hover:bg-gradient-to-br hover:from-slate-800/80 hover:to-slate-900/80 transition-all duration-500 group backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-orange-500/10">
+                <CardHeader className="pb-6">
+                  <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl inline-flex mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                    <Eye className="h-7 w-7 text-orange-400" />
                   </div>
-                  <CardTitle className="text-white">Full Visibility</CardTitle>
-                  <CardDescription className="text-white/70">
-                    Ensure full visibility and transparency over shipments, documents, offers, and pricing
+                  <CardTitle className="text-white text-xl font-bold mb-3">Full Visibility</CardTitle>
+                  <CardDescription className="text-white/80 leading-relaxed">
+                    Ensure full visibility and transparency over shipments, documents, offers, and pricing with comprehensive tracking
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -448,6 +592,83 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-950 border-t border-slate-800 py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {/* Company Info */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">P</span>
+                  </div>
+                  <span className="text-white font-bold text-2xl">PetroDealHub</span>
+                </div>
+                <p className="text-white/70 mb-6 max-w-md">
+                  The global platform for petroleum trading intelligence, transparency, and secure deal execution. Empowering brokers, traders, and industry professionals worldwide.
+                </p>
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2 text-white/60">
+                    <Mail className="h-4 w-4" />
+                    <span className="text-sm">contact@petrodealhub.com</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white/60">
+                    <Phone className="h-4 w-4" />
+                    <span className="text-sm">+1 (555) 123-4567</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Links */}
+              <div>
+                <h3 className="font-semibold mb-4 text-white">Platform</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/vessels" className="text-white/60 hover:text-orange-500 transition-colors">Vessel Tracking</Link></li>
+                  <li><Link href="/refineries" className="text-white/60 hover:text-orange-500 transition-colors">Refineries</Link></li>
+                  <li><Link href="/ports" className="text-white/60 hover:text-orange-500 transition-colors">Ports</Link></li>
+                  <li><Link href="/oil-prices" className="text-white/60 hover:text-orange-500 transition-colors">Oil Prices</Link></li>
+                  <li><Link href="/dashboard" className="text-white/60 hover:text-orange-500 transition-colors">Dashboard</Link></li>
+                </ul>
+              </div>
+
+              {/* Company */}
+              <div>
+                <h3 className="font-semibold mb-4 text-white">Company</h3>
+                <ul className="space-y-2">
+                  <li><span className="text-orange-500">About Us</span></li>
+                  <li><Link href="/careers" className="text-white/60 hover:text-orange-500 transition-colors">Careers</Link></li>
+                  <li><Link href="/contact" className="text-white/60 hover:text-orange-500 transition-colors">Contact</Link></li>
+                  <li><Link href="/privacy" className="text-white/60 hover:text-orange-500 transition-colors">Privacy Policy</Link></li>
+                  <li><Link href="/terms" className="text-white/60 hover:text-orange-500 transition-colors">Terms of Service</Link></li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between">
+              <div className="text-sm text-white/50 mb-4 md:mb-0">
+                © 2025 PetroDealHub. All rights reserved. | Built for the global petroleum trading industry.
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-white/40">
+                  <Globe className="h-4 w-4" />
+                  <span className="text-sm">Global Platform</span>
+                </div>
+                <div className="flex items-center gap-2 text-white/40">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-sm">Secure Trading</span>
+                </div>
+                <div className="flex items-center gap-2 text-white/40">
+                  <Award className="h-4 w-4" />
+                  <span className="text-sm">Industry Leading</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+      </div>
     </div>
   );
 }
