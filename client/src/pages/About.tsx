@@ -25,11 +25,20 @@ import {
   ArrowLeft,
   Mail,
   Phone,
-  ExternalLink
+  ExternalLink,
+  Cpu,
+  Database,
+  Network,
+  Activity,
+  Star,
+  Rocket,
+  Brain,
+  Settings
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import "../styles/about-animations.css";
 
 export default function About() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -139,123 +148,441 @@ export default function About() {
       {/* Main Content */}
       <div className="pt-40">
       {/* Hero Section */}
-      <section className="relative py-24 lg:py-40 overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900">
-        {/* Enhanced Background Effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,111,0,0.15),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,51,102,0.2),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,111,0,0.05),transparent_70%)]"></div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-[#001122]">
+        {/* Advanced Background Effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,111,0,0.15),transparent_40%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,51,102,0.2),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,111,0,0.08),transparent_60%)]"></div>
         
-        {/* Animated Grid Pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9Im5vbmUiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBkPSJNNjAgMHYxaC0xVjBoMXptMCA1OXYxaC0xdi0xaDF6TTEgMHYxSDB2LTFIMXM2MCAwaDB2NjBIMHYtMWgxVjBoNTl2NTlIMXoiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L2c+PC9zdmc+')] opacity-30"></div>
+        {/* Animated Geometric Patterns */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-20 left-20 w-64 h-64 border border-orange-500/20 rounded-full animate-spin-slow"></div>
+          <div className="absolute bottom-20 right-20 w-48 h-48 border border-orange-400/15 rounded-full animate-pulse"></div>
+          <div className="absolute top-1/2 left-10 w-32 h-32 bg-orange-500/5 rounded-full animate-bounce"></div>
+          <div className="absolute top-10 right-1/3 w-16 h-16 bg-gradient-to-r from-orange-500/10 to-transparent rotate-45 animate-pulse"></div>
+        </div>
         
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-2 h-2 bg-orange-500/30 rounded-full animate-ping"></div>
-        <div className="absolute top-40 right-20 w-3 h-3 bg-orange-400/20 rounded-full animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-2 h-2 bg-orange-600/40 rounded-full animate-bounce"></div>
-        <div className="absolute bottom-40 right-10 w-1 h-1 bg-orange-300/50 rounded-full animate-ping"></div>
+        {/* Floating Data Visualization Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-32 left-1/4 flex items-center gap-2 bg-slate-800/40 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/20 animate-float">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-white/70 text-sm">298 Active Vessels</span>
+          </div>
+          <div className="absolute top-48 right-1/4 flex items-center gap-2 bg-slate-800/40 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/20 animate-float-delayed">
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            <span className="text-white/70 text-sm">46 Global Ports</span>
+          </div>
+          <div className="absolute bottom-32 left-1/3 flex items-center gap-2 bg-slate-800/40 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-500/20 animate-float">
+            <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+            <span className="text-white/70 text-sm">Live Tracking</span>
+          </div>
+        </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <Badge variant="outline" className="mb-6 bg-orange-500/10 text-orange-300 border-orange-500/30 px-4 py-2">
-              About PetroDealHub
-            </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold mb-8 text-white">
-              Where Oil Trade Meets Intelligence, <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Transparency</span>, and Global Precision
+          <div className="text-center max-w-6xl mx-auto">
+            <div className="mb-8 flex justify-center">
+              <Badge variant="outline" className="bg-gradient-to-r from-orange-500/20 via-orange-600/20 to-orange-500/20 text-orange-300 border-orange-500/30 px-8 py-3 text-lg font-semibold backdrop-blur-sm">
+                <Globe className="w-4 h-4 mr-2" />
+                About PetroDealHub
+              </Badge>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-10 leading-tight">
+              <span className="text-white">The Future of</span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 animate-gradient-x">
+                Oil Trading
+              </span>
+              <br />
+              <span className="text-white/90 text-3xl md:text-4xl lg:text-5xl font-light">Intelligence Platform</span>
             </h1>
-            <p className="text-xl text-white/70 mb-8 max-w-3xl mx-auto leading-relaxed">
-              At PetroDealHub, we are not just a platform — we are a movement redefining how the world approaches oil trading, deal visibility, and transactional trust.
+            
+            <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-4xl mx-auto leading-relaxed font-light">
+              Revolutionizing petroleum trading through advanced analytics, real-time vessel tracking, 
+              and transparent deal execution. Where global oil trade meets cutting-edge technology.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <Globe className="h-5 w-5 text-orange-400" />
-                <span className="text-white font-medium">Global Platform</span>
+            
+            <div className="flex flex-wrap justify-center gap-6 mb-12">
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center gap-3 bg-slate-900/90 backdrop-blur-sm px-6 py-4 rounded-2xl border border-orange-500/30 group-hover:border-orange-500/50 transition-all">
+                  <Globe className="h-6 w-6 text-orange-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">Global Network</div>
+                    <div className="text-white/60 text-sm">Worldwide Coverage</div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <Shield className="h-5 w-5 text-orange-400" />
-                <span className="text-white font-medium">Secure & Transparent</span>
+              
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center gap-3 bg-slate-900/90 backdrop-blur-sm px-6 py-4 rounded-2xl border border-blue-500/30 group-hover:border-blue-500/50 transition-all">
+                  <Shield className="h-6 w-6 text-blue-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">Secure & Trusted</div>
+                    <div className="text-white/60 text-sm">Enterprise Grade</div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <TrendingUp className="h-5 w-5 text-orange-400" />
-                <span className="text-white font-medium">First of Its Kind</span>
+              
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center gap-3 bg-slate-900/90 backdrop-blur-sm px-6 py-4 rounded-2xl border border-green-500/30 group-hover:border-green-500/50 transition-all">
+                  <TrendingUp className="h-6 w-6 text-green-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">AI-Powered</div>
+                    <div className="text-white/60 text-sm">Smart Analytics</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/vessels">
+                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 group">
+                  Explore Platform
+                  <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="outline" size="lg" className="border-2 border-white/20 text-white hover:bg-white/10 hover:border-white/30 px-8 py-4 text-lg font-semibold rounded-xl backdrop-blur-sm transition-all duration-300">
+                  View Dashboard
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Vision Section */}
+      <section className="py-32 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+        {/* Advanced Background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_top,rgba(255,111,0,0.1),transparent_70%)]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,51,102,0.05),transparent_50%,rgba(255,111,0,0.05))]"></div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-7xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-20">
+              <Badge variant="outline" className="mb-8 bg-gradient-to-r from-orange-500/20 via-orange-600/20 to-orange-500/20 text-orange-300 border-orange-500/30 px-8 py-4 text-xl font-semibold backdrop-blur-sm">
+                <Target className="w-5 h-5 mr-3" />
+                Our Mission & Vision
+              </Badge>
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-black mb-12 leading-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-200 to-white">
+                  Transforming Global
+                </span>
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600">
+                  Oil Trade Intelligence
+                </span>
+              </h2>
+              <p className="text-2xl text-white/80 max-w-5xl mx-auto leading-relaxed font-light">
+                We're building the world's most advanced petroleum trading ecosystem, where transparency meets technology 
+                and global commerce meets intelligent automation.
+              </p>
+            </div>
+
+            {/* Mission Cards Grid */}
+            <div className="grid lg:grid-cols-3 gap-8 mb-20">
+              {/* Mission Card 1 */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative bg-gradient-to-br from-slate-800/60 via-slate-900/80 to-slate-800/60 border-slate-700/30 hover:border-orange-500/50 transition-all duration-500 group backdrop-blur-sm shadow-2xl hover:shadow-orange-500/20 rounded-3xl overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                      <div className="relative p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl inline-flex group-hover:scale-110 transition-all duration-300">
+                        <BarChart3 className="h-8 w-8 text-orange-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4 group-hover:text-orange-100 transition-colors">Real-Time Analytics</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Advanced vessel tracking, market analysis, and deal validation powered by AI-driven insights 
+                      and real-time data processing across global maritime networks.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+
+              {/* Mission Card 2 */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative bg-gradient-to-br from-slate-800/60 via-slate-900/80 to-slate-800/60 border-slate-700/30 hover:border-blue-500/50 transition-all duration-500 group backdrop-blur-sm shadow-2xl hover:shadow-blue-500/20 rounded-3xl overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                      <div className="relative p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl inline-flex group-hover:scale-110 transition-all duration-300">
+                        <Shield className="h-8 w-8 text-blue-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4 group-hover:text-blue-100 transition-colors">Transparent Security</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Enterprise-grade security with complete transaction transparency, encrypted communications, 
+                      and blockchain-verified deal authenticity for maximum trust and reliability.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+
+              {/* Mission Card 3 */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative bg-gradient-to-br from-slate-800/60 via-slate-900/80 to-slate-800/60 border-slate-700/30 hover:border-green-500/50 transition-all duration-500 group backdrop-blur-sm shadow-2xl hover:shadow-green-500/20 rounded-3xl overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                      <div className="relative p-4 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl inline-flex group-hover:scale-110 transition-all duration-300">
+                        <Globe className="h-8 w-8 text-green-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4 group-hover:text-green-100 transition-colors">Global Network</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Worldwide connectivity linking traders, brokers, refineries, and maritime operators 
+                      through intelligent matching algorithms and automated deal execution systems.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </div>
+
+            {/* Statistics Section */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity"></div>
+                  <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/30 group-hover:border-orange-500/50 transition-all">
+                    <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600 mb-2">298+</div>
+                    <div className="text-white/80 font-medium">Active Vessels</div>
+                    <div className="text-white/60 text-sm">Real-time tracking</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity"></div>
+                  <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/30 group-hover:border-blue-500/50 transition-all">
+                    <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 mb-2">46+</div>
+                    <div className="text-white/80 font-medium">Global Ports</div>
+                    <div className="text-white/60 text-sm">Worldwide coverage</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity"></div>
+                  <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/30 group-hover:border-green-500/50 transition-all">
+                    <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600 mb-2">24/7</div>
+                    <div className="text-white/80 font-medium">Live Monitoring</div>
+                    <div className="text-white/60 text-sm">Always available</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity"></div>
+                  <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/30 group-hover:border-purple-500/50 transition-all">
+                    <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 mb-2">AI</div>
+                    <div className="text-white/80 font-medium">Powered Intelligence</div>
+                    <div className="text-white/60 text-sm">Smart automation</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Mission Section */}
-      <section className="py-24 bg-gradient-to-br from-[#003366] via-[#004080] to-[#003366] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,111,0,0.1),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,165,0,0.08),transparent_60%)]"></div>
-        
-        {/* Animated Background Elements */}
-        <div className="absolute top-10 left-10 w-32 h-32 border border-orange-500/10 rounded-full animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-24 h-24 border border-orange-400/20 rounded-full animate-ping"></div>
-        <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-orange-500/40 rounded-full animate-bounce"></div>
+      {/* Technology Stack Section */}
+      <section className="py-32 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-pattern-grid opacity-30"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,111,0,0.08),transparent_60%)]"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-7xl mx-auto">
+            {/* Section Header */}
             <div className="text-center mb-20">
-              <Badge variant="outline" className="mb-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-300 border-orange-500/30 px-6 py-3 text-lg">
-                Our Mission
+              <Badge variant="outline" className="mb-8 bg-gradient-to-r from-blue-500/20 via-blue-600/20 to-blue-500/20 text-blue-300 border-blue-500/30 px-8 py-4 text-xl font-semibold backdrop-blur-sm">
+                <Cpu className="w-5 h-5 mr-3" />
+                Advanced Technology Stack
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-white bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
-                Empowering Global Oil Trade Intelligence
+              <h2 className="text-5xl md:text-6xl font-black mb-12 leading-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-white">
+                  Powered by
+                </span>
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600">
+                  Cutting-Edge Innovation
+                </span>
               </h2>
-              <p className="text-xl text-white/80 max-w-4xl mx-auto leading-relaxed mb-8">
-                We revolutionize petroleum trading through cutting-edge technology, transparent processes, and global connectivity
+              <p className="text-2xl text-white/80 max-w-5xl mx-auto leading-relaxed font-light">
+                Our platform leverages the latest in AI, blockchain, and real-time data processing 
+                to deliver unparalleled performance and reliability.
               </p>
             </div>
 
+            {/* Technology Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Mission Item 1 */}
-              <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-slate-700/30 hover:border-orange-500/30 hover:bg-gradient-to-br hover:from-slate-800/80 hover:to-slate-900/80 transition-all duration-500 group backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-orange-500/10">
-                <CardHeader className="pb-6">
-                  <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl inline-flex mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                    <BarChart3 className="h-7 w-7 text-orange-400" />
-                  </div>
-                  <CardTitle className="text-white text-xl font-bold mb-3">Track & Validate</CardTitle>
-                  <CardDescription className="text-white/80 leading-relaxed">
-                    Track, verify, and validate every stage of the petroleum deal cycle with complete transparency and real-time monitoring
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              {/* Tech Card 1 - AI & Machine Learning */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative glass-effect-dark rounded-3xl overflow-hidden group-hover:scale-105 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-pink-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="p-4 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-2xl inline-flex">
+                        <Brain className="h-8 w-8 text-purple-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4">AI & Machine Learning</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Advanced neural networks for predictive analytics, automated deal matching, 
+                      and intelligent market insights powered by GPT-4 and custom ML models.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
 
-              {/* Mission Item 2 */}
-              <Card className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-slate-700/30 hover:border-orange-500/30 hover:bg-gradient-to-br hover:from-slate-800/80 hover:to-slate-900/80 transition-all duration-500 group backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-orange-500/10">
-                <CardHeader className="pb-6">
-                  <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl inline-flex mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                    <Eye className="h-7 w-7 text-orange-400" />
-                  </div>
-                  <CardTitle className="text-white text-xl font-bold mb-3">Full Visibility</CardTitle>
-                  <CardDescription className="text-white/80 leading-relaxed">
-                    Ensure full visibility and transparency over shipments, documents, offers, and pricing with comprehensive tracking
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              {/* Tech Card 2 - Real-time Data Processing */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative glass-effect-dark rounded-3xl overflow-hidden group-hover:scale-105 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="p-4 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl inline-flex">
+                        <Activity className="h-8 w-8 text-green-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4">Real-time Processing</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      High-performance data streams processing vessel positions, market prices, 
+                      and deal status with sub-second latency using advanced WebSocket architecture.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
 
-              {/* Mission Item 3 */}
-              <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
-                <CardHeader>
-                  <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform">
-                    <TrendingUp className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <CardTitle className="text-white">Real-time Intelligence</CardTitle>
-                  <CardDescription className="text-white/70">
-                    Provide real-time data intelligence on refineries, vessels, and trade dynamics
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              {/* Tech Card 3 - Blockchain Security */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative glass-effect-dark rounded-3xl overflow-hidden group-hover:scale-105 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-red-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="p-4 bg-gradient-to-br from-orange-500/20 to-red-600/20 rounded-2xl inline-flex">
+                        <Lock className="h-8 w-8 text-orange-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4">Blockchain Security</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Immutable transaction records, smart contract automation, 
+                      and cryptographic verification ensuring maximum security and transparency.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
 
-              {/* Mission Item 4 */}
-              <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
-                <CardHeader>
-                  <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform">
-                    <Lock className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <CardTitle className="text-white">Secure Environment</CardTitle>
-                  <CardDescription className="text-white/70">
-                    Offer secure environments for negotiating and managing deals with complete protection
+              {/* Tech Card 4 - Cloud Infrastructure */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative glass-effect-dark rounded-3xl overflow-hidden group-hover:scale-105 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-cyan-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="p-4 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl inline-flex">
+                        <Database className="h-8 w-8 text-blue-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4">Cloud Infrastructure</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Enterprise-grade cloud architecture with auto-scaling, 
+                      global CDN distribution, and 99.9% uptime SLA for maximum reliability.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+
+              {/* Tech Card 5 - API Integration */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative glass-effect-dark rounded-3xl overflow-hidden group-hover:scale-105 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-2xl inline-flex">
+                        <Network className="h-8 w-8 text-yellow-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4">API Integration</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Seamless integration with maritime APIs, financial systems, 
+                      and third-party services through robust RESTful and GraphQL endpoints.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+
+              {/* Tech Card 6 - Advanced Analytics */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <Card className="relative glass-effect-dark rounded-3xl overflow-hidden group-hover:scale-105 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 to-purple-600"></div>
+                  <CardHeader className="p-8">
+                    <div className="relative mb-6">
+                      <div className="p-4 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-2xl inline-flex">
+                        <Settings className="h-8 w-8 text-indigo-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-white text-2xl font-bold mb-4">Advanced Analytics</CardTitle>
+                    <CardDescription className="text-white/80 leading-relaxed text-lg">
+                      Comprehensive business intelligence with custom dashboards, 
+                      predictive modeling, and automated reporting for strategic decision making.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Item 3 */}
+      <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
+        <CardHeader>
+          <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform">
+            <TrendingUp className="h-6 w-6 text-orange-500" />
+          </div>
+          <CardTitle className="text-white">Real-time Intelligence</CardTitle>
+          <CardDescription className="text-white/70">
+            Provide real-time data intelligence on refineries, vessels, and trade dynamics
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* Mission Item 4 */}
+      <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
+        <CardHeader>
+          <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform">
+            <Lock className="h-6 w-6 text-orange-500" />
+          </div>
+          <CardTitle className="text-white">Secure Environment</CardTitle>
+          <CardDescription className="text-white/70">
+            Offer secure environments for negotiating and managing deals with complete protection
                   </CardDescription>
                 </CardHeader>
               </Card>
