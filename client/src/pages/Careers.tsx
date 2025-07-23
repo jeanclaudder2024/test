@@ -230,10 +230,15 @@ export default function Careers() {
                             </Badge>
                           </div>
                         </div>
-                        <Button className="bg-orange-500 hover:bg-orange-600 text-white group-hover:scale-105 transition-transform">
-                          Apply Now
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
+                        <a 
+                          href={`mailto:careers@petrodealhub.com?subject=Application for ${role.title}&body=Dear PetroDealHub Team,%0D%0A%0D%0AI am interested in applying for the ${role.title} position located in ${role.location}.%0D%0A%0D%0APlease find my resume attached.%0D%0A%0D%0ABest regards`}
+                          className="inline-block"
+                        >
+                          <Button className="bg-orange-500 hover:bg-orange-600 text-white group-hover:scale-105 transition-transform">
+                            Apply Now
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        </a>
                       </div>
                     </CardContent>
                   </Card>
