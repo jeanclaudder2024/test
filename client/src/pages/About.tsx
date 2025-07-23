@@ -72,12 +72,6 @@ export default function About() {
           <span className="text-sm font-medium text-orange-500">
             About
           </span>
-          <Link 
-            href="/careers" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Careers
-          </Link>
           <div className="h-6 w-px bg-slate-700"></div>
           <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Refineries
@@ -122,9 +116,6 @@ export default function About() {
               Home
             </Link>
             <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
-            <Link href="/careers" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Careers
-            </Link>
             <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Refineries
             </Link>
@@ -637,7 +628,6 @@ export default function About() {
                 <h3 className="font-semibold mb-4 text-white">Company</h3>
                 <ul className="space-y-2">
                   <li><span className="text-orange-500">About Us</span></li>
-                  <li><Link href="/careers" className="text-white/60 hover:text-orange-500 transition-colors">Careers</Link></li>
                   <li><Link href="/contact" className="text-white/60 hover:text-orange-500 transition-colors">Contact</Link></li>
                   <li><Link href="/privacy" className="text-white/60 hover:text-orange-500 transition-colors">Privacy Policy</Link></li>
                   <li><Link href="/terms" className="text-white/60 hover:text-orange-500 transition-colors">Terms of Service</Link></li>
