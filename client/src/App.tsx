@@ -35,6 +35,7 @@ import LandingPage from "@/pages/LandingPage";
 import About from "@/pages/About";
 import Careers from "@/pages/Careers";
 import Blog from "@/pages/Blog";
+import ApiIntegration from "@/pages/ApiIntegration";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
@@ -162,6 +163,7 @@ function AuthenticatedApp() {
     if (location === "/about") return <About />;
     if (location === "/careers") return <Careers />;
     if (location === "/blog") return <Blog />;
+    if (location === "/api-integration") return <ApiIntegration />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;

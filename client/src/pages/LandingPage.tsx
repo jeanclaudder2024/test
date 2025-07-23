@@ -133,7 +133,7 @@ export default function LandingPage() {
       }));
     },
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache the results
+    gcTime: 0, // Don't cache the results
   });
 
   // Fetch landing page content from database
@@ -147,7 +147,7 @@ export default function LandingPage() {
       return response.json();
     },
     staleTime: 60000, // Cache for 1 minute
-    cacheTime: 300000, // Keep in cache for 5 minutes
+    gcTime: 300000, // Keep in cache for 5 minutes
   });
 
   // Handle trial start - redirect to registration with message
@@ -286,6 +286,12 @@ export default function LandingPage() {
           >
             Blog
           </Link>
+          <Link 
+            href="/api-integration" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            API Integration
+          </Link>
           <div className="h-6 w-px bg-slate-700"></div>
           <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Refineries
@@ -349,6 +355,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/blog" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Blog
+            </Link>
+            <Link href="/api-integration" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              API Integration
             </Link>
             <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Refineries
