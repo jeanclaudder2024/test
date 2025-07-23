@@ -318,7 +318,9 @@ router.put("/:id", async (req, res) => {
     const vesselId = parseInt(req.params.id);
     let vesselData = { ...req.body };
     
-    // Clean and validate data
+    console.log("VESSEL UPDATE - Raw data received:", vesselData);
+    
+    // Clean and validate data with proper port ID handling
     const cleanedData = {
       name: vesselData.name ? vesselData.name.toString().trim() : undefined,
       imo: vesselData.imo ? vesselData.imo.toString().trim() : undefined,
@@ -329,11 +331,13 @@ router.put("/:id", async (req, res) => {
       deadweight: vesselData.deadweight ? parseInt(vesselData.deadweight) : null,
       currentLat: vesselData.currentLat ? vesselData.currentLat.toString() : null,
       currentLng: vesselData.currentLng ? vesselData.currentLng.toString() : null,
-      departurePort: vesselData.departurePort ? vesselData.departurePort.toString().trim() : null,
+      // Fix: Convert port IDs to integers instead of strings
+      departurePort: vesselData.departurePort ? parseInt(vesselData.departurePort) : null,
       departureDate: vesselData.departureDate ? new Date(vesselData.departureDate) : null,
       departureLat: vesselData.departureLat ? vesselData.departureLat.toString() : null,
       departureLng: vesselData.departureLng ? vesselData.departureLng.toString() : null,
-      destinationPort: vesselData.destinationPort ? vesselData.destinationPort.toString().trim() : null,
+      // Fix: Convert destination port ID to integer
+      destinationPort: vesselData.destinationPort ? parseInt(vesselData.destinationPort) : null,
       destinationLat: vesselData.destinationLat ? vesselData.destinationLat.toString() : null,
       destinationLng: vesselData.destinationLng ? vesselData.destinationLng.toString() : null,
       eta: vesselData.eta ? new Date(vesselData.eta) : null,
@@ -350,12 +354,16 @@ router.put("/:id", async (req, res) => {
       lastUpdated: new Date()
     };
     
+    console.log("VESSEL UPDATE - Cleaned data:", cleanedData);
+    
     // Remove undefined values
     Object.keys(cleanedData).forEach(key => {
       if (cleanedData[key] === undefined) {
         delete cleanedData[key];
       }
     });
+    
+    console.log("VESSEL UPDATE - Final data for database:", cleanedData);
     
     const updatedVessel = await db
       .update(vessels)
@@ -367,9 +375,10 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Vessel not found" });
     }
     
+    console.log("VESSEL UPDATE - Successfully updated vessel:", updatedVessel[0]);
     res.json(updatedVessel[0]);
   } catch (error) {
-    console.error("Error updating vessel:", error);
+    console.error("VESSEL UPDATE - Error updating vessel:", error);
     res.status(500).json({ error: "Failed to update vessel: " + error.message });
   }
 });
