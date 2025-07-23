@@ -201,10 +201,12 @@ export default function Header({ currentPage }: HeaderProps) {
           
           {/* Get Started Button */}
           <div className="ml-4 pl-4 border-l border-white/20">
-            <Button className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 px-6 py-2 font-medium transition-all duration-200">
-              Get Started
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
+            <Link href="/login">
+              <Button className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 px-6 py-2 font-medium transition-all duration-200">
+                Get Started
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </nav>
 
@@ -275,10 +277,12 @@ export default function Header({ currentPage }: HeaderProps) {
                 
                 {/* Mobile Get Started Button */}
                 <div className="pt-6 mt-6 border-t border-white/20">
-                  <Button className="w-full bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 px-6 py-3 font-medium transition-all duration-200">
-                    Get Started
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  <Link href="/login" className="block">
+                    <Button className="w-full bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 px-6 py-3 font-medium transition-all duration-200">
+                      Get Started
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
