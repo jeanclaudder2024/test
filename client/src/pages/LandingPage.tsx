@@ -275,9 +275,6 @@ export default function LandingPage() {
           <Link href="/vessels" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Vessels
           </Link>
-          <Link href="/about" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            About
-          </Link>
         </nav>
         
         <div className="hidden lg:flex items-center gap-4">
@@ -331,9 +328,6 @@ export default function LandingPage() {
             </Link>
             <Link href="/vessels" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Vessels
-            </Link>
-            <Link href="/about" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              About
             </Link>
           </nav>
           <div className="mt-auto flex flex-col gap-3 pt-6">
