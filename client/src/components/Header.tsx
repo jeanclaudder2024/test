@@ -120,14 +120,14 @@ export default function Header({ currentPage }: HeaderProps) {
     <>
       {/* Header Navigation */}
       <header 
-        className={`px-4 lg:px-6 h-20 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+        className={`px-4 lg:px-6 h-28 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
           scrolled 
             ? "bg-slate-900/95 border-b border-orange-500/20 backdrop-blur-lg shadow-xl" 
             : "bg-slate-900/80 backdrop-blur-sm"
         }`}
       >
         <div className="flex items-center gap-2 font-bold text-2xl">
-          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-16 w-auto" />
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-24 w-auto" />
           <span className="text-white sr-only">PetroDealHub</span>
         </div>
         
@@ -227,7 +227,7 @@ export default function Header({ currentPage }: HeaderProps) {
             transition={{ type: 'tween', duration: 0.3 }}
             className="fixed inset-0 z-40 lg:hidden"
           >
-            <div className="bg-slate-900/95 backdrop-blur-lg h-full w-full pt-24 px-6 overflow-y-auto">
+            <div className="bg-slate-900/95 backdrop-blur-lg h-full w-full pt-32 px-6 overflow-y-auto">
               <div className="space-y-6">
                 {/* Home */}
                 {navigationStructure.main.map((item) => (
@@ -287,7 +287,7 @@ export default function Header({ currentPage }: HeaderProps) {
       </AnimatePresence>
 
       {/* Breadcrumb */}
-      <div className="pt-24 pb-4 px-4 lg:px-6 bg-slate-900 border-b border-slate-800">
+      <div className="pt-32 pb-4 px-4 lg:px-6 bg-slate-900 border-b border-slate-800">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-2 text-sm text-white/60">
             <Link href="/" className="hover:text-orange-400 transition-colors flex items-center gap-1">
