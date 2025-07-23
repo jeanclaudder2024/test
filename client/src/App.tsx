@@ -40,6 +40,7 @@ import ContactUs from "@/pages/ContactUs";
 import CookiePolicy from "@/pages/CookiePolicy";
 import DocumentationCenter from "@/pages/DocumentationCenter";
 import BecomeABroker from "@/pages/BecomeABroker";
+import PortsAccess from "@/pages/PortsAccess";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
@@ -172,6 +173,7 @@ function AuthenticatedApp() {
     if (location === "/cookie-policy") return <CookiePolicy />;
     if (location === "/documentation") return <DocumentationCenter />;
     if (location === "/become-broker") return <BecomeABroker />;
+    if (location === "/ports-access") return <PortsAccess />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;
