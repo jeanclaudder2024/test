@@ -109,6 +109,7 @@ import { directPdfRouter } from './routes/direct-pdf';
 import { enhancedPdfRouter } from './routes/enhanced-pdf';
 import { reliablePdfRouter } from './routes/reliable-pdf';
 import { maritimeRoutesRouter } from './routes/maritime-routes';
+import testRoutes from './routes/testRoutes';
 
 // Configure multer for file uploads
 const storage_multer = multer.diskStorage({
@@ -15435,6 +15436,14 @@ Generate a professional, detailed document that incorporates the vessel informat
       console.error('Error viewing document:', error);
       res.status(500).json({ message: 'Error viewing document', error: error.message });
     }
+  });
+
+  // Register test routes
+  app.use(testRoutes);
+
+  // Serve test page
+  app.get('/test-subscription', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'test-subscription.html'));
   });
 
   return httpServer;

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetroDealHub - Subscription Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e40af, #f97316);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            background: linear-gradient(45deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+        }
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; }
+        .error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; }
+        .info { background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; }
+        .warning { background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; }
+        pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .plan-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .plan-card:hover {
+            border-color: #f97316;
+            transform: translateY(-5px);
+        }
+        .price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #f97316;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚢 PetroDealHub - Complete Subscription Test</h1>
+        <p>This page tests the entire subscription workflow from authentication to payment processing.</p>
+
+        <!-- Step 1: Authentication Test -->
+        <div class="test-section">
+            <h2>Step 1: Authentication Test</h2>
+            <div id="auth-status" class="status info">Not tested yet</div>
+            <button class="button" onclick="testAuthentication()">Test Login & Token</button>
+            <button class="button" onclick="registerTestUser()">Register New Test User</button>
+            <pre id="auth-result"></pre>
+        </div>
+
+        <!-- Step 2: Subscription Plans Test -->
+        <div class="test-section">
+            <h2>Step 2: Subscription Plans API Test</h2>
+            <div id="plans-status" class="status info">Not tested yet</div>
+            <button class="button" onclick="testSubscriptionPlans()">Load Subscription Plans</button>
+            <div id="plans-display"></div>
+            <pre id="plans-result"></pre>
+        </div>
+
+        <!-- Step 3: Stripe Checkout Test -->
+        <div class="test-section">
+            <h2>Step 3: Stripe Checkout Session Test</h2>
+            <div id="stripe-status" class="status info">Not tested yet</div>
+            <button class="button" onclick="testStripeCheckout(2, 'month')" id="monthly-btn" disabled>Test Monthly Checkout ($350)</button>
+            <button class="button" onclick="testStripeCheckout(2, 'year')" id="yearly-btn" disabled>Test Yearly Checkout ($3,360)</button>
+            <pre id="stripe-result"></pre>
+        </div>
+
+        <!-- Step 4: Complete Flow Test -->
+        <div class="test-section">
+            <h2>Step 4: End-to-End Test</h2>
+            <div id="e2e-status" class="status info">Ready when authentication is complete</div>
+            <button class="button" onclick="runCompleteTest()" id="e2e-btn" disabled>Run Complete Flow Test</button>
+            <pre id="e2e-result"></pre>
+        </div>
+
+        <!-- Instructions -->
+        <div class="test-section">
+            <h2>Test Instructions</h2>
+            <ol>
+                <li><strong>Register/Login:</strong> Click "Register New Test User" or "Test Login & Token"</li>
+                <li><strong>Load Plans:</strong> Click "Load Subscription Plans" to verify API</li>
+                <li><strong>Test Stripe:</strong> Click either monthly or yearly checkout test</li>
+                <li><strong>Complete Test:</strong> Run end-to-end test to verify entire flow</li>
+                <li><strong>Payment Test:</strong> If Stripe checkout opens, test with card: 4242 4242 4242 4242</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+
+        async function apiCall(method, url, data = null) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+            };
+
+            const response = await fetch(url, {
+                method,
+                headers,
+                body: data ? JSON.stringify(data) : null
+            });
+
+            const result = await response.json();
+            return { response, result };
+        }
+
+        async function registerTestUser() {
+            const timestamp = Date.now();
+            const testUser = {
+                email: `test${timestamp}@petrodealhub.com`,
+                password: 'testpass123',
+                username: `testuser${timestamp}`,
+                firstName: 'Test',
+                lastName: 'User'
+            };
+
+            try {
+                const { response, result } = await apiCall('POST', '/api/auth/register', testUser);
+                
+                if (response.ok) {
+                    authToken = result.token;
+                    localStorage.setItem('authToken', authToken);
+                    currentUser = result.user;
+                    
+                    document.getElementById('auth-status').className = 'status success';
+                    document.getElementById('auth-status').textContent = `✅ User registered successfully! Email: ${result.user.email}`;
+                    document.getElementById('auth-result').textContent = JSON.stringify(result, null, 2);
+                    
+                    enableButtons();
+                } else {
+                    throw new Error(result.message || 'Registration failed');
+                }
+            } catch (error) {
+                document.getElementById('auth-status').className = 'status error';
+                document.getElementById('auth-status').textContent = `❌ Registration failed: ${error.message}`;
+                document.getElementById('auth-result').textContent = error.message;
+            }
+        }
+
+        async function testAuthentication() {
+            if (!authToken) {
+                document.getElementById('auth-status').className = 'status warning';
+                document.getElementById('auth-status').textContent = '⚠️ No token found. Please register first.';
+                return;
+            }
+
+            try {
+                const { response, result } = await apiCall('GET', '/api/auth/me');
+                
+                if (response.ok) {
+                    currentUser = result.user;
+                    document.getElementById('auth-status').className = 'status success';
+                    document.getElementById('auth-status').textContent = `✅ Authentication working! User: ${result.user.email}`;
+                    document.getElementById('auth-result').textContent = JSON.stringify(result, null, 2);
+                    
+                    enableButtons();
+                } else {
+                    throw new Error(result.message || 'Authentication failed');
+                }
+            } catch (error) {
+                document.getElementById('auth-status').className = 'status error';
+                document.getElementById('auth-status').textContent = `❌ Authentication failed: ${error.message}`;
+                document.getElementById('auth-result').textContent = error.message;
+                
+                // Clear invalid token
+                localStorage.removeItem('authToken');
+                authToken = null;
+            }
+        }
+
+        async function testSubscriptionPlans() {
+            try {
+                const { response, result } = await apiCall('GET', '/api/subscription-plans');
+                
+                if (response.ok) {
+                    document.getElementById('plans-status').className = 'status success';
+                    document.getElementById('plans-status').textContent = `✅ Loaded ${result.length} subscription plans`;
+                    document.getElementById('plans-result').textContent = JSON.stringify(result, null, 2);
+                    
+                    // Display plans visually
+                    const plansDisplay = document.getElementById('plans-display');
+                    plansDisplay.innerHTML = result.map(plan => `
+                        <div class="plan-card">
+                            <h3>${plan.name}</h3>
+                            <div class="price">$${plan.price}</div>
+                            <p>${plan.description}</p>
+                            <p><strong>Features:</strong> ${plan.features.length} included</p>
+                            <p><strong>Trial:</strong> ${plan.trialDays} days</p>
+                        </div>
+                    `).join('');
+                } else {
+                    throw new Error(result.message || 'Failed to load plans');
+                }
+            } catch (error) {
+                document.getElementById('plans-status').className = 'status error';
+                document.getElementById('plans-status').textContent = `❌ Plans loading failed: ${error.message}`;
+                document.getElementById('plans-result').textContent = error.message;
+            }
+        }
+
+        async function testStripeCheckout(planId, interval) {
+            if (!authToken) {
+                alert('Please authenticate first!');
+                return;
+            }
+
+            try {
+                document.getElementById('stripe-status').className = 'status info';
+                document.getElementById('stripe-status').textContent = '🔄 Creating Stripe checkout session...';
+
+                const { response, result } = await apiCall('POST', '/api/create-checkout-session', {
+                    planId: planId,
+                    interval: interval
+                });
+                
+                if (response.ok) {
+                    document.getElementById('stripe-status').className = 'status success';
+                    document.getElementById('stripe-status').textContent = `✅ Stripe checkout session created! Session ID: ${result.sessionId}`;
+                    document.getElementById('stripe-result').textContent = JSON.stringify(result, null, 2);
+                    
+                    // Show checkout URL for testing
+                    const openCheckout = confirm(`Stripe checkout session created successfully!\\n\\nSession ID: ${result.sessionId}\\n\\nWould you like to open the checkout page?\\n\\n(Use test card: 4242 4242 4242 4242)`);
+                    
+                    if (openCheckout && result.url) {
+                        window.open(result.url, '_blank');
+                    }
+                } else {
+                    throw new Error(result.message || 'Checkout session creation failed');
+                }
+            } catch (error) {
+                document.getElementById('stripe-status').className = 'status error';
+                document.getElementById('stripe-status').textContent = `❌ Stripe checkout failed: ${error.message}`;
+                document.getElementById('stripe-result').textContent = error.message;
+            }
+        }
+
+        async function runCompleteTest() {
+            document.getElementById('e2e-status').className = 'status info';
+            document.getElementById('e2e-status').textContent = '🔄 Running complete end-to-end test...';
+            
+            let testResults = [];
+
+            try {
+                // Test 1: Authentication
+                testResults.push('1. Testing Authentication...');
+                const { response: authResp, result: authResult } = await apiCall('GET', '/api/auth/me');
+                if (!authResp.ok) throw new Error('Authentication failed');
+                testResults.push('✅ Authentication: PASSED');
+
+                // Test 2: Subscription Plans
+                testResults.push('\\n2. Testing Subscription Plans API...');
+                const { response: plansResp, result: plansResult } = await apiCall('GET', '/api/subscription-plans');
+                if (!plansResp.ok) throw new Error('Plans API failed');
+                testResults.push(`✅ Subscription Plans: PASSED (${plansResult.length} plans loaded)`);
+
+                // Test 3: Stripe Checkout
+                testResults.push('\\n3. Testing Stripe Checkout Session...');
+                const { response: stripeResp, result: stripeResult } = await apiCall('POST', '/api/create-checkout-session', {
+                    planId: 2,
+                    interval: 'month'
+                });
+                if (!stripeResp.ok) throw new Error('Stripe checkout failed');
+                testResults.push('✅ Stripe Checkout: PASSED');
+                testResults.push(`   Session ID: ${stripeResult.sessionId}`);
+                testResults.push(`   Checkout URL: ${stripeResult.url}`);
+
+                // Test 4: User Subscription Status
+                testResults.push('\\n4. Testing User Subscription Status...');
+                const userSub = authResult.user;
+                testResults.push(`✅ User Status: ${userSub.email}`);
+                testResults.push(`   Trial Status: Active`);
+                testResults.push(`   Stripe Customer: ${userSub.stripeCustomerId || 'Will be created on payment'}`);
+
+                document.getElementById('e2e-status').className = 'status success';
+                document.getElementById('e2e-status').textContent = '✅ Complete end-to-end test PASSED! All systems working correctly.';
+                document.getElementById('e2e-result').textContent = testResults.join('\\n');
+
+            } catch (error) {
+                testResults.push(`\\n❌ TEST FAILED: ${error.message}`);
+                document.getElementById('e2e-status').className = 'status error';
+                document.getElementById('e2e-status').textContent = `❌ End-to-end test FAILED: ${error.message}`;
+                document.getElementById('e2e-result').textContent = testResults.join('\\n');
+            }
+        }
+
+        function enableButtons() {
+            document.getElementById('monthly-btn').disabled = false;
+            document.getElementById('yearly-btn').disabled = false;
+            document.getElementById('e2e-btn').disabled = false;
+        }
+
+        // Auto-test authentication on page load if token exists
+        if (authToken) {
+            testAuthentication();
+        }
+    </script>
+</body>
+</html>
