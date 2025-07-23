@@ -1,0 +1,58 @@
+Vessels – Real-Time Tracking of Global Oil Shipments
+
+Total Visibility. Verified Data. Smarter Petroleum Deals.
+
+At PetroDealHub, we understand that every successful oil trade depends on trust, timing, and transparency. That’s why our platform offers a dedicated Vessels Section designed to help brokers, buyers, refiners, and logistic managers gain real-time visibility into the movement of oil tankers, product carriers, and cargo vessels across the globe.
+
+This isn’t just tracking — this is deal intelligence in motion.
+
+What Our Vessel Tracking Offers
+
+- Live Vessel Data: Real-time AIS tracking integrated with global maritime sources.
+- Port-to-Port Route Monitoring: Know where the vessel is coming from and where it's going — from origin terminal to destination refinery.
+- Cargo Details: Access insights about the type of petroleum product, estimated quantity, and storage method.
+- Refinery Matching: See which refinery is linked to the tanker, if available.
+- Deal Reference: Link vessels to ongoing or historical deals within the platform (if authorized by user).
+- Ownership & Operator Info: Learn which company owns or manages the ship, and whether it's under contract or available.
+- ETA & Transit Status: Track estimated arrival times and live positioning on the map.
+- Compliance Markers: Highlight tankers that match international safety, documentation, or inspection standards.
+
+Why It Matters for Petroleum Professionals
+
+For Brokers:
+Verify that a seller’s tanker actually exists, is active, and is heading toward a legitimate port or refinery.
+
+For Buyers:
+Track your shipment in real time and stay updated on delays, route changes, or potential issues.
+
+For Refineries:
+Coordinate incoming deliveries with confidence. Manage berth availability, storage, and inspection readiness.
+
+For Traders & Analysts:
+Gain strategic insights into market movement and supply flow patterns worldwide.
+
+Key Features at a Glance
+
+Feature: Description
+- Vessel Name & IMO: Unique identifier for every ship
+- Cargo Type: Crude, diesel, jet fuel, LPG, etc.
+- Route Map: Origin & destination with live tracking
+- Linked Refinery: When disclosed by the shipper
+- Deal Context: Tied to PetroDealHub offers (optional)
+- Global Coverage: Includes tankers in Americas, Europe, Asia, Africa, and the Middle East
+
+Verified Tracking. Confidential Deals.
+
+All tracking data is sourced from trusted marine intelligence providers and integrated securely into the PetroDealHub system.
+While vessel movements are public by nature, deal-specific links or cargo confirmations are only visible to authorized users involved in the transaction.
+
+This is Not Just Data. This is Decision Power.
+
+From verifying a deal’s legitimacy to planning a terminal delivery, our Vessels Section turns complex oil logistics into clear, actionable intelligence — and keeps you ahead in a competitive market.
+
+Want to track a specific tanker?
+Or need to validate a seller’s shipping claim?
+Contact our maritime desk → vessels@petrodealhub.com
+
+PetroDealHub – Because Every Legit Deal Has a Legit Vessel Behind It.
+
