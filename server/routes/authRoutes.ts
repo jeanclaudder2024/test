@@ -237,8 +237,9 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
     }
     
     // Check if trial is expired for regular users
+    // Users with active subscriptions should not see trial expired page
     const trialExpired = userSubscription 
-      ? new Date() > new Date(userSubscription.trialEndDate)
+      ? (userSubscription.status === 'trial' && new Date() > new Date(userSubscription.trialEndDate))
       : false;
 
     res.json({

@@ -64,8 +64,8 @@ export default function ProfessionalPlansComparison() {
           name: plan.name,
           slug: plan.name.toLowerCase().replace(/\s+/g, '-'),
           description: plan.description,
-          monthlyPrice: parseFloat(plan.price).toString(),
-          yearlyPrice: (parseFloat(plan.price) * 12 * 0.8).toFixed(0), // 20% discount for yearly
+          monthlyPrice: plan.monthlyPrice ? plan.monthlyPrice.toString() : parseFloat(plan.price).toString(),
+          yearlyPrice: plan.yearlyPrice ? plan.yearlyPrice.toString() : (parseFloat(plan.price) * 12 * 0.8).toFixed(0), // Use database yearly price
           monthlyPriceId: plan.stripePriceId || `price_${plan.id}_monthly`,
           yearlyPriceId: plan.stripePriceId ? plan.stripePriceId.replace('monthly', 'yearly') : `price_${plan.id}_yearly`,
           currency: 'usd',
