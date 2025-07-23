@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
 
 interface HeaderProps {
-  currentPage: 'home' | 'about' | 'careers' | 'refineries' | 'vessels';
+  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'refineries' | 'vessels';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
@@ -27,6 +27,7 @@ export default function Header({ currentPage }: HeaderProps) {
       case 'home': return 'Home';
       case 'about': return 'About';
       case 'careers': return 'Careers';
+      case 'blog': return 'Blog';
       case 'refineries': return 'Refineries';
       case 'vessels': return 'Vessels';
       default: return page;
@@ -37,6 +38,7 @@ export default function Header({ currentPage }: HeaderProps) {
     { key: 'home', href: '/', label: 'Home' },
     { key: 'about', href: '/about', label: 'About' },
     { key: 'careers', href: '/careers', label: 'Careers' },
+    { key: 'blog', href: '/blog', label: 'Blog' },
   ];
 
   const platformItems = [
