@@ -13835,11 +13835,15 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(404).json({ error: 'Subscription plan not found' });
       }
 
-      const priceInCents = Math.round(parseFloat(plan.price) * 100);
-      console.log("Plan details:", { name: plan.name, price: plan.price, priceInCents });
+      // Use correct price based on interval (monthly or yearly)
+      const basePrice = interval === 'year' ? plan.yearlyPrice || plan.monthlyPrice : plan.monthlyPrice || parseFloat(plan.price);
+      const priceInCents = Math.round(basePrice * 100);
+      const periodText = interval === 'year' ? 'Annual' : 'Monthly';
+      
+      console.log("Plan details:", { name: plan.name, interval, basePrice, priceInCents, periodText });
 
       if (priceInCents <= 0) {
-        return res.status(400).json({ error: 'Invalid plan price: ' + plan.price });
+        return res.status(400).json({ error: 'Invalid plan price: ' + basePrice });
       }
 
       // Create checkout session with immediate payment (using payment mode to avoid subscription loading loops)
@@ -13850,8 +13854,8 @@ Note: This document contains real vessel operational data and should be treated 
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `${plan.name} - 1 Month Access`,
-              description: `${plan.description || plan.name} - One month subscription payment`,
+              name: `${plan.name} - ${periodText} Access`,
+              description: `${plan.description || plan.name} - ${periodText} subscription payment`,
             },
             unit_amount: priceInCents,
           },
@@ -13863,7 +13867,8 @@ Note: This document contains real vessel operational data and should be treated 
         metadata: {
           userId: user.id.toString(),
           planId: planId.toString(),
-          paymentType: 'monthly_subscription'
+          paymentType: `${interval}_subscription`,
+          interval: interval
         }
       });
 
@@ -14012,36 +14017,73 @@ Note: This document contains real vessel operational data and should be treated 
 
   // Helper functions for webhook processing
   async function handleCheckoutSessionCompleted(session: any) {
-    const { customer, subscription, metadata } = session;
+    const { customer, metadata, payment_status } = session;
     const userId = parseInt(metadata.userId);
     const planId = parseInt(metadata.planId);
+    const paymentType = metadata.paymentType || 'monthly_subscription';
 
-    console.log("Processing checkout completion for user:", userId, "plan:", planId);
+    console.log("Processing checkout completion for user:", userId, "plan:", planId, "payment_status:", payment_status);
 
     try {
-      // Get subscription details from Stripe
-      const stripeSubscription = await stripe.subscriptions.retrieve(subscription);
-      
-      // Create subscription record in database
-      const subscriptionData = {
-        userId,
-        planId,
-        stripeSubscriptionId: subscription,
-        status: 'active',
-        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
-        trialStartDate: null,
-        trialEndDate: null
-      };
+      if (payment_status === 'paid') {
+        // For payment mode (not subscription mode), update existing trial subscription to active
+        const existingSubscription = await storage.getUserSubscription(userId);
+        
+        if (existingSubscription) {
+          // Update existing trial subscription to active status
+          const now = new Date();
+          const periodEnd = new Date();
+          const interval = metadata.interval || 'month';
+          
+          if (interval === 'year') {
+            periodEnd.setFullYear(now.getFullYear() + 1);
+          } else {
+            periodEnd.setMonth(now.getMonth() + 1);
+          }
+          
+          await storage.updateUserSubscription(existingSubscription.id, {
+            status: 'active',
+            planId: planId,
+            currentPeriodStart: now.toISOString(),
+            currentPeriodEnd: periodEnd.toISOString(),
+            trialStartDate: null,
+            trialEndDate: null
+          });
+          
+          console.log("Trial subscription upgraded to active for user:", userId);
+        } else {
+          // Create new active subscription
+          const now = new Date();
+          const periodEnd = new Date();
+          const interval = metadata.interval || 'month';
+          
+          if (interval === 'year') {
+            periodEnd.setFullYear(now.getFullYear() + 1);
+          } else {
+            periodEnd.setMonth(now.getMonth() + 1);
+          }
+          
+          const subscriptionData = {
+            userId,
+            planId,
+            status: 'active',
+            currentPeriodStart: now.toISOString(),
+            currentPeriodEnd: periodEnd.toISOString(),
+            trialStartDate: null,
+            trialEndDate: null
+          };
 
-      await storage.createUserSubscription(subscriptionData);
+          await storage.createUserSubscription(subscriptionData);
+          console.log("New active subscription created for user:", userId);
+        }
 
-      // Update user status
-      await storage.updateUser(userId, {
-        stripeCustomerId: customer
-      });
+        // Update user with Stripe customer ID
+        await storage.updateUser(userId, {
+          stripeCustomerId: customer
+        });
 
-      console.log("Subscription activated successfully for user:", userId);
+        console.log("Payment processed and subscription activated for user:", userId);
+      }
     } catch (error) {
       console.error("Error handling checkout completion:", error);
     }
