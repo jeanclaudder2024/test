@@ -64,34 +64,10 @@ export default function About() {
         {/* Desktop Menu */}
         <nav className="hidden lg:flex gap-8 items-center">
           <Link 
-            href="#features" 
+            href="/" 
             className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
           >
-            Features
-          </Link>
-          <Link 
-            href="#why-us" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Why Us
-          </Link>
-          <Link 
-            href="#how-it-works" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            How It Works
-          </Link>
-          <Link 
-            href="#results" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Results
-          </Link>
-          <Link 
-            href="#pricing" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Pricing
+            Home
           </Link>
           <span className="text-sm font-medium text-orange-500">
             About
@@ -136,20 +112,8 @@ export default function About() {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
           <nav className="flex flex-col gap-4">
-            <Link href="#features" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Features
-            </Link>
-            <Link href="#why-us" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Why Us
-            </Link>
-            <Link href="#how-it-works" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              How It Works
-            </Link>
-            <Link href="#results" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Results
-            </Link>
-            <Link href="#pricing" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Pricing
+            <Link href="/" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Home
             </Link>
             <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
             <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
