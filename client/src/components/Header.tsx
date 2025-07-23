@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
 
 interface HeaderProps {
-  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'cookie-policy' | 'documentation' | 'refineries' | 'vessels';
+  currentPage: 'home' | 'about' | 'careers' | 'blog' | 'api' | 'contact' | 'cookie-policy' | 'documentation' | 'become-broker' | 'refineries' | 'vessels';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
@@ -32,6 +32,7 @@ export default function Header({ currentPage }: HeaderProps) {
       case 'contact': return 'Contact Us';
       case 'cookie-policy': return 'Cookie Policy';
       case 'documentation': return 'Documentation Center';
+      case 'become-broker': return 'Become a Broker';
       case 'refineries': return 'Refineries';
       case 'vessels': return 'Vessels';
       default: return page;
@@ -47,6 +48,7 @@ export default function Header({ currentPage }: HeaderProps) {
     { key: 'contact', href: '/contact', label: 'Contact Us' },
     { key: 'cookie-policy', href: '/cookie-policy', label: 'Cookie Policy' },
     { key: 'documentation', href: '/documentation', label: 'Documentation Center' },
+    { key: 'become-broker', href: '/become-broker', label: 'Become a Broker' },
   ];
 
   const platformItems = [
