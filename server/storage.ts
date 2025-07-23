@@ -92,6 +92,7 @@ export interface IStorage {
   // User Subscription methods (for new payment flow)
   createUserSubscription(subscription: any): Promise<any>;
   updateUserSubscriptionByStripeId(stripeId: string, updateData: any): Promise<any>;
+  updateUserSubscription(subscriptionId: number, updateData: any): Promise<any>;
   
   // Payment methods
   createPayment(payment: any): Promise<any>;
@@ -3110,6 +3111,30 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateUserSubscription(subscriptionId: number, updateData: any): Promise<any> {
+    try {
+      const [updatedSubscription] = await db
+        .update(userSubscriptions)
+        .set({
+          status: updateData.status,
+          planId: updateData.planId,
+          currentPeriodStart: updateData.currentPeriodStart,
+          currentPeriodEnd: updateData.currentPeriodEnd,
+          trialStartDate: updateData.trialStartDate,
+          trialEndDate: updateData.trialEndDate,
+          updatedAt: new Date()
+        })
+        .where(eq(userSubscriptions.id, subscriptionId))
+        .returning();
+      
+      console.log('User subscription updated by ID:', updatedSubscription);
+      return updatedSubscription;
+    } catch (error) {
+      console.error('Error updating user subscription by ID:', error);
+      throw new Error('Failed to update user subscription');
+    }
+  }
+
   async createPayment(paymentData: any): Promise<any> {
     try {
       const [payment] = await db.insert(payments).values({
@@ -3134,7 +3159,7 @@ export class DatabaseStorage implements IStorage {
   async getUserSubscription(userId: number): Promise<any> {
     try {
       // Get user subscription with plan details
-      const [subscription] = await db
+      const results = await db
         .select({
           id: userSubscriptions.id,
           userId: userSubscriptions.userId,
@@ -3146,24 +3171,13 @@ export class DatabaseStorage implements IStorage {
           currentPeriodEnd: userSubscriptions.currentPeriodEnd,
           trialEndDate: userSubscriptions.trialEndDate,
           cancelAtPeriodEnd: userSubscriptions.cancelAtPeriodEnd,
-          createdAt: userSubscriptions.createdAt,
-          plan: {
-            id: subscriptionPlans.id,
-            name: subscriptionPlans.name,
-            description: subscriptionPlans.description,
-            price: subscriptionPlans.price,
-            interval: subscriptionPlans.interval,
-            features: subscriptionPlans.features,
-            maxVessels: subscriptionPlans.maxVessels,
-            maxPorts: subscriptionPlans.maxPorts,
-            maxRefineries: subscriptionPlans.maxRefineries
-          }
+          createdAt: userSubscriptions.createdAt
         })
         .from(userSubscriptions)
-        .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
-        .where(eq(userSubscriptions.userId, userId));
+        .where(eq(userSubscriptions.userId, userId))
+        .limit(1);
       
-      return subscription || null;
+      return results.length > 0 ? results[0] : null;
     } catch (error) {
       console.error('Error fetching user subscription:', error);
       return null;
