@@ -40,11 +40,11 @@ import {
   CheckCircle,
   Calendar,
   CheckCircle2,
-  MenuIcon,
-  XIcon,
+  Menu,
   Droplets,
   Fuel
 } from "lucide-react";
+import Header from "@/components/Header";
 
 // Used for stats counter animation
 const AnimatedCounter = ({ value, label, duration = 2000, prefix = "", suffix = "" }: { 
@@ -107,13 +107,10 @@ const Testimonial = ({ quote, author, company, avatarChar }: {
 );
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const featuresRef = useRef<HTMLDivElement>(null);
   const whyUsRef = useRef<HTMLDivElement>(null);
   const howItWorksRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const [activeSection, setActiveSection] = useState("");
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
@@ -164,218 +161,11 @@ export default function LandingPage() {
     navigate('/register?trial=true&plan=' + planId);
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-      
-      // Determine active section for nav highlight
-      const scrollPosition = window.scrollY + 100;
-      
-      if (featuresRef.current && scrollPosition >= featuresRef.current.offsetTop && 
-          whyUsRef.current && scrollPosition < whyUsRef.current.offsetTop) {
-        setActiveSection("features");
-      } else if (whyUsRef.current && scrollPosition >= whyUsRef.current.offsetTop && 
-                howItWorksRef.current && scrollPosition < howItWorksRef.current.offsetTop) {
-        setActiveSection("why-us");
-      } else if (howItWorksRef.current && scrollPosition >= howItWorksRef.current.offsetTop && 
-                resultsRef.current && scrollPosition < resultsRef.current.offsetTop) {
-        setActiveSection("how-it-works");
-      } else if (resultsRef.current && scrollPosition >= resultsRef.current.offsetTop) {
-        const pricingSection = document.getElementById('pricing');
-        if (pricingSection && scrollPosition < pricingSection.offsetTop) {
-          setActiveSection("results");
-        }
-      } else if (document.getElementById('pricing')) {
-        const pricingSection = document.getElementById('pricing');
-        if (pricingSection && scrollPosition >= pricingSection.offsetTop) {
-          setActiveSection("pricing");
-        }
-      } else {
-        setActiveSection("");
-      }
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Navigation Bar */}
-      <header 
-        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
-          scrolled 
-            ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
-            : "bg-transparent"
-        }`}
-      >
-        <div className="flex items-center gap-2 font-bold text-2xl">
-          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
-          <span className="text-white sr-only">PetroDealHub</span>
-        </div>
-        
-        {/* Desktop Menu */}
-        <nav className="hidden lg:flex gap-8 items-center">
-          <Link 
-            href="#features" 
-            className={`text-sm font-medium transition-colors ${
-              activeSection === "features" 
-                ? "text-orange-500" 
-                : "text-white/80 hover:text-orange-500"
-            }`}
-          >
-            Features
-          </Link>
-          <Link 
-            href="#why-us" 
-            className={`text-sm font-medium transition-colors ${
-              activeSection === "why-us" 
-                ? "text-orange-500" 
-                : "text-white/80 hover:text-orange-500"
-            }`}
-          >
-            Why Us
-          </Link>
-          <Link 
-            href="#how-it-works" 
-            className={`text-sm font-medium transition-colors ${
-              activeSection === "how-it-works" 
-                ? "text-orange-500" 
-                : "text-white/80 hover:text-orange-500"
-            }`}
-          >
-            How It Works
-          </Link>
-          <Link 
-            href="#results" 
-            className={`text-sm font-medium transition-colors ${
-              activeSection === "results" 
-                ? "text-orange-500" 
-                : "text-white/80 hover:text-orange-500"
-            }`}
-          >
-            Results
-          </Link>
-          <Link 
-            href="#pricing" 
-            className={`text-sm font-medium transition-colors ${
-              activeSection === "pricing" 
-                ? "text-orange-500" 
-                : "text-white/80 hover:text-orange-500"
-            }`}
-          >
-            Pricing
-          </Link>
-          <Link 
-            href="/about" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            About
-          </Link>
-          <Link 
-            href="/careers" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Careers
-          </Link>
-          <Link 
-            href="/blog" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            Blog
-          </Link>
-          <Link 
-            href="/api-integration" 
-            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
-          >
-            API Integration
-          </Link>
-          <div className="h-6 w-px bg-slate-700"></div>
-          <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Refineries
-          </Link>
-          <Link href="/vessels" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
-            Vessels
-          </Link>
-        </nav>
-        
-        <div className="hidden lg:flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-              Dashboard
-            </Button>
-          </Link>
-          <Link href="/vessels">
-            <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
-              View Vessels
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
-        </div>
-        
-        {/* Mobile Menu Toggle */}
-        <button 
-          className="lg:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? (
-            <XIcon className="h-6 w-6 text-white" />
-          ) : (
-            <MenuIcon className="h-6 w-6 text-white" />
-          )}
-        </button>
-      </header>
-      
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
-          <nav className="flex flex-col gap-4">
-            <Link href="#features" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Features
-            </Link>
-            <Link href="#why-us" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Why Us
-            </Link>
-            <Link href="#how-it-works" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              How It Works
-            </Link>
-            <Link href="#results" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Results
-            </Link>
-            <Link href="#pricing" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Pricing
-            </Link>
-            <Link href="/about" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              About
-            </Link>
-            <Link href="/careers" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Careers
-            </Link>
-            <Link href="/blog" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Blog
-            </Link>
-            <Link href="/api-integration" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              API Integration
-            </Link>
-            <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Refineries
-            </Link>
-            <Link href="/vessels" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
-              Vessels
-            </Link>
-          </nav>
-          <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-slate-700 text-white">Dashboard</Button>
-            </Link>
-            <Link href="/vessels" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">View Vessels</Button>
-            </Link>
-          </div>
-        </div>
-      )}
+      <Header currentPage="home" />
 
       {/* Hero Section */}
       <section className="pt-40 min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900 text-white flex items-center">
@@ -504,7 +294,7 @@ export default function LandingPage() {
                     <div className="text-xs text-white/70">Global Tanker Network</div>
                     <div className="flex items-center space-x-2">
                       <Search className="h-4 w-4 text-white/70" />
-                      <MenuIcon className="h-4 w-4 text-white/70" />
+                      <Menu className="h-4 w-4 text-white/70" />
                     </div>
                   </div>
                   
