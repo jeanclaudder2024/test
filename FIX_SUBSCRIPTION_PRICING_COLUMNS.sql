@@ -30,7 +30,7 @@ SELECT
     price as old_price_text,
     "monthlyPrice" as monthly_price,
     "yearlyPrice" as yearly_price,
-    "trialDays"
+    trial_days
 FROM subscription_plans 
 ORDER BY id;
 
