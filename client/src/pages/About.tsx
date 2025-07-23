@@ -170,15 +170,7 @@ export default function About() {
         </div>
       )}
 
-      {/* Back to Home Button */}
-      <div className="fixed top-24 left-4 z-40">
-        <Link href="/">
-          <Button variant="ghost" className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-white hover:bg-slate-700/80 hover:text-orange-500">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
-      </div>
+
       
       {/* Main Content */}
       <div className="pt-40">
