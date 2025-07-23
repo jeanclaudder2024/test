@@ -1,0 +1,75 @@
+Privacy Policy
+Effective Date: July 19, 2025
+Welcome to PetroDealHub. This Privacy Policy explains how we collect, use, and protect your personal information when you access or use our platform. By continuing to use our services, you agree to this policy in full.
+________________________________________
+1. Disclaimer of Liability
+PetroDealHub is a technology platform designed to assist professionals in the petroleum trade. While it offers access to information, tools, and digital services (including subscription-based content), we do not guarantee the accuracy, availability, legality, or reliability of any refinery, tanker, trade document, or offer displayed or shared via the platform.
+All subscriptions and services are provided “AS IS” and “AS AVAILABLE” with no warranties of any kind. PetroDealHub does not accept liability for any losses, damages, or misunderstandings arising from the use of the platform, paid or unpaid features, or any decisions users make based on platform content.
+The platform may display real, semi-real, or AI-generated data for educational, analytical, or professional simulation purposes. Users are fully responsible for verifying any information before acting on it.
+________________________________________
+2. Information We Collect
+We may collect and process the following types of personal and business-related information:
+•	Account Information: Full name, company name, email address, phone number, country, and user credentials.
+•	Business Data: Deal-related information, uploaded documents (e.g., LOI, B/L, SPA), company registration details.
+•	Device Information: IP address, browser type, operating system, and access time.
+•	Usage Data: Page visits, clicks, session duration, and actions within the platform.
+•	Location Data (if applicable): For vessel tracking and refinery identification.
+________________________________________
+3. How We Use Your Information
+We use the information we collect to:
+•	Operate and maintain the PetroDealHub platform.
+•	Facilitate secure oil trade deals between users (brokers, buyers, sellers, refineries).
+•	Provide real-time tanker tracking and refinery insights.
+•	Generate and store petroleum trade documentation.
+•	Communicate with users (e.g., notifications, platform updates).
+•	Analyze and improve platform performance and user experience.
+•	Comply with applicable laws and prevent fraudulent activities.
+________________________________________
+4. Sharing and Disclosure
+We do not sell or rent your personal data. However, we may share your information in the following cases:
+•	With trusted partners who provide services essential to platform operation.
+•	When required by law, court order, or governmental request.
+•	In business transfers, such as a merger or acquisition.
+•	With your explicit consent, for specific business engagements.
+________________________________________
+5. Data Security
+We implement industry-standard security measures (SSL, encryption, secure authentication) to protect your data. However, no system is 100% secure, and users are responsible for keeping their login credentials safe.
+________________________________________
+6. Your Rights and Choices
+You have the right to:
+•	Access, update, or delete your account information.
+•	Request a copy of your stored data.
+•	Opt out of marketing communications.
+•	Object or restrict certain types of processing.
+To exercise your rights, contact us at: privacy@petrodealhub.com
+________________________________________
+7. Cookies and Tracking Technologies
+We use cookies and similar technologies to enhance platform performance and understand usage patterns. You can manage cookie preferences through your browser settings.
+________________________________________
+8. International Users and Data Transfers
+PetroDealHub may be accessed globally. By using the platform, you agree to transfer your data to our secure servers, even if located outside your country of residence.
+________________________________________
+9. Third-Party Links
+The platform may contain links to third-party websites or tools (e.g., Google Maps). PetroDealHub is not responsible for their privacy practices. We recommend reading their policies.
+________________________________________
+10. Children’s Privacy
+PetroDealHub is not intended for users under the age of 18. We do not knowingly collect personal data from minors.
+________________________________________
+11. No Guarantee of Service or Continuity
+We reserve the right to modify, suspend, limit, or discontinue any feature, service, or subscription at any time without prior notice.
+________________________________________
+12. No Intermediary Role or Endorsement
+PetroDealHub is not a broker, buyer, or seller, and does not guarantee or endorse any transaction, offer, or communication between users. All interactions are at users’ own risk.
+________________________________________
+13. Refunds and Disputes
+All subscription fees are non-refundable, unless otherwise agreed in writing. Subscribing does not guarantee access to real deals, valid offers, or verified parties.
+________________________________________
+14. Changes to This Policy
+We may update this policy at any time. Any changes are effective immediately upon posting. Continued use of the platform means acceptance of those changes.
+________________________________________
+15. Contact Us
+If you have any questions or concerns regarding this Privacy Policy, please contact:
+PetroDealHub Legal
+Email: legal@petrodealhub.com
+
+

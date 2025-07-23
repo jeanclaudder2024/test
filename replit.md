@@ -777,6 +777,28 @@ Changelog:
   * **Effective Date Display**: Prominent "Effective Date: July 19, 2025" badge in hero section with professional legal styling
   * **Navigation Integration**: Added Terms of Service to Header navigation menu and App.tsx routing with proper TypeScript interfaces
   * **Comprehensive Legal Coverage**: All 12 sections properly structured with professional legal language and user agreement requirements
+
+- July 23, 2025. **PRIVACY POLICY - COMPREHENSIVE DATA PROTECTION FRAMEWORK**:
+  * **Complete Privacy Policy Page**: Created comprehensive PrivacyPolicy.tsx with exact user-provided privacy content effective July 19, 2025
+  * **Professional Privacy Structure**: Organized 15 detailed sections covering Disclaimer, Information Collection, Usage, Sharing, Security, Rights, Cookies, International Transfers, Third-Party Links, Children's Privacy, Service Continuity, Intermediary Role, Refunds, Changes, and Contact
+  * **Disclaimer of Liability Section**: Clear "AS IS" and "AS AVAILABLE" disclaimers for platform services, data accuracy, and user responsibility for verification
+  * **Comprehensive Data Collection**: Detailed coverage of Account Information, Business Data, Device Information, Usage Data, and Location Data collection
+  * **Platform Usage Transparency**: Clear explanation of data usage for platform operation, trade facilitation, tanker tracking, document generation, communication, analysis, and legal compliance
+  * **Data Sharing Policy**: Explicit "do not sell or rent" policy with limited sharing cases (trusted partners, legal requirements, business transfers, explicit consent)
+  * **Security Framework**: Industry-standard security measures (SSL, encryption, secure authentication) with user responsibility disclaimers
+  * **User Rights Protection**: Complete rights coverage including access, update, delete, data copy, opt-out, and processing objection with privacy@petrodealhub.com contact
+  * **Cookie Management**: Cookie and tracking technology usage with browser preference management options
+  * **Global Data Transfers**: International accessibility with secure server data transfer agreements
+  * **Third-Party Integration**: Clear disclaimers for external links (Google Maps) with independent privacy policy recommendations
+  * **Age Restrictions**: Explicit 18+ age requirement with minor data protection policies
+  * **Service Continuity Disclaimers**: Right to modify, suspend, or discontinue services without notice
+  * **Non-Intermediary Clarification**: Clear statement that PetroDealHub is not a broker/buyer/seller with user risk acknowledgment
+  * **Refund Policy**: Non-refundable subscription fees with no guarantee of real deals or verified parties
+  * **Privacy-Themed Design**: Used privacy-focused icons (Shield, Database, Eye, Share2, Lock, UserCheck, Cookie, Globe, etc.) with green gradient color scheme
+  * **Advanced Privacy Layout**: Professional card design with color-coded sections, information icons, and highlighted important notices
+  * **Legal Contact Integration**: Added legal@petrodealhub.com contact for PetroDealHub Legal privacy inquiries
+  * **Navigation Integration**: Added Privacy Policy to Header navigation menu and App.tsx routing with proper TypeScript interfaces
+  * **Comprehensive Privacy Protection**: All 15 sections covering complete data protection framework with professional privacy language and user consent requirements
   * **Enterprise-Grade Design**: Professional layout featuring API capabilities, consultation process, and contact information
   * **Beautiful Scroll Animations**: Applied same advanced animation system as Blog page with smooth reveals and interactions
   * **Contact Integration**: Added direct email, phone, and location contact cards with hover effects and professional styling

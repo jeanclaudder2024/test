@@ -39,6 +39,7 @@ import ApiIntegration from "@/pages/ApiIntegration";
 import ContactUs from "@/pages/ContactUs";
 import SupportCenter from "@/pages/SupportCenter";
 import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import DocumentationCenter from "@/pages/DocumentationCenter";
 import BecomeABroker from "@/pages/BecomeABroker";
@@ -177,6 +178,7 @@ function AuthenticatedApp() {
     if (location === "/contact") return <ContactUs />;
     if (location === "/support-center") return <SupportCenter />;
     if (location === "/terms-of-service") return <TermsOfService />;
+    if (location === "/privacy-policy") return <PrivacyPolicy />;
     if (location === "/cookie-policy") return <CookiePolicy />;
     if (location === "/documentation") return <DocumentationCenter />;
     if (location === "/become-broker") return <BecomeABroker />;
