@@ -1,0 +1,453 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'wouter';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ChevronRight, Mail, Globe, Ship, TrendingUp, Users, MapPin, Menu as MenuIcon, X as XIcon, Rocket, Briefcase, GraduationCap, FileText } from 'lucide-react';
+
+export default function Careers() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const benefits = [
+    {
+      icon: Globe,
+      title: "Global Impact",
+      description: "Contribute to projects that influence trade flows, fuel infrastructure, and economic resilience worldwide."
+    },
+    {
+      icon: Ship,
+      title: "Real-World Trade",
+      description: "Collaborate with brokers, refineries, and shipping agents on live workflows and real trade scenarios."
+    },
+    {
+      icon: TrendingUp,
+      title: "High-Performance Culture",
+      description: "Thrive in a data-driven environment where innovation, precision, and speed matter."
+    },
+    {
+      icon: Users,
+      title: "Trusted Network",
+      description: "Join a community of professionals shaping the digital future of oil logistics and commercial intelligence."
+    },
+    {
+      icon: MapPin,
+      title: "Remote & Hybrid Roles",
+      description: "Our team spans multiple continents, with flexible work models to support productivity and well-being."
+    }
+  ];
+
+  const roles = [
+    {
+      title: "Senior Oil Trade Analyst",
+      location: "Remote",
+      type: "Full-time",
+      category: "Analytics"
+    },
+    {
+      title: "Refinery Account Manager (Gulf & MENA)",
+      location: "Dubai / Remote",
+      type: "Full-time",
+      category: "Business Development"
+    },
+    {
+      title: "Platform Product Manager – Maritime Tools",
+      location: "US or Europe",
+      type: "Full-time",
+      category: "Product"
+    },
+    {
+      title: "Head of Broker Partnerships",
+      location: "Flexible",
+      type: "Leadership",
+      category: "Partnerships"
+    },
+    {
+      title: "Contract Specialist – Oil & Commodities",
+      location: "Remote",
+      type: "Full-time",
+      category: "Legal"
+    }
+  ];
+
+  const skills = [
+    "Oil trading and brokering",
+    "Refinery operations and downstream strategy", 
+    "Tanker logistics and marine traffic coordination",
+    "Business development in energy markets",
+    "Digital trade infrastructure (product, tech, UX)",
+    "Legal and compliance in petroleum contracts",
+    "Research & market intelligence (energy economics, OPEC trends)"
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Header Navigation */}
+      <header 
+        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+          scrolled 
+            ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
+            : "bg-transparent"
+        }`}
+      >
+        <div className="flex items-center gap-2 font-bold text-2xl">
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
+          <span className="text-white sr-only">PetroDealHub</span>
+        </div>
+        
+        {/* Desktop Menu */}
+        <nav className="hidden lg:flex gap-8 items-center">
+          <Link 
+            href="/" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Home
+          </Link>
+          <Link 
+            href="/about" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            About
+          </Link>
+          <span className="text-sm font-medium text-orange-500">
+            Careers
+          </span>
+          <div className="h-6 w-px bg-slate-700"></div>
+          <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Refineries
+          </Link>
+          <Link href="/vessels" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
+            Vessels
+          </Link>
+        </nav>
+        
+        <div className="hidden lg:flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
+              Dashboard
+            </Button>
+          </Link>
+          <Link href="/vessels">
+            <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
+              View Vessels
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Link>
+        </div>
+        
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="lg:hidden"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? (
+            <XIcon className="h-6 w-6 text-white" />
+          ) : (
+            <MenuIcon className="h-6 w-6 text-white" />
+          )}
+        </button>
+      </header>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
+          <nav className="flex flex-col gap-4">
+            <Link href="/" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Home
+            </Link>
+            <Link href="/about" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              About
+            </Link>
+            <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">Careers</span>
+            <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Refineries
+            </Link>
+            <Link href="/vessels" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Vessels
+            </Link>
+          </nav>
+          <div className="mt-auto flex flex-col gap-3 pt-6">
+            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full border-slate-700 text-white">Dashboard</Button>
+            </Link>
+            <Link href="/vessels" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">View Vessels</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="pt-40">
+        {/* Hero Section */}
+        <section className="relative py-24 lg:py-40 overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900">
+          {/* Background Effects */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,111,0,0.1),transparent_70%)]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,51,102,0.15),transparent_60%)]"></div>
+          
+          {/* Floating Elements */}
+          <div className="absolute top-20 left-10 w-2 h-2 bg-orange-500/30 rounded-full animate-ping"></div>
+          <div className="absolute top-40 right-20 w-3 h-3 bg-orange-400/20 rounded-full animate-pulse"></div>
+          <div className="absolute bottom-20 left-20 w-2 h-2 bg-orange-600/40 rounded-full animate-bounce"></div>
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="text-center max-w-4xl mx-auto">
+              <Badge variant="outline" className="mb-6 bg-orange-500/10 text-orange-300 border-orange-500/30 px-4 py-2">
+                Careers at PetroDealHub
+              </Badge>
+              <h1 className="text-4xl md:text-6xl font-bold mb-8 text-white">
+                Shape the Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Global Oil Trade</span>
+              </h1>
+              <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
+                At PetroDealHub, we don't just build platforms — we build the tools that power petroleum trade across continents. We're redefining how brokers, refineries, and shipping operators connect, communicate, and close deals.
+              </p>
+              <p className="text-lg text-white/70 mb-8 max-w-3xl mx-auto leading-relaxed">
+                As a U.S.-based global platform, we combine technological innovation, trade insight, and operational intelligence to drive value for our partners and users. And we're always on the lookout for bold minds ready to lead the next phase of our growth.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
+                  <Globe className="h-5 w-5 text-orange-400" />
+                  <span className="text-white font-medium">Global Platform</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
+                  <Briefcase className="h-5 w-5 text-orange-400" />
+                  <span className="text-white font-medium">Remote-First</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
+                  <Rocket className="h-5 w-5 text-orange-400" />
+                  <span className="text-white font-medium">Innovation-Driven</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Work With Us Section */}
+        <section className="py-24 bg-gradient-to-br from-[#003366] via-[#004080] to-[#003366] relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,111,0,0.1),transparent_50%)]"></div>
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-20">
+                <Badge variant="outline" className="mb-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-300 border-orange-500/30 px-6 py-3 text-lg">
+                  Why Work With Us?
+                </Badge>
+                <h2 className="text-4xl md:text-5xl font-bold mb-8 text-white bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
+                  Join the Energy Revolution
+                </h2>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {benefits.map((benefit, index) => (
+                  <Card key={index} className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-slate-700/30 hover:border-orange-500/30 hover:bg-gradient-to-br hover:from-slate-800/80 hover:to-slate-900/80 transition-all duration-500 group backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-orange-500/10">
+                    <CardHeader className="pb-6">
+                      <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl inline-flex mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                        <benefit.icon className="h-7 w-7 text-orange-400" />
+                      </div>
+                      <CardTitle className="text-white text-xl font-bold mb-3">{benefit.title}</CardTitle>
+                      <CardDescription className="text-white/80 leading-relaxed">
+                        {benefit.description}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Who We're Looking For Section */}
+        <section className="py-24 bg-slate-900/80 backdrop-blur-sm relative overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-16">
+                <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">
+                  Who We're Looking For
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                  We Hire Globally
+                </h2>
+                <p className="text-white/70 text-lg max-w-3xl mx-auto">
+                  If you have expertise in the following fields, we want to hear from you:
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {skills.map((skill, index) => (
+                  <div key={index} className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-6 hover:bg-slate-800/60 transition-all duration-300 group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                        <GraduationCap className="h-5 w-5 text-orange-400" />
+                      </div>
+                      <span className="text-white font-medium">{skill}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Current Openings Section */}
+        <section className="py-24 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-16">
+                <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">
+                  Current Openings
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                  Join Our Team
+                </h2>
+              </div>
+
+              <div className="grid gap-6">
+                {roles.map((role, index) => (
+                  <Card key={index} className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-all duration-300 group">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-orange-500/20 rounded-lg">
+                              <Briefcase className="h-5 w-5 text-orange-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">{role.title}</h3>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                            <Badge variant="outline" className="bg-slate-700/50 text-white border-slate-600">
+                              {role.location}
+                            </Badge>
+                            <Badge variant="outline" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                              {role.type}
+                            </Badge>
+                            <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                              {role.category}
+                            </Badge>
+                          </div>
+                        </div>
+                        <Button className="bg-orange-500 hover:bg-orange-600 text-white group-hover:scale-105 transition-transform">
+                          Apply Now
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section className="py-24 bg-[#003366] relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,111,0,0.05),transparent_40%)]"></div>
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-4xl mx-auto text-center">
+              <Badge variant="outline" className="mb-6 bg-orange-500/10 text-orange-300 border-orange-500/30">
+                Ready to Join?
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                Work Where Oil Meets Opportunity
+              </h2>
+              <p className="text-white/80 text-lg mb-8 max-w-3xl mx-auto leading-relaxed">
+                Whether you're a seasoned broker, a trade lawyer, or a digital product thinker — if you're ready to work at the intersection of energy, commerce, and technology, PetroDealHub is the place for you.
+              </p>
+              
+              <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700/50 mb-8">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Mail className="h-6 w-6 text-orange-400" />
+                  <span className="text-white font-medium">Send your resume and cover letter to:</span>
+                </div>
+                <a 
+                  href="mailto:careers@petrodealhub.com" 
+                  className="text-orange-400 hover:text-orange-300 font-bold text-xl transition-colors"
+                >
+                  careers@petrodealhub.com
+                </a>
+              </div>
+
+              <div className="text-center">
+                <p className="text-2xl font-bold text-white mb-2">
+                  🚀 Let's move the barrels. Let's build the future. Together.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-slate-950 py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-4 gap-8">
+              <div className="md:col-span-2">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">P</span>
+                  </div>
+                  <span className="text-white font-bold text-xl">PetroDealHub</span>
+                </div>
+                <p className="text-white/70 mb-6">
+                  The leading platform for global petroleum trade intelligence and vessel tracking.
+                </p>
+                <div className="flex gap-4">
+                  <Link href="/">
+                    <Button variant="ghost" size="sm" className="text-white/80 hover:text-orange-500">
+                      Home
+                    </Button>
+                  </Link>
+                  <Link href="/about">
+                    <Button variant="ghost" size="sm" className="text-white/80 hover:text-orange-500">
+                      About
+                    </Button>
+                  </Link>
+                  <Link href="/vessels">
+                    <Button variant="ghost" size="sm" className="text-white/80 hover:text-orange-500">
+                      Vessels
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-white font-semibold mb-4">Platform</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/vessels" className="text-white/70 hover:text-orange-500 transition-colors">Vessels</Link></li>
+                  <li><Link href="/refineries" className="text-white/70 hover:text-orange-500 transition-colors">Refineries</Link></li>
+                  <li><Link href="/ports" className="text-white/70 hover:text-orange-500 transition-colors">Ports</Link></li>
+                  <li><Link href="/dashboard" className="text-white/70 hover:text-orange-500 transition-colors">Dashboard</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="text-white font-semibold mb-4">Company</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/about" className="text-white/70 hover:text-orange-500 transition-colors">About Us</Link></li>
+                  <li><Link href="/careers" className="text-white/70 hover:text-orange-500 transition-colors">Careers</Link></li>
+                  <li><a href="mailto:careers@petrodealhub.com" className="text-white/70 hover:text-orange-500 transition-colors">Contact</a></li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="border-t border-slate-800 mt-12 pt-8 text-center">
+              <p className="text-white/60">
+                © 2025 PetroDealHub. All rights reserved. | Global Petroleum Trade Intelligence Platform
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}

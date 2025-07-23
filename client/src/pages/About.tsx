@@ -72,6 +72,12 @@ export default function About() {
           <span className="text-sm font-medium text-orange-500">
             About
           </span>
+          <Link 
+            href="/careers" 
+            className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors"
+          >
+            Careers
+          </Link>
           <div className="h-6 w-px bg-slate-700"></div>
           <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Refineries
@@ -116,6 +122,9 @@ export default function About() {
               Home
             </Link>
             <span className="text-lg font-medium py-2 border-b border-slate-800/80 text-orange-500">About</span>
+            <Link href="/careers" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Careers
+            </Link>
             <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Refineries
             </Link>
