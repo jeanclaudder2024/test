@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'wouter';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Ship, 
   MapPin, 
@@ -58,6 +60,7 @@ const useScrollAnimation = () => {
 
 export default function VesselsTracking() {
   const visibleElements = useScrollAnimation();
+  const { isAuthenticated } = useAuth();
 
   const trackingFeatures = [
     {
@@ -424,22 +427,26 @@ export default function VesselsTracking() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  <Eye className="h-5 w-5 mr-2" />
-                  Start Tracking Vessels
-                  <ChevronRight className="h-5 w-5 ml-2" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-slate-900 px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <Target className="h-5 w-5 mr-2" />
-                  View Live Map
-                </Button>
+                <Link href={isAuthenticated ? "/vessels" : "/login"}>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    <Eye className="h-5 w-5 mr-2" />
+                    Start Tracking Vessels
+                    <ChevronRight className="h-5 w-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link href={isAuthenticated ? "/map" : "/login"}>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-slate-900 px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Target className="h-5 w-5 mr-2" />
+                    View Live Map
+                  </Button>
+                </Link>
               </div>
 
               {/* Contact Information */}
