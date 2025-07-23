@@ -38,6 +38,7 @@ import Blog from "@/pages/Blog";
 import ApiIntegration from "@/pages/ApiIntegration";
 import ContactUs from "@/pages/ContactUs";
 import CookiePolicy from "@/pages/CookiePolicy";
+import DocumentationCenter from "@/pages/DocumentationCenter";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
@@ -168,6 +169,7 @@ function AuthenticatedApp() {
     if (location === "/api-integration") return <ApiIntegration />;
     if (location === "/contact") return <ContactUs />;
     if (location === "/cookie-policy") return <CookiePolicy />;
+    if (location === "/documentation") return <DocumentationCenter />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;
