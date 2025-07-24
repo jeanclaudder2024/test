@@ -15563,5 +15563,30 @@ Generate a professional, detailed document that incorporates the vessel informat
     res.sendFile(path.join(process.cwd(), 'test-subscription.html'));
   });
 
+  // Health check endpoint for PM2 and load balancers
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Simple health check with database connectivity test
+      const users = await storage.getUsers();
+      res.status(200).json({
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        database: "connected",
+        users: users.length
+      });
+    } catch (error) {
+      res.status(503).json({
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: "Database connection failed"
+      });
+    }
+  });
+
+  // Mount the API router
+  app.use(apiRouter);
+
   return httpServer;
 }
