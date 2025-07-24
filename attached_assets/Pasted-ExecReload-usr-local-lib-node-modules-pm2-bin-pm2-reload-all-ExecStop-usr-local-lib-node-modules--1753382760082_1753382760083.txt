@@ -1,0 +1,90 @@
+ExecReload=/usr/local/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop=/usr/local/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target
+
+Target path
+/etc/systemd/system/pm2-root.service
+Command list
+[ 'systemctl enable pm2-root' ]
+[PM2] Writing init configuration in /etc/systemd/system/pm2-root.service
+[PM2] Making script booting at startup...
+[PM2] [-] Executing: systemctl enable pm2-root...
+Created symlink /etc/systemd/system/multi-user.target.wants/pm2-root.service → /etc/systemd/system/pm2-root.service.
+[PM2] [v] Command successfully executed.
++---------------------------------------+
+[PM2] Freeze a process list on reboot via:
+$ pm2 save
+
+[PM2] Remove init script via:
+$ pm2 unstartup systemd
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+[TAILING] Tailing last 20 lines for [petrodealhub] process (change the value with --lines option)
+/root/.pm2/logs/petrodealhub-out-0.log last 20 lines:
+0|petrodea | 2025-07-24T18:45:22: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:45:28: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:45:34: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:45:39: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:45:45: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:45:51: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:45:56: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:46:03: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:46:08: 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodea | 2025-07-24T18:46:14: 🚀 Starting oil vessel tracking platform with Supabase...
+
+/root/.pm2/logs/petrodealhub-error-0.log last 20 lines:
+0|petrodea |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodea |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodea |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodea |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodea | 2025-07-24T18:46:08: Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodea |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodea |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodea |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodea |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodea | 2025-07-24T18:46:14: Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodea |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodea |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodea |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodea |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+
+/root/.pm2/logs/petrodealhub-out-1.log last 20 lines:
+1|petrodea | 2025-07-24T18:45:23: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:45:28: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:45:34: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:45:39: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:45:45: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:45:51: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:45:56: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:46:03: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:46:08: 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodea | 2025-07-24T18:46:14: 🚀 Starting oil vessel tracking platform with Supabase...
+
+/root/.pm2/logs/petrodealhub-error-1.log last 20 lines:
+1|petrodea |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodea |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodea |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodea |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodea | 2025-07-24T18:46:08: Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodea |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodea |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodea |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodea |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodea | 2025-07-24T18:46:14: Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodea |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodea |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodea |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodea |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodea |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
