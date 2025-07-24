@@ -1,0 +1,50 @@
+curl -I http://195.35.29.137
+
+# Also test the health endpoint through Nginx
+curl http://195.35.29.137/api/health
+
+# Save the PM2 configuration so it starts on boot
+pm2 save
+
+# Check final status
+pm2 status
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Thu 2025-07-24 19:09:13 UTC; 31s ago
+       Docs: man:nginx(8)
+    Process: 112245 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 112249 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 112251 (nginx)
+      Tasks: 3 (limit: 9485)
+     Memory: 2.4M (peak: 2.8M)
+        CPU: 12ms
+     CGroup: /system.slice/nginx.service
+             ├─112251 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─112252 "nginx: worker process"
+             └─112253 "nginx: worker process"
+
+Jul 24 19:09:13 srv898241 systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy server...
+Jul 24 19:09:13 srv898241 systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+HTTP/1.1 502 Bad Gateway
+Server: nginx/1.24.0 (Ubuntu)
+Date: Thu, 24 Jul 2025 19:09:45 GMT
+Content-Type: text/html
+Content-Length: 166
+Connection: keep-alive
+
+<html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+┌────┬─────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name            │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ petrodealhub    │ default     │ 1.0.0   │ cluster │ 0        │ 0      │ 9    │  │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ petrodealhub    │ default     │ 1.0.0   │ cluster │ 0        │ 0      │ 9    │  │ 0%       │ 0b       │ root     │ disabled │
+└────┴─────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@srv898241:/var/www/petrodealhub# 
