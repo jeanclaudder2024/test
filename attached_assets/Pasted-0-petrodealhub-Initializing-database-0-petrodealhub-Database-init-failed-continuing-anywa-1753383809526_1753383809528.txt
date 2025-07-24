@@ -1,0 +1,800 @@
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+0|petrodealhub  | Initializing database...
+0|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+0|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+0|petrodealhub  | Registering routes...
+0|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+0|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+0|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+0|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+0|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+0|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+0|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+0|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+1|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
+1|petrodealhub  | Initializing database...
+1|petrodealhub  | Database init failed, continuing anyway: Error: DATABASE_URL environment variable must be set
+1|petrodealhub  |     at server/db.ts (file:///var/www/petrodealhub/dist/index.js:2064:13)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/database-init.ts (file:///var/www/petrodealhub/dist/index.js:5473:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31699:111
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31699:75
+1|petrodealhub  | Registering routes...
+1|petrodealhub  | Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not provided
+1|petrodealhub  | Fatal startup error: Error: Neither apiKey nor config.authenticator provided
+1|petrodealhub  |     at Stripe._setAuthenticator (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:152:23)
+1|petrodealhub  |     at new Stripe (file:///var/www/petrodealhub/node_modules/stripe/esm/stripe.core.js:90:14)
+1|petrodealhub  |     at server/routes/brokerRoutes.ts (file:///var/www/petrodealhub/dist/index.js:6830:14)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at server/routes.ts (file:///var/www/petrodealhub/dist/index.js:31573:5)
+1|petrodealhub  |     at __init (file:///var/www/petrodealhub/dist/index.js:4:56)
+1|petrodealhub  |     at file:///var/www/petrodealhub/dist/index.js:31709:85
+1|petrodealhub  |     at async file:///var/www/petrodealhub/dist/index.js:31709:49
+0|petrodealhub  | 🚀 Starting oil vessel tracking platform with Supabase...
