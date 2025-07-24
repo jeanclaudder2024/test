@@ -1,0 +1,54 @@
+Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 6.8.0-62-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Thu Jul 24 18:35:07 UTC 2025
+
+  System load:  0.0               Processes:             119
+  Usage of /:   3.8% of 95.82GB   Users logged in:       0
+  Memory usage: 7%                IPv4 address for eth0: 195.35.29.137
+  Swap usage:   0%                IPv6 address for eth0: 2a02:4780:28:87ee::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+Expanded Security Maintenance for Applications is not enabled.
+
+2 updates can be applied immediately.
+2 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+*** System restart required ***
+Last login: Thu Jul 24 18:30:06 2025 from 169.254.0.1
+root@srv898241:~# cd /var/www/petrodealhub
+
+cat > .env << 'EOF'
+VITE_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA
+
+# Supabase Configuration (Correct Active Project)
+SUPABASE_URL=https://fahvjksfkzmbsyvtktyk.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhaHZqa3Nma3ptYnN5dnRrdHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NzgwMDMsImV4cCI6MjA2NDA1NDAwM30.TsfzDouSyN-jQE0uM36LV2UmVljAUbr92rPry9kZR78
+DATABASE_URL=postgresql://postgres.fahvjksfkzmbsyvtktyk:Jonny%402025%40@aws-0-us-east-2.pooler.supabase.com:6543/postgres
+
+# Frontend Supabase Variables
+VITE_SUPABASE_URL=https://fahvjksfkzmbsyvtktyk.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhaHZqa3Nma3ptYnN5dnRrdHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NzgwMDMsImV4cCI6MjA2NDA1NDAwM30.TsfzDouSyN-jQE0uM36LV2UmVljAUbr92rPry9kZR78
+
+# AI Configuration
+OPENAI_API_KEY=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
+
+# Production Settings
+SESSION_SECRET=your_32_character_session_secret_here
+NODE_ENV=production
+PORT=5000
+DOMAIN=petrodealhub.com
+
+# Stripe Keys (Add your live keys here)
+STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
+VITE_STRIPE_PUBLIC_KEY=pk_live_your_stripe_public_key
