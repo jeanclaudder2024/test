@@ -62,4 +62,4 @@ temp/
 
 # Cache directories
 .cache/
-.parcel-cache/
+.parcel-cache/attached_assets/*.txt
