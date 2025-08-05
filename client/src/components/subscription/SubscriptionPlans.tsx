@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckIcon, Crown, Zap, Building, Users } from 'lucide-react';
 import { getSubscriptionPlans, createStripeCheckout, formatPrice } from '@/lib/subscriptionService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -15,6 +16,7 @@ interface SubscriptionPlansProps {
 
 export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionPlansProps) {
   const { toast } = useToast();
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const { data: plans, isLoading } = useQuery({
     queryKey: ['/api/subscription-plans'],
     queryFn: () => getSubscriptionPlans(),
@@ -27,7 +29,8 @@ export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionP
         return;
       }
       
-      await createStripeCheckout(planId, interval);
+      const selectedInterval = billingCycle === 'yearly' ? 'year' : 'month';
+      await createStripeCheckout(planId, selectedInterval);
     } catch (error) {
       toast({
         title: 'Error',
@@ -35,6 +38,26 @@ export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionP
         variant: 'destructive',
       });
     }
+  };
+
+  const calculatePrice = (plan: any) => {
+    const basePrice = plan.monthlyPrice ? parseFloat(plan.monthlyPrice) : parseFloat(plan.price || '0');
+    
+    if (billingCycle === 'yearly') {
+      if (plan.yearlyPrice) {
+        return parseFloat(plan.yearlyPrice);
+      }
+      // Calculate yearly with 20% discount if no yearlyPrice is set
+      return basePrice * 12 * 0.8;
+    }
+    return basePrice;
+  };
+
+  const calculateSavings = (plan: any) => {
+    const basePrice = plan.monthlyPrice ? parseFloat(plan.monthlyPrice) : parseFloat(plan.price || '0');
+    const monthlyTotal = basePrice * 12;
+    const yearlyPrice = plan.yearlyPrice ? parseFloat(plan.yearlyPrice) : (basePrice * 12 * 0.8);
+    return monthlyTotal - yearlyPrice;
   };
 
   const getPlanIcon = (planName: string) => {
@@ -88,8 +111,41 @@ export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionP
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {plans.map((plan) => (
+    <div className="space-y-8">
+      {/* Billing Toggle */}
+      <div className="flex justify-center">
+        <div className="bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+          <div className="flex items-center">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                billingCycle === 'monthly'
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'text-white/70 hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all relative ${
+                billingCycle === 'yearly'
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'text-white/70 hover:text-white'
+              }`}
+            >
+              Yearly
+              <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1.5 py-0.5">
+                Save 20%
+              </Badge>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Plans Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {plans.map((plan) => (
         <Card 
           key={plan.id} 
           className={`relative transition-all duration-200 hover:shadow-lg ${
@@ -111,10 +167,22 @@ export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionP
               {plan.description}
             </CardDescription>
             <div className="mt-4">
-              <span className="text-3xl font-bold text-gray-900">
-                {formatPrice(plan.price)}
-              </span>
-              <span className="text-gray-600 ml-1">/{plan.interval}</span>
+              <div className="text-3xl font-bold text-white">
+                ${calculatePrice(plan).toFixed(2)}
+              </div>
+              <div className="text-white/60 text-sm">
+                per {billingCycle === 'yearly' ? 'year' : 'month'}
+              </div>
+              {billingCycle === 'yearly' && plan.monthlyPrice && (
+                <div className="text-green-400 text-sm mt-1">
+                  Save ${calculateSavings(plan).toFixed(2)} per year
+                </div>
+              )}
+              {billingCycle === 'monthly' && (
+                <div className="text-white/40 text-xs mt-1">
+                  ${(calculatePrice(plan) * 12).toFixed(2)} billed annually
+                </div>
+              )}
             </div>
             {plan.trialDays > 0 && (
               <Badge variant="outline" className="mt-2">
@@ -186,8 +254,9 @@ export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionP
               {currentPlanId === plan.id ? 'Current Plan' : 'Select Plan'}
             </Button>
           </CardFooter>
-        </Card>
-      ))}
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
