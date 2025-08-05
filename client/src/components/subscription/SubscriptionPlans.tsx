@@ -143,118 +143,74 @@ export function SubscriptionPlans({ currentPlanId, onSelectPlan }: SubscriptionP
         </div>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {plans.map((plan) => (
-        <Card 
-          key={plan.id} 
-          className={`relative transition-all duration-200 hover:shadow-lg ${
-            currentPlanId === plan.id ? 'ring-2 ring-blue-500' : ''
-          } ${getPlanColor(plan.name)}`}
-        >
-          {isPopularPlan(plan.name) && (
-            <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-              Most Popular
-            </Badge>
-          )}
-          
-          <CardHeader className="text-center pb-4">
-            <div className="flex justify-center mb-3">
-              {getPlanIcon(plan.name)}
-            </div>
-            <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-            <CardDescription className="text-sm text-gray-600">
-              {plan.description}
-            </CardDescription>
-            <div className="mt-4">
-              <div className="text-3xl font-bold text-white">
-                ${calculatePrice(plan).toFixed(2)}
-              </div>
-              <div className="text-white/60 text-sm">
-                per {billingCycle === 'yearly' ? 'year' : 'month'}
-              </div>
-              {billingCycle === 'yearly' && plan.monthlyPrice && (
-                <div className="text-green-400 text-sm mt-1">
-                  Save ${calculateSavings(plan).toFixed(2)} per year
+      {/* Plans Grid - Using Original Landing Page Style */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {plans.map((plan, index) => (
+          <div 
+            key={plan.id} 
+            className={`backdrop-blur-sm rounded-xl border p-8 flex flex-col h-full transition-transform duration-300 hover:transform hover:-translate-y-2 relative overflow-hidden group ${
+              isPopularPlan(plan.name) 
+                ? 'bg-gradient-to-br from-[#003366]/80 to-[#00264d]/80 border-orange-500/30 transform scale-105 shadow-xl' 
+                : 'bg-slate-900/50 border-slate-800/60'
+            }`}
+          >
+            {isPopularPlan(plan.name) && (
+              <div className="absolute top-0 right-0">
+                <div className="bg-orange-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg shadow-md">
+                  POPULAR
                 </div>
-              )}
-              {billingCycle === 'monthly' && (
-                <div className="text-white/40 text-xs mt-1">
-                  ${(calculatePrice(plan) * 12).toFixed(2)} billed annually
-                </div>
-              )}
-            </div>
-            {plan.trialDays > 0 && (
-              <Badge variant="outline" className="mt-2">
-                {plan.trialDays}-day free trial
-              </Badge>
+              </div>
             )}
-          </CardHeader>
-
-          <CardContent className="space-y-3">
-            <div className="text-sm space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Vessels</span>
-                <span className="font-medium">
-                  {plan.maxVessels === -1 ? 'Unlimited' : plan.maxVessels}
-                </span>
+            
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+              isPopularPlan(plan.name) 
+                ? 'bg-gradient-to-br from-orange-500/5 to-blue-900/10' 
+                : 'bg-gradient-to-br from-slate-800/10 to-slate-900/30'
+            }`}></div>
+            
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold text-white mb-4">{plan.name}</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-white">${calculatePrice(plan).toFixed(2)}</span>
+                <span className="text-white/60 ml-2">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+                {billingCycle === 'yearly' && (
+                  <div className="text-green-400 text-sm mt-1">
+                    Save ${calculateSavings(plan).toFixed(2)} per year
+                  </div>
+                )}
+                {billingCycle === 'monthly' && (
+                  <div className="text-white/40 text-xs mt-1">
+                    ${(calculatePrice(plan) * 12).toFixed(2)} billed annually
+                  </div>
+                )}
               </div>
-              <div className="flex items-center justify-between">
-                <span>Ports</span>
-                <span className="font-medium">
-                  {plan.maxPorts === -1 ? 'Unlimited' : plan.maxPorts}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Refineries</span>
-                <span className="font-medium">
-                  {plan.maxRefineries === -1 ? 'Unlimited' : plan.maxRefineries}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-gray-200">
-              <h4 className="font-medium text-sm mb-2">Features included:</h4>
-              <ul className="space-y-1 text-sm">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <CheckIcon className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                    <span className="capitalize">{feature.replace(/_/g, ' ')}</span>
+              <p className="text-white/70 mb-8">{plan.description}</p>
+              
+              <ul className="space-y-3 mb-8">
+                {plan.features?.slice(0, 6).map((feature, featureIndex) => (
+                  <li key={featureIndex} className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">{feature.replace(/_/g, ' ')}</span>
                   </li>
                 ))}
-                {plan.canAccessAnalytics && (
-                  <li className="flex items-center">
-                    <CheckIcon className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                    <span>Advanced Analytics</span>
-                  </li>
-                )}
-                {plan.canExportData && (
-                  <li className="flex items-center">
-                    <CheckIcon className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                    <span>Data Export</span>
-                  </li>
-                )}
-                {plan.canAccessBrokerFeatures && (
-                  <li className="flex items-center">
-                    <CheckIcon className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                    <span>Broker Tools</span>
-                  </li>
-                )}
               </ul>
+              
+              <div className="mt-auto">
+                <Button 
+                  className={`w-full mb-3 ${
+                    isPopularPlan(plan.name) 
+                      ? 'bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50' 
+                      : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'
+                  }`}
+                  onClick={() => handleSelectPlan(plan.id)}
+                  disabled={currentPlanId === plan.id}
+                >
+                  {currentPlanId === plan.id ? 'Current Plan' : `Start ${plan.trialDays || 5}-Day Free Trial`}
+                </Button>
+                <p className="text-xs text-center text-white/50">No credit card required</p>
+              </div>
             </div>
-          </CardContent>
-
-          <CardFooter>
-            <Button
-              onClick={() => handleSelectPlan(plan.id)}
-              className="w-full"
-              variant={currentPlanId === plan.id ? "outline" : "default"}
-              disabled={currentPlanId === plan.id}
-            >
-              {currentPlanId === plan.id ? 'Current Plan' : 'Select Plan'}
-            </Button>
-          </CardFooter>
-          </Card>
+          </div>
         ))}
       </div>
     </div>
