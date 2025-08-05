@@ -22,27 +22,40 @@ export const stripeService = {
   async createCheckoutSession(options: CreateCheckoutSessionOptions): Promise<Stripe.Checkout.Session> {
     const { planId, userId, userEmail, interval, successUrl, cancelUrl } = options;
     
-    // In a real implementation, you would fetch the plan details from the database
-    // For now, we'll use hardcoded Stripe price IDs based on plan
-    const priceIdMap: Record<string, { month: string; year: string }> = {
-      '1': { month: 'price_trial', year: 'price_trial_yearly' }, // Free Trial
-      '2': { month: 'price_basic', year: 'price_basic_yearly' }, // Basic Plan
-      '3': { month: 'price_pro', year: 'price_pro_yearly' }, // Pro Plan
-      '4': { month: 'price_enterprise', year: 'price_enterprise_yearly' }, // Enterprise
-      '5': { month: 'price_broker', year: 'price_broker_yearly' }, // Broker Premium
+    // Use dynamic pricing instead of fixed Stripe price IDs for demo/development
+    // This allows the payment system to work without creating specific Stripe products
+    const planPricing: Record<string, { amount: number; name: string; description: string }> = {
+      '1': { amount: 0, name: 'Free Trial', description: 'Free trial access to PetroDealHub' },
+      '2': { amount: 2900, name: 'Basic Plan', description: 'Basic access to maritime trading tools' }, // $29/month
+      '3': { amount: 9900, name: 'Professional Plan', description: 'Professional maritime trading platform' }, // $99/month
+      '4': { amount: 19900, name: 'Enterprise Plan', description: 'Full enterprise maritime solution' }, // $199/month
+      '5': { amount: 28000, name: 'Broker Premium', description: 'Premium broker certification and tools' }, // $280/month
     };
 
-    const priceId = priceIdMap[planId.toString()]?.[interval];
+    const planInfo = planPricing[planId.toString()];
     
-    if (!priceId) {
-      throw new Error(`No Stripe price ID found for plan ${planId} with interval ${interval}`);
+    if (!planInfo) {
+      throw new Error(`No pricing found for plan ${planId}`);
     }
+
+    // Calculate yearly pricing (20% discount)
+    const finalAmount = interval === 'year' ? Math.round(planInfo.amount * 12 * 0.8) : planInfo.amount;
 
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: planInfo.name,
+              description: planInfo.description,
+            },
+            unit_amount: finalAmount,
+            recurring: {
+              interval: interval === 'year' ? 'year' : 'month',
+            },
+          },
           quantity: 1,
         },
       ],
