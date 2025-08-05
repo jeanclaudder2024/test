@@ -62,4 +62,7 @@ temp/
 
 # Cache directories
 .cache/
-.parcel-cache/attached_assets/*.txt
+.parcel-cache/
+
+# Attached assets with potential secrets
+attached_assets/*.txt
