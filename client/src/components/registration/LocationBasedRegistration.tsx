@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { 
   MapPin, 
   Ship, 
@@ -354,11 +354,12 @@ const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved 
       return;
     }
 
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
+    // Use PaymentElement
+    const paymentElement = elements.getElement(PaymentElement);
+    if (!paymentElement) {
       toast({
         title: "Error",
-        description: "Card element not found",
+        description: "Payment element not found",
         variant: "destructive"
       });
       return;
@@ -367,19 +368,23 @@ const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved 
     setLoading(true);
 
     try {
-      // Create payment method
+      // Create payment method using PaymentElement
       const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardElement,
+        elements: elements, // Pass the elements object
+        params: {
+          return_url: window.location.origin + '/payment-success', // Optional: for 3D secure
+        },
       });
 
       if (error) {
+        // Handle errors, e.g., display them to the user
         toast({
-          title: "Payment Method Error",
-          description: error.message,
+          title: "Payment Error",
+          description: error.message || "An unknown error occurred",
           variant: "destructive"
         });
-      } else {
+      } else if (paymentMethod) {
+        // Payment method created successfully
         toast({
           title: "Success",
           description: "Payment method saved successfully!",
@@ -419,18 +424,10 @@ const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved 
                 <CreditCard className="h-4 w-4 mr-2" />
                 Card Information
               </label>
-              <div className="p-4 border border-gray-300 rounded-lg">
-                <CardElement
+              <div className="p-4 border rounded-lg bg-gray-50">
+                <PaymentElement 
                   options={{
-                    style: {
-                      base: {
-                        fontSize: '16px',
-                        color: '#424770',
-                        '::placeholder': {
-                          color: '#aab7c4',
-                        },
-                      },
-                    },
+                    layout: 'tabs'
                   }}
                 />
               </div>
@@ -535,7 +532,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         setPasswordErrors([]);
       }
     }, 100);
-    
+
     return () => clearTimeout(timeoutId);
   }, [userPassword]);
 
@@ -544,7 +541,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     queryKey: ['/api/public/ports'],
     staleTime: 0,
   });
-  
+
   const ports = (portsResponse as any)?.ports || [];
 
   // Fetch subscription plans from API
@@ -568,7 +565,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const getRegionsForPlan = (planId: number): string[] => {
     const plan = (plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === planId);
     if (!plan) return regions; // Show all regions if no plan found
-    
+
     // Show all available regions during registration
     return regions;
   };
@@ -590,7 +587,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     if (selectedPorts.length > 0 && selectedPlan && plans) {
       const plan = (plans as SubscriptionPlan[])?.find((p: SubscriptionPlan) => p.id === selectedPlan);
       const selectedPortData = ports.filter((p: Port) => selectedPorts.includes(p.id));
-      
+
       if (plan && selectedPortData.length > 0) {
         setPreviewData({
           selectedPorts: selectedPortData,
@@ -673,7 +670,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             const price = billingInterval === 'month' 
               ? plan.monthlyPrice 
               : plan.yearlyPrice;
-              
+
             return (
               <Card key={plan.id} className={`flex flex-col ${
                 plan.isPopular ? "border-primary shadow-md" : ""
@@ -749,7 +746,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <p className="text-xl text-slate-600 max-w-2xl mx-auto">
           Choose the maritime regions you want to focus on based on your selected plan.
         </p>
-        
+
         {selectedPlan && plans && Array.isArray(plans) && plans.length > 0 ? (
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -758,7 +755,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {getMaxRegionsForPlan(selectedPlan)} of {regions.length} available maritime regions.
               </p>
             </div>
-            
+
             {selectedRegions.length > 0 && (
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-green-800 font-semibold">
@@ -780,7 +777,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           const isSelected = selectedRegions.includes(region);
           const maxRegions = getMaxRegionsForPlan(selectedPlan || 1);
           const isAtLimit = selectedRegions.length >= maxRegions && !isSelected;
-          
+
           return (
             <Card 
               key={region}
@@ -818,7 +815,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 {ports.filter((p: Port) => p.region === region).length} ports available
               </p>
             </CardHeader>
-            
+
             <CardContent className="text-center">
               <Button 
                 variant={isSelected ? "default" : "outline"}
@@ -871,7 +868,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
         <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
           Select Strategic Ports
         </h2>
-        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+        <p className="text-xl text-slate-600 max-2xl mx-auto">
           Choose the ports that align with your trading focus and operational needs.
         </p>
       </div>
@@ -882,7 +879,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             <Waves className="w-6 h-6 mr-3 text-blue-600" />
             {region}
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {ports
               .filter((port: Port) => port.region === region)
@@ -914,7 +911,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       <span className="text-sm">{port.country}</span>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="pt-0">
                     <div className="flex items-center justify-between text-sm text-slate-500">
                       <span>Lat: {port.lat}</span>
@@ -952,7 +949,6 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       setIsLoading(true);
 
       try {
-        // Complete registration with all collected data
         const registrationData = {
           email: userEmail,
           password: userPassword,
@@ -961,7 +957,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           selectedPlan: selectedPlan,
           selectedRegions: selectedRegions,
           selectedPorts: selectedPorts,
-          billingInterval: billingInterval
+          billingInterval: billingInterval,
+          paymentMethodId: paymentMethodId // Include paymentMethodId
         };
 
         console.log('Creating account with data:', registrationData);
@@ -974,7 +971,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           },
           body: JSON.stringify(registrationData),
         });
-        
+
         const result = await response.json();
 
         if (response.ok) {
@@ -1019,7 +1016,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             <CheckCircle2 className="w-6 h-6 text-green-600 mr-2" />
             Registration Summary
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
@@ -1029,7 +1026,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   <p className="text-gray-600">{userEmail}</p>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700">Selected Plan</label>
                 <p className="text-lg font-semibold text-gray-900 mt-1">
@@ -1037,7 +1034,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 </p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700">Maritime Coverage</label>
@@ -1046,14 +1043,14 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   <p className="text-gray-600">{selectedPorts.length} strategic ports</p>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700">Billing Cycle</label>
                 <p className="text-gray-900 mt-1 capitalize">{billingInterval}ly billing</p>
               </div>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <div className="flex items-center">
               <Shield className="w-5 h-5 text-green-600 mr-2" />
@@ -1153,7 +1150,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="bg-white p-4 rounded-lg">
                       <h4 className="font-bold text-green-800 mb-2">Strategic Ports ({previewData.totalPortsSelected})</h4>
                       <div className="max-h-40 overflow-y-auto space-y-2">
@@ -1209,8 +1206,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             </Card>
 
             <div className="flex justify-between mt-8">
-              <Button variant="outline" onClick={() => setStep(5)}>
-                Back to Payment Method
+              <Button variant="outline" onClick={() => setStep(4)}>
+                Back to Account Creation
               </Button>
               <Button 
                 onClick={() => {
@@ -1219,7 +1216,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                       selectedPlan,
                       selectedPort: selectedPorts[0], // Pass first selected port
                       previewData,
-                      paymentMethodId
+                      paymentMethodId // Pass the saved paymentMethodId
                     });
                   }
                 }}
@@ -1235,8 +1232,6 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
       </div>
     );
   };
-
-  // REMOVED: Duplicate AccountCreationStep - now using stable external component
 
   return (
     <div className="min-h-screen w-full">
@@ -1262,7 +1257,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                 </div>
               ))}
             </div>
-            
+
             <div className="text-center">
               <h1 className="text-3xl font-bold text-slate-800">
                 {step === 1 && "Choose Your Plan"}
