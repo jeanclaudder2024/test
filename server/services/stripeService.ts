@@ -129,6 +129,14 @@ export const stripeService = {
     return await stripe.subscriptions.retrieve(subscriptionId);
   },
 
+  // Create a setup intent for saving payment methods
+  async createSetupIntent(): Promise<Stripe.SetupIntent> {
+    return await stripe.setupIntents.create({
+      payment_method_types: ['card'],
+      usage: 'off_session',
+    });
+  },
+
   // Handle webhook events
   async handleWebhook(
     payload: string | Buffer, 

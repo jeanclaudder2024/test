@@ -336,11 +336,12 @@ const AccountCreationStep = React.memo(({
 });
 
 // Payment Method Step Component
-const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved }: {
+const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved, clientSecret }: {
   onNext: () => void;
   onBack: () => void;
   isProcessing: boolean;
   onPaymentMethodSaved: (paymentMethodId: string) => void;
+  clientSecret: string;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -350,47 +351,40 @@ const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
-      return;
-    }
-
-    // Use PaymentElement
-    const paymentElement = elements.getElement(PaymentElement);
-    if (!paymentElement) {
-      toast({
-        title: "Error",
-        description: "Payment element not found",
-        variant: "destructive"
-      });
+    if (!stripe || !elements || !clientSecret) {
       return;
     }
 
     setLoading(true);
 
     try {
-      // Create payment method using PaymentElement
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
-        elements: elements, // Pass the elements object
-        params: {
-          return_url: window.location.origin + '/payment-success', // Optional: for 3D secure
+      // Confirm the setup intent to save the payment method
+      const { error, setupIntent } = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + '/payment-success',
         },
+        redirect: 'if_required',
       });
 
       if (error) {
-        // Handle errors, e.g., display them to the user
         toast({
           title: "Payment Error",
           description: error.message || "An unknown error occurred",
           variant: "destructive"
         });
-      } else if (paymentMethod) {
-        // Payment method created successfully
+      } else if (setupIntent && setupIntent.payment_method) {
+        // Payment method saved successfully
+        const paymentMethodId = typeof setupIntent.payment_method === 'string' 
+          ? setupIntent.payment_method 
+          : setupIntent.payment_method.id;
+        
         toast({
           title: "Success",
           description: "Payment method saved successfully!",
           variant: "default"
         });
-        onPaymentMethodSaved(paymentMethod.id);
+        onPaymentMethodSaved(paymentMethodId);
         onNext();
       }
     } catch (error) {
@@ -482,13 +476,57 @@ const PaymentMethodStep = ({ onNext, onBack, isProcessing, onPaymentMethodSaved 
   isProcessing: boolean;
   onPaymentMethodSaved: (paymentMethodId: string) => void;
 }) => {
+  const [clientSecret, setClientSecret] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Create a SetupIntent for saving payment method
+    const createSetupIntent = async () => {
+      try {
+        const response = await fetch('/api/create-setup-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        const data = await response.json();
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        }
+      } catch (error) {
+        console.error('Error creating setup intent:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    createSetupIntent();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  const options = {
+    clientSecret,
+    appearance: {
+      theme: 'stripe' as const,
+    },
+  };
+
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={clientSecret ? options : undefined}>
       <PaymentMethodForm 
         onNext={onNext} 
         onBack={onBack}
         isProcessing={isProcessing}
         onPaymentMethodSaved={onPaymentMethodSaved}
+        clientSecret={clientSecret}
       />
     </Elements>
   );
