@@ -167,13 +167,25 @@ export default function VesselDocuments() {
     isLoading: isLoadingDocuments,
     refetch: refetchDocuments
   } = useQuery({
-    queryKey: ['/api/documents', { vessel: vesselId }],
-    queryFn: () => fetch(`/api/documents?vessel=${vesselId}`).then(res => res.json()),
+    queryKey: ['/api/vessel-documents', { vessel: vesselId }],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/vessels/${vesselId}/documents`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch vessel documents');
+      }
+      return response.json();
+    },
     enabled: !!vesselId
   });
 
   // Extract documents from response
-  const documents = documentsResponse?.data || [];
+  const documents = Array.isArray(documentsResponse) ? documentsResponse : documentsResponse?.data || [];
   
   // Type the vessel properly to avoid type errors
   const typedVessel = vessel as any;
@@ -181,17 +193,26 @@ export default function VesselDocuments() {
   // Generate document mutation
   const generateDocument = useMutation({
     mutationFn: async (formData: any) => {
-      return apiRequest(`/api/vessels/${vesselId}/generate-document`, {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/vessels/${vesselId}/generate-document`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(formData)
       });
+      if (!response.ok) {
+        throw new Error('Failed to generate document');
+      }
+      return response.json();
     },
     onSuccess: (data) => {
       if (data && data.documentId) {
         setGeneratedDocumentId(data.documentId);
         
         // Invalidate documents query to refresh list
-        queryClient.invalidateQueries({ queryKey: ['/api/documents', { vessel: vesselId }] });
+        queryClient.invalidateQueries({ queryKey: ['/api/vessel-documents', { vessel: vesselId }] });
         
         // Show success toast
         toast({
