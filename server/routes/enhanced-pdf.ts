@@ -11,6 +11,11 @@ import OpenAI from "openai";
 import { logoBase64 } from "../assets/petrodeal-logo";
 
 // Create OpenAI client
+// Check if OpenAI API key is available
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OpenAI API key not found in environment variables');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -21,6 +26,14 @@ export const enhancedPdfRouter = Router();
 // Generate an advanced PDF document with OpenAI-enhanced content
 enhancedPdfRouter.post('/api/vessels/:id/enhanced-pdf', async (req: Request, res: Response) => {
   try {
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'OpenAI API key not configured. Please add OPENAI_API_KEY to environment variables.'
+      });
+    }
+    
     const vesselId = parseInt(req.params.id);
     const documentType = req.body.documentType || 'Document';
     

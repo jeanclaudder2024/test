@@ -4,6 +4,11 @@ import fs from 'fs';
 import path from 'path';
 import { storage } from '../storage';
 
+// Verify OpenAI API key is available from environment
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OpenAI API key not found in environment variables');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -20,6 +25,11 @@ export class ProfessionalDocumentService {
 
   async generateDocumentContent(title: string, description: string, vesselData?: any): Promise<string> {
     try {
+      // Check if OpenAI API key is configured
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured in environment variables. Please add OPENAI_API_KEY to your .env file.');
+      }
+      
       const prompt = this.buildContentPrompt(title, description, vesselData);
       
       const completion = await openai.chat.completions.create({
@@ -41,6 +51,9 @@ export class ProfessionalDocumentService {
       return completion.choices[0]?.message?.content || '';
     } catch (error) {
       console.error('Error generating document content:', error);
+      if (error.message?.includes('API key')) {
+        throw new Error('OpenAI API key configuration error. Please check your environment variables.');
+      }
       throw new Error('Failed to generate document content');
     }
   }

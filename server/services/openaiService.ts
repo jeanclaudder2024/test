@@ -580,6 +580,11 @@ This document was generated automatically without AI assistance.
   }
 
   private async getGenericDocumentPrompt(vessel: Vessel, documentType: string): Promise<string> {
+    // Verify OpenAI API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured in environment variables');
+    }
+    
     // Get additional vessel details
     const departurePort = vessel.departurePort ? 
       await storage.getPortById(Number(vessel.departurePort)) : null;
