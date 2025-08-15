@@ -26,4 +26,8 @@ export default defineConfig({
       },
     },
   },
+  // Expose environment variables to the client
+  define: {
+    'process.env.VITE_STRIPE_PUBLISHABLE_KEY': JSON.stringify(process.env.VITE_STRIPE_PUBLISHABLE_KEY),
+  },
 });

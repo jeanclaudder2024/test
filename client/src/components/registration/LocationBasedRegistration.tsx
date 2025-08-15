@@ -11,7 +11,13 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements
+} from '@stripe/react-stripe-js';
+import PaymentPage from './PaymentPage';
 import { 
   MapPin, 
   Ship, 
@@ -379,20 +385,39 @@ const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved 
           description: error.message,
           variant: "destructive"
         });
-      } else {
-        toast({
-          title: "Success",
-          description: "Payment method saved successfully!",
-          variant: "default"
-        });
-        onPaymentMethodSaved(paymentMethod.id);
-        onNext();
+        return;
       }
+
+      // Save payment method to backend
+      const response = await fetch('/api/create-payment-method', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          userEmail: 'temp@example.com' // Will be updated during registration
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save payment method');
+      }
+
+      toast({
+        title: "Success",
+        description: "Payment method saved successfully!",
+        variant: "default"
+      });
+      onPaymentMethodSaved(paymentMethod.id);
+      onNext();
     } catch (error) {
       console.error('Payment method error:', error);
       toast({
         title: "Error",
-        description: "Failed to save payment method",
+        description: error instanceof Error ? error.message : "Failed to save payment method",
         variant: "destructive"
       });
     } finally {
@@ -1305,11 +1330,19 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               />
             )}
             {step === 5 && (
-              <PaymentMethodStep
+              <PaymentPage
                 onNext={() => setStep(6)}
                 onBack={() => setStep(4)}
-                isProcessing={isCreatingAccount}
                 onPaymentMethodSaved={(paymentId) => setPaymentMethodId(paymentId)}
+                selectedPlan={{
+                  name: plans?.find((p: any) => p.id === selectedPlan)?.name || 'Selected Plan',
+                  price: billingInterval === 'month' 
+                    ? plans?.find((p: any) => p.id === selectedPlan)?.monthlyPrice || 0
+                    : plans?.find((p: any) => p.id === selectedPlan)?.yearlyPrice || 0,
+                  interval: billingInterval,
+                  features: plans?.find((p: any) => p.id === selectedPlan)?.features || []
+                }}
+                userEmail={userEmail}
               />
             )}
             {step === 6 && <CompleteRegistrationStep />}

@@ -86,6 +86,40 @@ export function registerSubscriptionRoutes(app: Express) {
     }
   });
 
+  // Create payment method for registration (no auth required)
+  app.post('/api/create-payment-method', async (req, res) => {
+    try {
+      const { paymentMethodId, userEmail } = req.body;
+      
+      if (!paymentMethodId || !userEmail) {
+        return res.status(400).json({ error: 'Payment method ID and user email are required' });
+      }
+
+      // Retrieve payment method from Stripe to get details
+      const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+      
+      if (!paymentMethod) {
+        return res.status(400).json({ error: 'Invalid payment method' });
+      }
+
+      // For registration flow, we'll store the payment method ID temporarily
+      // It will be associated with the user when they complete registration
+      res.json({ 
+        success: true, 
+        paymentMethodId: paymentMethod.id,
+        card: {
+          brand: paymentMethod.card?.brand,
+          last4: paymentMethod.card?.last4,
+          exp_month: paymentMethod.card?.exp_month,
+          exp_year: paymentMethod.card?.exp_year
+        }
+      });
+    } catch (error) {
+      console.error('Error creating payment method:', error);
+      res.status(500).json({ error: 'Failed to create payment method' });
+    }
+  });
+
   // Create checkout session
   app.post('/api/subscriptions/create-checkout-session', authenticateToken, async (req, res) => {
     try {

@@ -167,14 +167,17 @@ aiRouter.post('/generate-document', async (req: Request, res: Response) => {
     const document = await openaiService.generateShippingDocument(vessel, documentType);
     
     // Store the document in the database
-    const newDocument = await storage.createDocument({
+    const documentData = {
       vesselId,
       title: document.title,
       content: document.content,
-      type: documentType,  // in our schema, it's 'type' not 'documentType'
-      status: 'generated'
-      // The createdAt and lastUpdated fields are handled by the database
-    });
+      documentType: documentType,  // Fixed: should be 'documentType' not 'type'
+      status: 'generated',
+      category: 'ai-generated'  // Required field for adminDocuments table
+      // The createdAt and updatedAt fields are handled by the database
+    };
+    
+    const createdDocument = await storage.createDocument(documentData);
     
     // Return success response
     return res.json({

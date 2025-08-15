@@ -63,3 +63,19 @@ temp/
 # Cache directories
 .cache/
 .parcel-cache/
+
+# Sensitive files and API keys
+attached_assets/**/Pasted-*
+**/sk-*
+**/*api*key*
+**/*secret*
+**/*token*
+
+# Uploaded files
+uploads/
+attached_assets/*.txt
+attached_assets/*.log
+
+# Database dumps
+*.sql.backup
+*.dump

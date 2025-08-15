@@ -1,6 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
+import { config } from "dotenv";
 import { log } from "./vite";
+
+// Load environment variables
+config();
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
