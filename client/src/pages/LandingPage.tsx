@@ -45,6 +45,7 @@ import {
   Fuel
 } from "lucide-react";
 import Header from "@/components/Header";
+import SubscriptionPlans from "@/components/subscription/SubscriptionPlans";
 
 // Used for stats counter animation
 const AnimatedCounter = ({ value, label, duration = 2000, prefix = "", suffix = "" }: { 
@@ -1224,81 +1225,8 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plansLoading ? (
-              // Loading skeleton
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-800/60 p-8 animate-pulse">
-                  <div className="h-6 bg-slate-700 rounded mb-4"></div>
-                  <div className="h-12 bg-slate-700 rounded mb-6"></div>
-                  <div className="h-16 bg-slate-700 rounded mb-8"></div>
-                  <div className="space-y-3 mb-8">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <div key={j} className="h-4 bg-slate-700 rounded"></div>
-                    ))}
-                  </div>
-                  <div className="h-12 bg-slate-700 rounded"></div>
-                </div>
-              ))
-            ) : (
-              subscriptionPlans?.map((plan: any, index: number) => (
-                <div 
-                  key={plan.id} 
-                  className={`backdrop-blur-sm rounded-xl border p-8 flex flex-col h-full transition-transform duration-300 hover:transform hover:-translate-y-2 relative overflow-hidden group ${
-                    plan.isPopular 
-                      ? 'bg-gradient-to-br from-[#003366]/80 to-[#00264d]/80 border-orange-500/30 transform scale-105 shadow-xl' 
-                      : 'bg-slate-900/50 border-slate-800/60'
-                  }`}
-                >
-                  {plan.isPopular && (
-                    <div className="absolute top-0 right-0">
-                      <div className="bg-orange-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg shadow-md">
-                        POPULAR
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                    plan.isPopular 
-                      ? 'bg-gradient-to-br from-orange-500/5 to-blue-900/10' 
-                      : 'bg-gradient-to-br from-slate-800/10 to-slate-900/30'
-                  }`}></div>
-                  
-                  <div className="relative z-10">
-                    <h3 className="text-2xl font-bold text-white mb-4">{plan.name}</h3>
-                    <div className="mb-6">
-                      <span className="text-4xl font-bold text-white">${plan.price}</span>
-                      <span className="text-white/60 ml-2">/month</span>
-                    </div>
-                    <p className="text-white/70 mb-8">{plan.description}</p>
-                    
-                    <ul className="space-y-3 mb-8">
-                      {plan.features?.slice(0, 6).map((feature: string, featureIndex: number) => (
-                        <li key={featureIndex} className="flex items-start">
-                          <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                          <span className="text-white/80">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <div className="mt-auto">
-                      <Button 
-                        className={`w-full mb-3 ${
-                          plan.isPopular 
-                            ? 'bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50' 
-                            : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'
-                        }`}
-                        onClick={() => handleStartTrial(plan.id)}
-                      >
-                        Start {plan.trialDays || 5}-Day Free Trial
-                      </Button>
-                      <p className="text-xs text-center text-white/50">No credit card required</p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          {/* Use the improved SubscriptionPlans component with monthly/yearly toggle */}
+          <SubscriptionPlans onSelectPlan={handleStartTrial} />
           
           <div className="mt-16 text-center">
             <p className="text-white/70 mb-6">

@@ -304,6 +304,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create setup intent for saving payment methods
+  app.post("/api/create-setup-intent", async (req: Request, res: Response) => {
+    try {
+      console.log('Creating setup intent for payment method saving...');
+      
+      const setupIntent = await stripeService.createSetupIntent();
+
+      console.log('Setup intent created:', setupIntent.id);
+
+      res.json({ 
+        success: true,
+        clientSecret: setupIntent.client_secret,
+        setupIntentId: setupIntent.id
+      });
+    } catch (error: any) {
+      console.error('Setup intent creation error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        message: "Failed to create setup intent" 
+      });
+    }
+  });
+
   // Test endpoint for broker payment (no auth needed for testing)
   app.post("/api/test-broker-payment", async (req: Request, res: Response) => {
     try {

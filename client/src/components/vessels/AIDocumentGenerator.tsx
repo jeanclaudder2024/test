@@ -91,7 +91,8 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
     queryFn: async () => {
       const response = await fetch(`/api/generated-documents?vesselId=${vesselId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
         }
       });
       if (!response.ok) {

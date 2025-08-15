@@ -206,22 +206,32 @@ export function registerSubscriptionRoutes(app: Express) {
           const planId = parseInt(session.metadata?.planId || '0');
           
           if (userId && planId) {
-            await storage.createSubscription({
+            // Create user subscription record that matches the userSubscriptions schema
+            const subscriptionData = {
               userId,
               planId,
               stripeSubscriptionId: session.subscription as string,
-              stripeCustomerId: session.customer as string,
               status: 'active',
+              trialStartDate: new Date(),
+              trialEndDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5-day trial
               currentPeriodStart: new Date(),
               currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-            });
+              cancelAtPeriodEnd: false,
+            };
+
+            try {
+              await storage.createUserSubscription(subscriptionData);
+              console.log('User subscription created successfully for user:', userId);
+            } catch (error) {
+              console.error('Failed to create user subscription:', error);
+            }
           }
           break;
 
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted':
           const subscription = event.data.object as Stripe.Subscription;
-          await storage.updateSubscriptionByStripeId(subscription.id, {
+          await storage.updateUserSubscriptionByStripeId(subscription.id, {
             status: subscription.status,
             currentPeriodStart: new Date(subscription.current_period_start * 1000),
             currentPeriodEnd: new Date(subscription.current_period_end * 1000),
