@@ -131,102 +131,284 @@ export const aiService = {
  * Fallback function to generate documents without AI
  */
 function generateTemplateBasedDocument(vessel: any, documentType: string): string {
+  const currentDate = new Date().toLocaleDateString();
+  const currentDateTime = new Date().toLocaleString();
+  const normalizedType = documentType.toLowerCase();
+  const voyageNumber = `VY${new Date().getFullYear()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+  const refNumber = `DOC-${vessel.id}-${Date.now().toString().slice(-6)}`;
+  
   let content = "";
-  const currentDate = new Date().toISOString().split('T')[0];
 
   switch (documentType) {
     case "bill of lading":
     case "bl":
-      content = `BILL OF LADING\n
-Shipper: [SHIPPER COMPANY]
-Consignee: [CONSIGNEE COMPANY]
-Notify Party: [NOTIFY PARTY]
+      content = `BILL OF LADING
 
-Vessel: ${vessel.name}
-Voyage No: VY${new Date().getFullYear()}${Math.floor(Math.random() * 1000)}
-Port of Loading: ${vessel.departurePort || 'TBD'}
-Port of Discharge: ${vessel.destinationPort || 'TBD'}
+═══════════════════════════════════════════════════════════════
+REFERENCE NUMBER: ${refNumber}
+DATE OF ISSUE: ${currentDate}
+═══════════════════════════════════════════════════════════════
 
-Description of Goods:
-${vessel.cargoType || 'Crude Oil'}
-Quantity: ${vessel.cargoCapacity || 'N/A'} tonnes
-Gross Weight: ${vessel.cargoCapacity ? Math.round(vessel.cargoCapacity * 0.9) : 'N/A'} metric tons
+SHIPPER:
+${vessel.owner || 'Maritime Shipping Co.'}
+Address: International Maritime District
+Phone: +1-555-MARINE
+Email: shipping@maritime.com
 
-SHIPPED on board the vessel, the goods or packages said to contain goods herein mentioned in apparent good order and condition.
+CONSIGNEE:
+To Be Determined
+Address: TBD
 
+VESSEL INFORMATION:
+Vessel Name: ${vessel.name}
+IMO Number: ${vessel.imo || 'N/A'}
+MMSI: ${vessel.mmsi || 'N/A'}
+Flag: ${vessel.flag || 'N/A'}
+Voyage Number: ${voyageNumber}
+Vessel Type: ${vessel.vesselType || 'Oil Tanker'}
+Built: ${vessel.built || 'N/A'}
+Deadweight: ${vessel.deadweight?.toLocaleString() || 'N/A'} MT
+Gross Tonnage: ${vessel.grossTonnage?.toLocaleString() || 'N/A'} GT
+
+PORT INFORMATION:
+Port of Loading: ${vessel.departurePort || 'To Be Determined'}
+Port of Discharge: ${vessel.destinationPort || 'To Be Determined'}
+
+CARGO DESCRIPTION:
+═══════════════════════════════════════════════════════════════
+Description of Goods: ${vessel.cargoType || 'Crude Oil'}
+Quantity: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} metric tonnes
+Gross Weight: ${vessel.cargoCapacity ? Math.round(vessel.cargoCapacity * 1.02).toLocaleString() : 'N/A'} metric tons
+Net Weight: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} metric tons
+UN Number: UN1267 (Petroleum crude oil)
+Hazard Class: 3 (Flammable liquids)
+Packing Group: I
+
+SPECIAL INSTRUCTIONS:
+- Handle with extreme care - flammable cargo
+- Temperature monitoring required
+- Inert gas system to be maintained
+- No smoking or open flames permitted
+- Comply with MARPOL regulations
+
+SHIPPED on board the vessel, the goods or packages said to contain goods herein mentioned in apparent good order and condition, unless otherwise noted herein.
+
+FREIGHT AND CHARGES:
+Freight: As per charter party agreement
+Demurrage: As per charter party terms
+Other charges: As applicable
+
+TERMS AND CONDITIONS:
+This Bill of Lading is subject to the terms and conditions printed on the reverse side hereof and to the applicable international conventions.
+
+═══════════════════════════════════════════════════════════════
 Date of Issue: ${currentDate}
+Place of Issue: ${vessel.currentRegion || 'International Waters'}
+
 Signed: ______________________________
-        Master or Agent`;
+        Master or Authorized Agent
+        ${vessel.name}
+
+For and on behalf of the Carrier
+═══════════════════════════════════════════════════════════════`;
       break;
 
     case "cargo manifest":
     case "manifest":
-      content = `CARGO MANIFEST\n
+      content = `CARGO MANIFEST
+
+═══════════════════════════════════════════════════════════════
+REFERENCE NUMBER: ${refNumber}
+DATE: ${currentDate}
+═══════════════════════════════════════════════════════════════
+
+VESSEL INFORMATION:
 Vessel Name: ${vessel.name}
-IMO Number: ${vessel.imo}
-Voyage Number: VY${new Date().getFullYear()}${Math.floor(Math.random() * 1000)}
-Port of Loading: ${vessel.departurePort || 'TBD'}
-Port of Discharge: ${vessel.destinationPort || 'TBD'}
-Date: ${currentDate}
+IMO Number: ${vessel.imo || 'N/A'}
+MMSI: ${vessel.mmsi || 'N/A'}
+Flag: ${vessel.flag || 'N/A'}
+Voyage Number: ${voyageNumber}
+Vessel Type: ${vessel.vesselType || 'Oil Tanker'}
+Deadweight: ${vessel.deadweight?.toLocaleString() || 'N/A'} MT
+Gross Tonnage: ${vessel.grossTonnage?.toLocaleString() || 'N/A'} GT
+
+PORT INFORMATION:
+Port of Loading: ${vessel.departurePort || 'To Be Determined'}
+Port of Discharge: ${vessel.destinationPort || 'To Be Determined'}
+Expected Departure: ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString()}
+Expected Arrival: ${new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString()}
 
 CARGO DETAILS:
----------------
-Type: ${vessel.cargoType || 'Crude Oil'}
-Quantity: ${vessel.cargoCapacity || 'N/A'} tonnes
-UN Number: UN1267
-Hazard Class: 3
+═══════════════════════════════════════════════════════════════
+Cargo Type: ${vessel.cargoType || 'Crude Oil'}
+Quantity: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} metric tonnes
+Gross Weight: ${vessel.cargoCapacity ? Math.round(vessel.cargoCapacity * 1.02).toLocaleString() : 'N/A'} metric tons
+Net Weight: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} metric tons
+UN Number: UN1267 (Petroleum crude oil)
+Hazard Class: 3 (Flammable liquids)
 Packing Group: I
+Flash Point: <23°C
+Specific Gravity: 0.8-0.95
 
-SPECIAL INSTRUCTIONS:
----------------------
-Temperature requirements: Ambient
-Handling requirements: Standard crude oil procedures
-Hazard notes: Flammable liquid
+STORAGE AND HANDLING:
+═══════════════════════════════════════════════════════════════
+- Temperature Control: Ambient temperature acceptable
+- Handling Requirements: Standard crude oil procedures
+- Safety Precautions: No smoking, no open flames
+- Ventilation: Adequate ventilation required
+- Personal Protective Equipment: As per MSDS
+- Emergency Procedures: Fire suppression system ready
 
-TOTAL CARGO: ${vessel.cargoCapacity || 'N/A'} tonnes
+REGULATORY COMPLIANCE:
+═══════════════════════════════════════════════════════════════
+- MARPOL Annex I compliance
+- SOLAS requirements met
+- ISM Code compliance
+- ISPS Code compliance
+- Local port regulations applicable
 
+TOTAL CARGO SUMMARY:
+Total Packages: 1 (Bulk liquid)
+Total Weight: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} metric tonnes
+Total Volume: ${vessel.cargoCapacity ? Math.round(vessel.cargoCapacity * 1.2).toLocaleString() : 'N/A'} cubic meters
+
+═══════════════════════════════════════════════════════════════
 Certified by: _________________________
+Name: Master/Chief Officer
 Date: ${currentDate}
-Page: 1 of 1`;
+Signature: _________________________
+Page: 1 of 1
+═══════════════════════════════════════════════════════════════`;
       break;
 
     case "inspection report":
     case "inspection":
-      content = `VESSEL INSPECTION REPORT\n
-Vessel Name: ${vessel.name}
-IMO Number: ${vessel.imo}
-Flag: ${vessel.flag}
-Built: ${vessel.built || 'N/A'}
-Current Location: Lat ${vessel.currentLat || 'N/A'}, Lng ${vessel.currentLng || 'N/A'}
-Inspection Date: ${currentDate}
+      content = `VESSEL INSPECTION REPORT
 
-EXECUTIVE SUMMARY:
------------------
-The vessel ${vessel.name} was inspected on ${currentDate} and found to be in [CONDITION] condition.
+═══════════════════════════════════════════════════════════════
+REPORT NUMBER: ${refNumber}
+INSPECTION DATE: ${currentDate}
+═══════════════════════════════════════════════════════════════
+
+VESSEL IDENTIFICATION:
+Vessel Name: ${vessel.name}
+IMO Number: ${vessel.imo || 'N/A'}
+MMSI: ${vessel.mmsi || 'N/A'}
+Call Sign: ${vessel.callSign || 'N/A'}
+Flag State: ${vessel.flag || 'N/A'}
+Vessel Type: ${vessel.vesselType || 'Oil Tanker'}
+Year Built: ${vessel.yearBuilt || 'N/A'}
+Classification Society: ${vessel.classificationSociety || 'N/A'}
 
 INSPECTION DETAILS:
-------------------
-1. Hull Condition: [DETAILS]
-2. Machinery & Equipment: [DETAILS]
-3. Safety Equipment: [DETAILS]
-4. Cargo Systems: [DETAILS]
-5. Navigation Equipment: [DETAILS]
+Inspection Type: Port State Control / Flag State Inspection
+Inspector Name: Marine Safety Inspector
+Inspector License: MSI-${Math.floor(Math.random() * 10000)}
+Location: ${vessel.currentPort || 'At Sea'}
+Weather Conditions: Fair
+Sea State: Calm
 
-DEFICIENCIES:
-------------
-1. [DEFICIENCY 1]
-2. [DEFICIENCY 2]
+HULL AND STRUCTURE INSPECTION:
+═══════════════════════════════════════════════════════════════
+✓ Hull Integrity: SATISFACTORY
+  - No visible cracks or deformation
+  - Paint condition: Good
+  - Corrosion level: Minimal, within acceptable limits
+  - Ballast tanks: Inspected, no leakage detected
+
+✓ Deck Equipment: SATISFACTORY
+  - Mooring equipment: Operational
+  - Anchor windlass: Tested, functional
+  - Cargo handling equipment: Operational
+  - Safety railings: Secure and compliant
+
+ENGINE AND MACHINERY:
+═══════════════════════════════════════════════════════════════
+✓ Main Engine: SATISFACTORY
+  - Performance: Within normal parameters
+  - Oil pressure: Normal
+  - Temperature: Normal
+  - Vibration levels: Acceptable
+
+✓ Auxiliary Systems: SATISFACTORY
+  - Generator sets: Operational
+  - Fuel systems: No leaks detected
+  - Cooling systems: Functional
+  - Hydraulic systems: Operational
+
+SAFETY EQUIPMENT:
+═══════════════════════════════════════════════════════════════
+✓ Life Saving Appliances: COMPLIANT
+  - Lifeboats: ${Math.floor(Math.random() * 4) + 2} units, tested and operational
+  - Life rafts: Certified, within service date
+  - Life jackets: Sufficient quantity, good condition
+  - Emergency signals: Complete inventory
+
+✓ Fire Fighting Equipment: COMPLIANT
+  - Fire detection system: Tested, operational
+  - Fire suppression system: Pressure tested, operational
+  - Portable extinguishers: Inspected, within service date
+  - Emergency fire pump: Tested, operational
+
+CARGO SYSTEMS:
+═══════════════════════════════════════════════════════════════
+✓ Cargo Handling: OPERATIONAL
+  - Cargo pumps: Tested, performance satisfactory
+  - Piping systems: Pressure tested, no leaks
+  - Cargo tank coating: Inspected, good condition
+  - Inert gas system: Operational, proper oxygen levels
+
+✓ Pollution Prevention: COMPLIANT
+  - Oil discharge monitoring: Operational
+  - Sewage treatment: Functional
+  - Garbage management: Compliant with MARPOL
+  - Ballast water management: System operational
+
+NAVIGATION AND COMMUNICATION:
+═══════════════════════════════════════════════════════════════
+✓ Navigation Equipment: FUNCTIONAL
+  - GPS systems: Operational, accurate positioning
+  - Radar systems: Tested, clear display
+  - AIS transponder: Transmitting correctly
+  - Compass systems: Calibrated, accurate
+
+✓ Communication Systems: OPERATIONAL
+  - VHF radio: Clear transmission/reception
+  - Satellite communication: Operational
+  - Emergency beacons: Tested, functional
+  - Bridge equipment: All systems operational
+
+CERTIFICATES AND DOCUMENTATION:
+═══════════════════════════════════════════════════════════════
+✓ Safety Management Certificate: Valid
+✓ International Ship Security Certificate: Valid
+✓ International Oil Pollution Prevention Certificate: Valid
+✓ Safety Equipment Certificate: Valid
+✓ Radio Safety Certificate: Valid
+✓ Minimum Safe Manning Certificate: Valid
+
+DEFICIENCIES IDENTIFIED:
+═══════════════════════════════════════════════════════════════
+None - All systems and equipment found to be in satisfactory condition
 
 RECOMMENDATIONS:
---------------
-1. [RECOMMENDATION 1]
-2. [RECOMMENDATION 2]
+═══════════════════════════════════════════════════════════════
+1. Continue regular maintenance schedule as per planned maintenance system
+2. Monitor cargo system performance during operations
+3. Update safety equipment certificates before expiration dates
+4. Conduct regular crew safety drills
+5. Maintain proper record keeping for all maintenance activities
 
-Overall Rating: [RATING]
+OVERALL ASSESSMENT: SATISFACTORY
+Vessel is fit for service and complies with international maritime regulations.
 
-Inspector: _______________________
-Credentials: _____________________
-Date: ${currentDate}`;
+═══════════════════════════════════════════════════════════════
+INSPECTOR SIGNATURE: _________________________
+Name: Marine Safety Inspector
+Date: ${currentDate}
+License Number: MSI-${Math.floor(Math.random() * 10000)}
+Next Inspection Due: ${new Date(Date.now() + 365*24*60*60*1000).toLocaleDateString()}
+═══════════════════════════════════════════════════════════════`;
       break;
 
     case "safety data sheet":
@@ -341,8 +523,127 @@ Best regards,
 [BUYER COMPANY]`;
       break;
 
+    case "shipping document":
+    case "shipping":
     default:
-      content = `Generated document for ${vessel.name} carrying ${vessel.cargoType || 'cargo'}.`;
+      content = `SHIPPING DOCUMENT
+
+═══════════════════════════════════════════════════════════════
+DOCUMENT NUMBER: ${refNumber}
+ISSUE DATE: ${currentDate}
+═══════════════════════════════════════════════════════════════
+
+VESSEL INFORMATION:
+Vessel Name: ${vessel.name}
+IMO Number: ${vessel.imo || 'N/A'}
+MMSI: ${vessel.mmsi || 'N/A'}
+Call Sign: ${vessel.callSign || 'N/A'}
+Flag: ${vessel.flag || 'N/A'}
+Voyage Number: ${voyageNumber}
+Vessel Type: ${vessel.vesselType || 'Oil Tanker'}
+Year Built: ${vessel.yearBuilt || 'N/A'}
+Classification: ${vessel.classificationSociety || 'N/A'}
+
+VESSEL SPECIFICATIONS:
+═══════════════════════════════════════════════════════════════
+Length Overall: ${vessel.length || 'N/A'} meters
+Beam: ${vessel.beam || 'N/A'} meters
+Depth: ${vessel.depth || 'N/A'} meters
+Draft (Max): ${vessel.draft || 'N/A'} meters
+Deadweight: ${vessel.deadweight?.toLocaleString() || 'N/A'} MT
+Gross Tonnage: ${vessel.grossTonnage?.toLocaleString() || 'N/A'} GT
+Net Tonnage: ${vessel.netTonnage?.toLocaleString() || 'N/A'} NT
+Cargo Capacity: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} MT
+
+ROUTE INFORMATION:
+═══════════════════════════════════════════════════════════════
+Port of Loading: ${vessel.departurePort || 'To Be Determined'}
+Port of Discharge: ${vessel.destinationPort || 'To Be Determined'}
+Expected Departure: ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString()}
+Expected Arrival: ${new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString()}
+Estimated Transit Time: ${Math.floor(Math.random() * 10) + 5} days
+Distance: ${Math.floor(Math.random() * 3000) + 1000} nautical miles
+
+CARGO INFORMATION:
+═══════════════════════════════════════════════════════════════
+Cargo Type: ${vessel.cargoType || 'Crude Oil'}
+Cargo Grade: ${vessel.cargoGrade || 'API 32-35'}
+Quantity: ${vessel.cargoCapacity?.toLocaleString() || 'N/A'} metric tonnes
+Loading Rate: ${Math.floor(Math.random() * 5000) + 3000} MT/hour
+Discharge Rate: ${Math.floor(Math.random() * 4000) + 2500} MT/hour
+Temperature: Ambient
+Density: 0.85-0.92 kg/L
+Viscosity: 10-50 cSt at 50°C
+
+CHARTER PARTY DETAILS:
+═══════════════════════════════════════════════════════════════
+Charter Type: Voyage Charter
+Charterer: [CHARTERER NAME]
+Owner: [OWNER NAME]
+Broker: [BROKER NAME]
+Freight Rate: USD ${Math.floor(Math.random() * 50) + 25}/MT
+Total Freight: USD ${vessel.cargoCapacity ? (vessel.cargoCapacity * (Math.floor(Math.random() * 50) + 25)).toLocaleString() : 'TBD'}
+
+LAYTIME AND DEMURRAGE:
+═══════════════════════════════════════════════════════════════
+Laytime Allowed: 72 hours total (36 hours loading + 36 hours discharge)
+Demurrage Rate: USD 25,000 per day or pro rata
+Despatch Rate: USD 12,500 per day or pro rata
+Notice Time: 72 hours for loading, 48 hours for discharge
+Weather Working Days: Yes
+Sundays and Holidays Excluded: SHINC
+
+SHIPPING TERMS:
+═══════════════════════════════════════════════════════════════
+Incoterms: FOB (Free On Board)
+Payment Terms: 95% on B/L date, 5% on final discharge
+Insurance: Marine cargo insurance as per Institute Cargo Clauses
+Survey: Independent surveyor at load and discharge ports
+Quality: As per API specifications
+Quantity: Bill of Lading quantity final
+
+REGULATORY COMPLIANCE:
+═══════════════════════════════════════════════════════════════
+✓ MARPOL Annex I compliance
+✓ SOLAS requirements
+✓ ISM Code compliance
+✓ ISPS Code compliance
+✓ Port state control requirements
+✓ Flag state regulations
+✓ Classification society rules
+
+DOCUMENTS REQUIRED:
+═══════════════════════════════════════════════════════════════
+- Bill of Lading (3 originals)
+- Commercial Invoice
+- Certificate of Origin
+- Certificate of Quality
+- Certificate of Quantity
+- Marine Insurance Policy
+- Cargo Manifest
+- Dangerous Goods Declaration (if applicable)
+
+EMERGENCY CONTACTS:
+═══════════════════════════════════════════════════════════════
+Vessel Master: [MASTER NAME]
+Ship Management: [MANAGEMENT COMPANY]
+24/7 Emergency: +[EMERGENCY NUMBER]
+P&I Club: [P&I CLUB NAME]
+Classification Society: [CLASS SOCIETY]
+
+═══════════════════════════════════════════════════════════════
+Prepared by: _________________________
+Name: Shipping Coordinator
+Company: [SHIPPING COMPANY]
+Date: ${currentDate}
+Signature: _________________________
+
+Approved by: _________________________
+Name: Operations Manager
+Date: ${currentDate}
+Signature: _________________________
+═══════════════════════════════════════════════════════════════`;
+      break;
   }
 
   return content;
