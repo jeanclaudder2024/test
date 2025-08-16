@@ -35,7 +35,22 @@ export class CustomPdfTemplateService {
   private templateAssetsPath: string;
 
   constructor() {
-    this.templateAssetsPath = path.join(process.cwd(), 'attached_assets');
+    // In production, check if attached_assets exists in current directory
+    // If not, look for it in the parent directory (for Docker/deployment scenarios)
+    const prodPath = path.join(process.cwd(), 'attached_assets');
+    const devPath = path.join(process.cwd(), '..', 'attached_assets');
+    
+    if (fs.existsSync(prodPath)) {
+      this.templateAssetsPath = prodPath;
+    } else if (fs.existsSync(devPath)) {
+      this.templateAssetsPath = devPath;
+    } else {
+      // Fallback to original path
+      this.templateAssetsPath = prodPath;
+      console.warn(`Template assets directory not found at ${prodPath} or ${devPath}`);
+    }
+    
+    console.log(`Template assets path: ${this.templateAssetsPath}`);
   }
 
   private getTemplateAsset(filename: string): string | null {
