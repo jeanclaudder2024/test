@@ -35,22 +35,31 @@ export class CustomPdfTemplateService {
   private templateAssetsPath: string;
 
   constructor() {
-    // In production, check if attached_assets exists in current directory
-    // If not, look for it in the parent directory (for Docker/deployment scenarios)
-    const prodPath = path.join(process.cwd(), 'attached_assets');
-    const devPath = path.join(process.cwd(), '..', 'attached_assets');
+    // In production deployment, check multiple possible paths for attached_assets
+    const distPath = path.join(process.cwd(), 'dist', 'attached_assets'); // Production build path
+    const prodPath = path.join(process.cwd(), 'attached_assets'); // Development path
+    const devPath = path.join(process.cwd(), '..', 'attached_assets'); // Alternative dev path
     
-    if (fs.existsSync(prodPath)) {
+    if (fs.existsSync(distPath)) {
+      this.templateAssetsPath = distPath;
+      console.log('✅ Using production assets path:', distPath);
+    } else if (fs.existsSync(prodPath)) {
       this.templateAssetsPath = prodPath;
+      console.log('✅ Using development assets path:', prodPath);
     } else if (fs.existsSync(devPath)) {
       this.templateAssetsPath = devPath;
+      console.log('✅ Using alternative dev assets path:', devPath);
     } else {
-      // Fallback to original path
-      this.templateAssetsPath = prodPath;
-      console.warn(`Template assets directory not found at ${prodPath} or ${devPath}`);
+      // Fallback to dist path for production
+      this.templateAssetsPath = distPath;
+      console.warn(`❌ Template assets directory not found at any of these paths:`);
+      console.warn(`   - ${distPath}`);
+      console.warn(`   - ${prodPath}`);
+      console.warn(`   - ${devPath}`);
+      console.warn(`Using fallback path: ${distPath}`);
     }
     
-    console.log(`Template assets path: ${this.templateAssetsPath}`);
+    console.log(`📁 Final template assets path: ${this.templateAssetsPath}`);
   }
 
   private getTemplateAsset(filename: string): string | null {
