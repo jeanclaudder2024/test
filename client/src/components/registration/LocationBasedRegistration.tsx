@@ -394,10 +394,33 @@ const PaymentMethodForm = ({ onNext, onBack, isProcessing, onPaymentMethodSaved,
         });
         onPaymentMethodSaved(paymentMethodId);
         onNext();
-      } else {
-        // If we don't have a payment method, something went wrong
-        throw new Error("Failed to save payment method");
       }
+
+      // Save payment method to backend
+      const response = await fetch('/api/create-payment-method', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          userEmail: 'temp@example.com' // Will be updated during registration
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save payment method');
+      }
+
+      toast({
+        title: "Success",
+        description: "Payment method saved successfully!",
+        variant: "default"
+      });
+      onPaymentMethodSaved(paymentMethod.id);
+      onNext();
     } catch (error) {
       console.error('Payment method error:', error);
       toast({

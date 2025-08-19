@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import { InsertAdminDocument } from "@shared/schema";
+import { InsertDocument } from "@shared/schema";
 import { cohereService } from "./cohereService";
 
 export const aiService = {
@@ -107,17 +107,20 @@ export const aiService = {
       issuer = "Global Cargo Documentation Authority";
     }
     
-    const documentData: InsertAdminDocument = {
+    const documentData: InsertDocument = {
       vesselId,
-      documentType: formattedType,
+      type: formattedType,
       title,
       content,
-      status: "published",
-      category: "generated",
-      description: `AI-generated ${formattedType} for vessel ${vessel.name}`,
-      tags: `${formattedType.toLowerCase().replace(/\s+/g, ',')},vessel,${vessel.name.toLowerCase().replace(/\s+/g, '-')}`,
-      isTemplate: false,
-      isActive: true
+      status: "active",
+      reference: refNumber,
+      issuer,
+      recipientName: "Authorized Personnel",
+      recipientOrg: "Maritime Operations",
+      language: "en",
+      // Using string ISO format for dates since we updated the schema
+      issueDate: today.toISOString(),
+      expiryDate: expiryDate.toISOString()
     };
 
     return storage.createDocument(documentData);

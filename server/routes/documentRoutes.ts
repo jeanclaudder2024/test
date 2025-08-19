@@ -22,7 +22,6 @@ const documentSchema = z.object({
   category: z.enum(["general", "technical", "legal", "commercial"]).default("general"),
   tags: z.string().optional(),
   isTemplate: z.boolean().default(false),
-  isActive: z.boolean().default(true),
   vesselId: z.number().optional(), // Optional vessel association
 });
 

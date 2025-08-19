@@ -171,13 +171,10 @@ aiRouter.post('/generate-document', async (req: Request, res: Response) => {
       vesselId,
       title: document.title,
       content: document.content,
-      documentType: documentType,
+      documentType: documentType,  // Fixed: should be 'documentType' not 'type'
       status: 'generated',
-      category: 'ai-generated',
-      description: `AI-generated ${documentType} document for vessel ${vessel.name}`,
-      tags: ['ai-generated', documentType],
-      isTemplate: false,
-      isActive: true
+      category: 'ai-generated'  // Required field for adminDocuments table
+      // The createdAt and updatedAt fields are handled by the database
     };
     
     const createdDocument = await storage.createDocument(documentData);
@@ -186,7 +183,7 @@ aiRouter.post('/generate-document', async (req: Request, res: Response) => {
     return res.json({
       success: true,
       vesselId,
-      documentId: createdDocument.id,
+      documentId: newDocument.id,
       document
     });
   } catch (error) {
